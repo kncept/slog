@@ -1,4 +1,6 @@
-import DateTime from 'luxon'
+// DATES are ISO dates. 
+// eg: Luxon's DateTime.toISO()
+//
 
 export interface Identified {
     id: string
@@ -11,8 +13,8 @@ export interface Contributor extends Identified {
 
 export interface Post extends Identified {
     title: string
-    created: DateTime
-    updated: DateTime
+    created: string
+    updated: string
     content: Array<PostPart>
     contributors: Array<Contributor>
 }

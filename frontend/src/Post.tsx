@@ -1,7 +1,7 @@
 import React from 'react'
 import './App.css'
 import {Post as BlogPost, Identified} from '../../interface/Model'
-import {GetPost2} from './loaders'
+import {GetPost} from './loaders'
 
 
 const Post: React.FC<{blogpost: BlogPost|Identified}> = ({blogpost}) => {
@@ -12,8 +12,7 @@ const Post: React.FC<{blogpost: BlogPost|Identified}> = ({blogpost}) => {
   React.useEffect(() => {
     console.log('(in useEffect) loading: ' + loading)
     if (loading) {
-      // GetPost(blog.id).then(setBlog)
-      GetPost2(blog.id, setBlog,)
+      GetPost(blog.id).then(setBlog)
     }
   }, [loading, blog])
   
