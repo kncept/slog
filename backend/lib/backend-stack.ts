@@ -1,16 +1,51 @@
-import * as cdk from 'aws-cdk-lib';
-import { Construct } from 'constructs';
-// import * as sqs from 'aws-cdk-lib/aws-sqs';
+import * as path from 'path'
+
+import * as cdk from 'aws-cdk-lib'
+import { Construct } from 'constructs'
+
+import * as lambda from 'aws-cdk-lib/aws-lambda'
+import * as lambdaNodeJs from 'aws-cdk-lib/aws-lambda-nodejs'
+import * as logs from 'aws-cdk-lib/aws-logs'
+import * as route53 from 'aws-cdk-lib/aws-route53'
+
+export interface BackendStackProps extends cdk.StackProps {
+  projectRootDir: string
+}
 
 export class BackendStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
-    super(scope, id, props);
+  constructor(
+    scope: Construct,
+    id: string,
+    props: BackendStackProps
+  ) {
+    super(scope, id, props)
 
-    // The code that defines your stack goes here
+    const prefix = 'SSB'
 
-    // example resource
-    // const queue = new sqs.Queue(this, 'BackendQueue', {
-    //   visibilityTimeout: cdk.Duration.seconds(300)
-    // });
+    const zone = new route53.PublicHostedZone(this, `${prefix}-zone`, {
+      caaAmazon: true,
+      zoneName: 'TEMP'
+    })
+
+    new cdk.CfnOutput(this, 'ZoneArn', {
+      value: zone.hostedZoneArn,
+    })
+
+    // this is crazy inefficient... its downloads a nodejs builder from an aws ecr and runs an esbuild
+    const emailLambda = new lambdaNodeJs.NodejsFunction(this, `${prefix}-lambda-fn`, {
+      functionName: `${prefix}-lambda`,
+      handler: 'handler',
+      runtime: lambda.Runtime.NODEJS_18_X,
+      entry: path.join(props.projectRootDir, 'backend', 'src', 'index.ts'),
+      environment: {
+        "customProp": "customPropValue",
+      },
+      logRetention: logs.RetentionDays.ONE_MONTH,
+      bundling: {
+        minify: true,
+        externalModules: ['aws-sdk'],
+      },
+    })
+
   }
 }

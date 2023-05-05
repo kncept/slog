@@ -9,11 +9,14 @@ It's easy and quick to get up and running, and to make your first post.
     Feel free to fork it first, and make any changes you need. 
     Otherwise, `git clone git@github.com:kncept/super-simple-blog.git` will work.
 
-2) Copy the 'prod.env.template' to 'prod.env', and update values as required.
-    The minimum set to update is:
+2) Copy the 'prod.env.template' to 'prod.env', and fill in any blank properties
+    `ADMIN_USER` in a 'provider/email' format. eg: google/email.address@gmail.com
     `FRONTEND_ENDPOINT` The front end URL that you want to use
     `REACT_APP_API_ENDPOINT` The back end URL that you want to use
-    `ADMIN_USER` in a 'provider/email' format. eg: google/email.address@gmail.com
+    `AWS_ACCESS_KEY_ID`
+    `AWS_SECRET_ACCESS_KEY`
+    `AWS_DEFAULT_REGION` AWS CLI Credentials (pre setup)
+    
     supported providers are: none
     AWS Key and Secret
     If you wish to also purchase your domain through amazon, set XXXX to true as well
