@@ -20,7 +20,7 @@ const App: React.FC = () => {
 
 
 
-      <pre>router here?</pre>
+      <pre>router here.</pre>
 
       <Post blogpost={{id:"0"}} />
 

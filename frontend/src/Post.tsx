@@ -7,15 +7,15 @@ import {GetPost} from './loaders'
 const Post: React.FC<{blogpost: BlogPost|Identified}> = ({blogpost}) => {
   const [blog, setBlog] = React.useState<BlogPost>(blogpost as BlogPost)
   const loading = Object.keys(blog).length === 1
-  console.log("blog: ", blog)
-  console.log('(not useEffect) loading: ' + loading)
+  
   React.useEffect(() => {
-    console.log('(in useEffect) loading: ' + loading)
     if (loading) {
+      // setInitializing(false)
       GetPost(blog.id).then(setBlog)
     }
   }, [loading, blog])
   
+
   if (loading) {
     return <div>
       Blog Post Loading
@@ -40,7 +40,7 @@ const Post: React.FC<{blogpost: BlogPost|Identified}> = ({blogpost}) => {
 
       
     </div>
-  );
+  )
 }
 
 export default Post;

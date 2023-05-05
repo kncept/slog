@@ -9,9 +9,9 @@ export default class Router {
     }
 
     async route(method: string, path: string, requestBody: any): Promise<any> {
-        console.log('method', method)
-        console.log('path', path)
-        console.log('requestBody', requestBody)
+        // console.log('method', method)
+        // console.log('path', path)
+        // console.log('requestBody', requestBody)
 
         if (path == null || path == undefined || path === "") {
             throw new Error("No path defined: " + path)
@@ -37,6 +37,6 @@ export default class Router {
         }
 
 
-        return "Got path: " + path
+        throw new Error("404 Not Found")
     }
 }
