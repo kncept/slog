@@ -2,9 +2,6 @@
   "name": "backend",
   "version": "0.1.0",
   "scripts": {
-    "build": "tsc",
-    "clean": "rm -fr dist/",
-    "watch": "tsc -w",
     "test": "jest",
     "cdk": "env-cmd -f ../prod.env cdk",
     "dev": "nodemon --watch \"src/**\" src/dev_server.ts"
