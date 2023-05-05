@@ -17,6 +17,7 @@ start() {
     # start backend
     pushd .
     cd backend
+    npm i
     npm run dev &
     BACKEND_PID=$!
     trap "kill ${BACKEND_PID}" INT
@@ -25,6 +26,7 @@ start() {
     # start frontend
     pushd .
     cd frontend
+    npm i
     npm start &
     FRONTEND_PID=$!
     trap "kill ${FRONTEND_PID}" INT
@@ -39,17 +41,8 @@ deploy() {
     # build frontend
     pushd .
     cd frontend
-    npm run build
-    popd
-
-    #build backend
-    pushd .
-    cd backend
     npm i
-    npm run clean
     npm run build
-    npm ci --omit=dev
-    cp -r node_modules dist/backend/src
     popd
 
     pushd .
