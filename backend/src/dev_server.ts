@@ -44,5 +44,5 @@ const server = http.createServer((req, res) => {
     }
 })
 server.listen(8080, "localhost", () => {
-    console.log("server is running")
+    console.log("dev backend is running")
 })

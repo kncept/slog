@@ -1,6 +1,10 @@
 import fetchPonyfill from 'fetch-ponyfill'
 const {fetch, Headers} = fetchPonyfill({});
 
+let apiBase = process.env.REACT_APP_API_ENDPOINT || ""
+while (apiBase.endsWith("/")) {
+  apiBase = apiBase.slice(0, -1)
+}
 
 // super basic parallel request cache
 class Cache {
@@ -25,14 +29,14 @@ class Cache {
 const cache = new Cache()
 
 export const GetPost: (id: string) => Promise<any> = (id: string) => {
-    return cache.lookup('post:' + id, () => {
-      return fetch(process.env.REACT_APP_API_ENDPOINT + '/post/' + id, {
+    return cache.lookup('post:' + id, async (): Promise<any> => {
+      const res = await fetch(apiBase + '/post/' + id, {
         method: 'GET',
         headers: new Headers({
-          "X-header-test": "custom header test"
+          "Accept": "application/json"
         })
-      })
-      .then(res => res.json())
+      });
+      return await res.json();
     })
 }
 
