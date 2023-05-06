@@ -8,8 +8,7 @@
 
 * work out login/sso/oauth/oidc details.
 
-* fully scriptify in javascript (not bash)
-  possibly include using .js for config, as this allows for arrays of configuration
+* Use .js for config, as this allows for structured types
 
 * online 'new post'
   including a 'media upload' (pics, etc)

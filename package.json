@@ -1,0 +1,23 @@
+{
+  "name": "super-simple-blog",
+  "version": "1.0.0",
+  "description": "Orchestration management",
+  "main": "index.js",
+  "scripts": {
+    "run": "node run.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kncept/super-simple-blog.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/kncept/super-simple-blog/issues"
+  },
+  "homepage": "https://github.com/kncept/super-simple-blog#readme",
+  "devDependencies": {
+    "@types/node": "^20.1.0"
+  }
+}

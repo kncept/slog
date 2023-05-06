@@ -22,13 +22,9 @@ USER ubuntu
 WORKDIR /home/ubuntu
 
 ARG NODE_VERSION=18
-# install NVM and node version
+# install NVM and node tools
 RUN \
-    curl -sL https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.0/install.sh -o install_nvm.sh && \
-    bash install_nvm.sh && \
-    rm -fr install_nvm.sh
-
-
-
-# RUN printf "[url \"ssh://git@github.com/\"] \n        insteadOf = https://github.com/\n" >> ~/.gitconfig
-
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+RUN bash -c 'source .nvm/nvm.sh && npm install -g ts-node'
+# known location for the current node version bin tools
+RUN ln -s /home/ubuntu/.nvm/versions/node/v${NODE_VERSION}* /home/ubuntu/.local_node
