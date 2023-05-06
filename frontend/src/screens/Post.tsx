@@ -1,7 +1,6 @@
 import React from 'react'
-import './App.css'
-import {Post as BlogPost, Identified} from '../../interface/Model'
-import {GetPost} from './loaders'
+import {Post as BlogPost, Identified} from '../../../interface/Model'
+import {GetPost} from '../loaders'
 import { useParams } from 'react-router-dom'
 
 
@@ -10,26 +9,25 @@ const Post: React.FC = () => {
   const [blog, setBlog] = React.useState<BlogPost | null>(null)
   
   React.useEffect(() => {
-    if (blog== null) {
-      // setInitializing(false)
+    if (blog== null || blog.id !== id) {
       GetPost(id || "").then(setBlog)
     }
   }, [id, blog])
   
 
   if (blog == null) {
-    return <div>
+    return <div key='loading'>
       Blog Post Loading
     </div>
   }
 
   return (
-    <div className="BlogPost">
+    <div key={id} className="BlogPost">
       <header className="PostTitle">
-        {blog.title}
+        {id} {blog.title}
       </header>
       <div className="PostContent">
-
+ 
         ++ body content ++
 
       </div>

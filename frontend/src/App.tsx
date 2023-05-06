@@ -1,8 +1,10 @@
 import React from 'react'
 // import logo from './logo.svg'
 import './App.css'
-import Post from './Post'
-import { Outlet, RouterProvider, createBrowserRouter } from 'react-router-dom'
+import Post from './screens/Post'
+import { RouterProvider, createBrowserRouter } from 'react-router-dom'
+import RootLayout from './screens/RootLayout'
+import RouterError from './screens/RouterError'
 
 // eslint-disable-next-line
 declare namespace NodeJS {
@@ -18,8 +20,8 @@ interface Window { // eslint-disable-line
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <div>ROOT<Outlet /></div>,
-    errorElement: <div>ERROR element</div>, //   const error = useRouteError();  https://reactrouter.com/en/main/start/tutorial
+    element: <RootLayout />,
+    errorElement: <RouterError />,
     children: [
       {
         path: "posts/:id",
