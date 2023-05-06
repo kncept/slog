@@ -1,7 +1,14 @@
 # Super Simple Blog
 
 What's super simple about the super simple blog?
-It's easy and quick to get up and running, and to make your first post.
+
+* Super Simple to get started
+    Just follow the Quickstart to first post.
+* Super Simple to host
+    Self hosted with scope for increased (or decreased) load, 
+* Super Simple to keep
+    As an open source project, you can use it, fork it and even change it.
+
 
 ## Quickstart
 
