@@ -20,3 +20,5 @@
   Require signin for the remainder
 
 
+* tsconfig to get rid of any semicolons. ugh
+

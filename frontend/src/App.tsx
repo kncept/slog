@@ -5,6 +5,7 @@ import Post from './screens/Post'
 import { RouterProvider, createBrowserRouter } from 'react-router-dom'
 import RootLayout from './screens/RootLayout'
 import RouterError from './screens/RouterError'
+import PostScroller from './screens/PostScroller'
 
 // eslint-disable-next-line
 declare namespace NodeJS {
@@ -26,6 +27,10 @@ const router = createBrowserRouter([
       {
         path: "posts/:id",
         element: <Post />
+      },
+      {
+        path: '/',
+        element: <PostScroller />
       }
     ]
   },
