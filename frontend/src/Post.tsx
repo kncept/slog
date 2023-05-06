@@ -2,21 +2,22 @@ import React from 'react'
 import './App.css'
 import {Post as BlogPost, Identified} from '../../interface/Model'
 import {GetPost} from './loaders'
+import { useParams } from 'react-router-dom'
 
 
-const Post: React.FC<{blogpost: BlogPost|Identified}> = ({blogpost}) => {
-  const [blog, setBlog] = React.useState<BlogPost>(blogpost as BlogPost)
-  const loading = Object.keys(blog).length === 1
+const Post: React.FC = () => {
+  const { id } = useParams()
+  const [blog, setBlog] = React.useState<BlogPost | null>(null)
   
   React.useEffect(() => {
-    if (loading) {
+    if (blog== null) {
       // setInitializing(false)
-      GetPost(blog.id).then(setBlog)
+      GetPost(id || "").then(setBlog)
     }
-  }, [loading, blog])
+  }, [id, blog])
   
 
-  if (loading) {
+  if (blog == null) {
     return <div>
       Blog Post Loading
     </div>

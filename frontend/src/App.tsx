@@ -1,7 +1,8 @@
-import React from 'react';
-// import logo from './logo.svg';
-import './App.css';
-import Post from './Post';
+import React from 'react'
+// import logo from './logo.svg'
+import './App.css'
+import Post from './Post'
+import { Outlet, RouterProvider, createBrowserRouter } from 'react-router-dom'
 
 // eslint-disable-next-line
 declare namespace NodeJS {
@@ -14,16 +15,24 @@ declare namespace NodeJS {
 interface Window { // eslint-disable-line
 }
 
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <div>ROOT<Outlet /></div>,
+    errorElement: <div>ERROR element</div>, //   const error = useRouteError();  https://reactrouter.com/en/main/start/tutorial
+    children: [
+      {
+        path: "posts/:id",
+        element: <Post />
+      }
+    ]
+  },
+])
+
 const App: React.FC = () => {
   return (
     <div className="App">
-
-
-
-      <pre>router here.</pre>
-
-      <Post blogpost={{id:"0"}} />
-
+      <RouterProvider router={router}/>
 
       {/* <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
@@ -40,7 +49,7 @@ const App: React.FC = () => {
         </a>
       </header> */}
     </div>
-  );
+  )
 }
 
-export default App;
+export default App
