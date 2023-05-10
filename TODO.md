@@ -8,8 +8,6 @@
 
 * work out login/sso/oauth/oidc details.
 
-* Use .js for config, as this allows for structured types
-
 * online 'new post'
   including a 'media upload' (pics, etc)
 
