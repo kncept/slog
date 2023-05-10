@@ -1,0 +1,10 @@
+import { FrontendProperties } from "./orchestration/env-properties"
+
+// add as many property types from orchestration/properties as required
+const properties : FrontendProperties = {
+    publicUrl: '/',
+    reactAppApiEndpoint: 'http://localhost:8080/',
+
+}
+
+export default properties

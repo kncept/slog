@@ -1,6 +1,12 @@
 #!/home/ubuntu/.local_node/bin/ts-node
-import * as path from 'path'
-import {spawn} from 'child_process'
+import exec from './orchestration/exec'
+import { EnvironmentName } from './orchestration/property-loaders'
+
+// ensure that we don't have any background promises fail without a real error
+process.on('unhandledRejection', (reason, promise) => {
+    console.log('Unhandled rejection at ', promise, `reason: ${reason}`)
+    process.exit(1)
+  })
 
 const args = process.argv
 // args[0] = node binary
@@ -40,77 +46,34 @@ function showHelp() {
     console.log("    deploy: Builds and Deploys the stack")
 }
 
-async function exec(dir: string, command: string, args: Array<string>): Promise<void> {
-    // const env = process.env
-
-    return new Promise((resolve, reject) => {
-        const writeChunk = (writer: NodeJS.WriteStream, chunk: any) => {
-            chunk.toString().split(/\r?\n/).forEach((v: string) => {
-                writer.write(dir)
-                writer.write('/')
-                writer.write(command)
-                writer.write(': ')
-                writer.write(v)
-                writer.write('\n')
-            })
-        }
-        const child = spawn(command, args, {
-            cwd: path.join(process.cwd(), dir),
-            // env,
-            // env: {}
-        })
-        child.on('error', (err) => {
-            // console.log('Error', {dir, command})
-            // console.log(err)
-            reject(err)
-        })
-        child.on('close', (code) => {
-            if (code === 0) {
-                resolve()
-            } else {
-                reject({
-                    message: 'Non Zero Exit Code',
-                    errno: code
-                })
-            }
-        })
-        child.stdout.on('data', function (chunk: any) {
-            writeChunk(process.stdout, chunk)
-         })
-         child.stderr.on('data', function (chunk: any) {  
-            writeChunk(process.stderr, chunk)
-         })
-    })
-}
-
 async function startDev() {
-    let backend = exec('backend', 'npm', ['i'])
-    .then(async () => {
-        await exec('backend', 'npm', ['run', 'dev'])
-    })
-
-    let frontend = exec('frontend', 'npm', ['i'])
-    .then(async () => {
-        await exec('frontend', 'npm',['start'])
-    })
-
-    // and just wait till we're done
-    await backend
-    await frontend
+    const envName = EnvironmentName.dev
+    await Promise.all([
+        exec(envName, 'backend', 'npm', ['i'])
+        .then(async () => {
+            await exec(envName, 'backend', 'npm', ['run', 'dev'])
+        }),
+        exec(envName, 'frontend', 'npm', ['i'])
+        .then(async () => {
+            await exec(envName, 'frontend', 'npm',['start'])
+        })
+    ])
 }
 
 async function build() {
-    await exec('frontend', 'npm', ['i'])
+    const envName = EnvironmentName.prod
+    await exec(envName, 'frontend', 'npm', ['i'])
     .then(async () => {
-        await exec('frontend', 'npm',['run', 'build'])
+        await exec(envName, 'frontend', 'npm',['run', 'build'])
     })
 }
 
 async function deploy() {
     await build()
 
-    await exec('backend', 'npm', ['i'])
+    const envName = EnvironmentName.prod
+    await exec(envName, 'backend', 'npm', ['i'])
     .then(async () => {
-        await exec('backend', 'npm',['run', 'cdk', 'deploy'])
+        await exec(envName, 'backend', 'npm',['run', 'cdk', 'deploy'])
     })
 }

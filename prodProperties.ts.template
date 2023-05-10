@@ -1,0 +1,14 @@
+import { AwsAccessKeys, FrontendProperties } from "./orchestration/env-properties"
+
+// add as many property types from orchestration/properties as required
+const properties : AwsAccessKeys & FrontendProperties = {
+    publicUrl: ,
+    reactAppApiEndpoint: ,
+
+    awsAccessKeyId: ,
+    awsSecretAccessKey: ,
+    awsDefaultRegion: '
+
+}
+
+export default properties

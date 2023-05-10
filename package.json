@@ -18,6 +18,10 @@
   },
   "homepage": "https://github.com/kncept/super-simple-blog#readme",
   "devDependencies": {
+    "@types/lodash": "^4.14.194",
     "@types/node": "^20.1.0"
+  },
+  "dependencies": {
+    "lodash": "^4.17.21"
   }
 }

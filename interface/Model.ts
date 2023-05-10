@@ -13,7 +13,7 @@ export interface Contributor extends Identified {
 
 export interface Post extends Identified {
     title: string
-    created: string
+    created: string // luxon ?
     updated: string
     content: Array<PostPart>
     contributors: Array<Contributor>
