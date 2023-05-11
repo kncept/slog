@@ -35,8 +35,7 @@ export interface AwsAccessKeyProperties {
 export interface LoginProvider { //ugh - react app prefix
     providerName: string,
 
-    authority: URL // eg: https://github.com/login (from https://github.com/login/oauth)
-    clientId: string
+    authority: URL
+    client_id: string
     redirectUri: URL
-    // scopes: string // space seperated list of scopes.
 }

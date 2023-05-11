@@ -66,9 +66,20 @@ If you want to commit secrets, I would suggest using the `https://github.com/com
 Help for some basic auth providers.<br/>
 Currently only OIDC is supported.
 
-### Github
-Only Oauth.. c'mon Microsoft, you can do better
+### OIDC providers:
 
-### Facebook
-* https://developers.facebook.com/apps
+* Kncept
+  * Fork the repo, deploy, and use the URLs
+  * Not a real solution yet
+  * https://github.com/kncept-oauth/simple-oidc
+
+### Oauth (not OIDC) providers:
+
+* Github
+  * https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app
+  *  Only Oauth.. c'mon Microsoft, you can do better
+
+* Facebook
+  * Not an OIDC provider. sigh.
+  * https://developers.facebook.com/apps
 
