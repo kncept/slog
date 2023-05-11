@@ -1,0 +1,28 @@
+
+.DropDownPicker {
+    border: 2px solid lightgray;
+    padding: 4px;
+}
+.DropDownPicker:hover {
+    background-color: lightgray;
+}
+
+/* as above, but no hover style */
+.DisabledDropDownPicker {
+    border: 2px solid lightgray;
+    padding: 4px;
+}
+
+.DropDownPickerItems {
+    position: absolute;
+    margin-top: 6px;
+}
+
+.DropDownPickerItem {
+    border: 2px solid lightgray;
+    padding: 4px;
+    margin: 1px;
+}
+.DropDownPickerItem:hover {
+    background-color: lightgray;
+}

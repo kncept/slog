@@ -3,6 +3,7 @@ import { OidcContext } from '../App'
 import { LoginProvider } from '../../../orchestration/env-properties'
 import { useAuth } from 'react-oidc-context'
 import ButtonLink from './ButtonLink'
+import DropDownPicker from './DropDownPicker'
 
 type Props = {
     style?: React.CSSProperties
@@ -22,16 +23,33 @@ const LoginBox: React.FC<Props> = ({style}) => {
     const oidcContext = useContext(OidcContext)
     console.log('available providers: ', availableProviders)
 
+    const onSelectProvider = (providerName: string): void => {
+        console.log('onSelectProvider ==> ' + providerName)
+    }
+
     if (availableProviders.length == 0) {
         return <div style={style}>
-            <ButtonLink disabled={true}>Login Disabled</ButtonLink>
+            <DropDownPicker
+            disabled={true}
+            text='Login Disabled'
+            values={[]}
+            onSelect={onSelectProvider} />
+            {/* <ButtonLink disabled={true}>Login Disabled</ButtonLink> */}
         </div>
     }
 
     // auth.isAuthenticated
 
+   
+
+
     return <div style={style} onClick={() => {console.log('onclick')}}>
-        [login box]
+        <DropDownPicker
+            text='Login'
+            values={availableProviders.map(p => p.providerName)}
+            // values={['Github', 'Google', 'Facebook', 'Twitter']}
+            onSelect={onSelectProvider}
+        />
     </div>
 }
 
