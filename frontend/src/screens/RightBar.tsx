@@ -5,9 +5,7 @@ import { Link } from 'react-router-dom'
 const RightBar: React.FC = () => {
   
   return (
-    <div className='RightBar'>
-        Rightbar Content (todo = componentize)<br/>
-        <Link to='/'>Home</Link>
+    <div className='RightBar'>  
         <span>
             <ul>
                 <li><Link to={'/posts/000'}>000 post</Link></li>

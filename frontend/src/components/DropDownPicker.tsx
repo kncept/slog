@@ -1,7 +1,5 @@
-import React, { useContext, useState } from 'react'
+import React, { useState } from 'react'
 import './DropDownPicker.css'
-import { Link } from 'react-router-dom'
-import ButtonLink from './ButtonLink'
 
 type Props = {
     disabled?: boolean

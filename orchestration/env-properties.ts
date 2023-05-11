@@ -7,7 +7,14 @@ export interface BlogProperties {
     // default = SuperSimpleBlog
     blogName?: string
 
-    reactAppLoginProviders?: Array<LoginProvider>
+    // TODO: possibly roll our own oauth
+    // because switching providers _should_ be easy
+    // but apparently isn't
+    // eg: https://tasoskakour.com/blog/react-use-oauth2
+    //
+    // till then, just use ONE LoginProvider
+    reactAppLoginProvider: LoginProvider
+    // reactAppLoginProviders?: Array<LoginProvider>
   
 }
 
@@ -27,6 +34,9 @@ export interface AwsAccessKeyProperties {
 
 export interface LoginProvider { //ugh - react app prefix
     providerName: string,
+
+    authority: URL // eg: https://github.com/login (from https://github.com/login/oauth)
     clientId: string
-    scopes: string, // space seperated list of scopes.
+    redirectUri: URL
+    // scopes: string // space seperated list of scopes.
 }

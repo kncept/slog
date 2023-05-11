@@ -1,0 +1,14 @@
+
+.SimpleButton {
+    border: 2px solid lightgray;
+    padding: 4px;
+}
+.SimpleButton:hover {
+    background-color: lightgray;
+}
+
+/* as above, but no hover style */
+.DisabledSimpleButton {
+    border: 2px solid lightgray;
+    padding: 4px;
+}

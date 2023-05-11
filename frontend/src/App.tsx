@@ -6,6 +6,8 @@ import { RouterProvider, createBrowserRouter } from 'react-router-dom'
 import RootLayout from './screens/RootLayout'
 import RouterError from './screens/RouterError'
 import PostScroller from './screens/PostScroller'
+import { providers } from './components/LoginBox'
+import Privacy from './screens/Privacy'
 
 // eslint-disable-next-line
 declare namespace NodeJS {
@@ -29,6 +31,10 @@ const router = createBrowserRouter([
         element: <Post />
       },
       {
+        path: "privacy",
+        element: <Privacy />
+      },
+      {
         path: '/',
         element: <PostScroller />
       }
@@ -36,18 +42,16 @@ const router = createBrowserRouter([
   },
 ])
 
-
-export const OidcContext = createContext<any>(null);
+export const OidcContext = createContext<any>(null)
 
 const App: React.FC = () => {
-  const [oidcConfig, setOidcConfig] = useState<Record<string, string>>({
-    authority: "<your authority>",
-    client_id: "<your client id>",
-    redirect_uri: "<your redirect uri>",
-  })
+  const availableProviders = providers()
+  const [oidcConfig, setOidcConfig] = useState<Record<string, string>>(
+    availableProviders.length === 1 ? availableProviders[0] as any as Record<string, string> : {}
+  )
   return (
     <div className="App">
-      <OidcContext.Provider value={{
+      <OidcContext.Provider key={oidcConfig.providerName} value={{
         config: oidcConfig,
         setConfig: setOidcConfig
       }}>

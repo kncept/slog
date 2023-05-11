@@ -1,6 +1,6 @@
 import React, { useContext } from 'react'
 import './RootLayout.css'
-import { Outlet } from 'react-router-dom'
+import { Link, Outlet } from 'react-router-dom'
 import VBox from '../components/VBox'
 import HBox from '../components/HBox'
 import RightBar from './RightBar'
@@ -34,9 +34,15 @@ const RootLayout: React.FC = () => {
                         <RightBar />
                     </HBox>
                     <div>
-                    {/* <div style={{display: 'flex', justifyContent: 'flex-end'}}> */}
-                    <sub style={{marginLeft: 'auto', marginRight: '0'}}>Super Simple Blog provided by https://github.com/kncept/super-simple-blog</sub>
-                    {/* </div> */}
+
+                    <div>
+                        <Link to='/privacy'>Privacy</Link>
+                        &nbsp;&nbsp;
+                        <Link to='/'>Home</Link>
+                    </div>
+                    <div style={{display: 'flex', justifyContent: 'flex-end'}}>
+                        <sub style={{marginLeft: 'auto', marginRight: '0'}}>Super Simple Blog provided by https://github.com/kncept/super-simple-blog</sub>
+                    </div>
                     </div>
                 </VBox>
                 <div style={{width: `${marginWidth}%`}}></div>

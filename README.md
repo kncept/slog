@@ -59,3 +59,16 @@ If you are NOT using a dev container, then you will need to us ts-node.
 
 If you want to commit secrets, I would suggest using the `https://github.com/commenthol/ansible-vault` library.
 
+
+
+## Auth Provider Configuration
+
+Help for some basic auth providers.<br/>
+Currently only OIDC is supported.
+
+### Github
+Only Oauth.. c'mon Microsoft, you can do better
+
+### Facebook
+* https://developers.facebook.com/apps
+
