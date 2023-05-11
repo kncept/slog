@@ -1,0 +1,15 @@
+
+.ButtonLink {
+    border: 2px solid lightgray;
+    padding: 4px;
+}
+
+span.ButtonLink {
+    color: gray;
+}
+
+a.ButtonLink:visited {
+    font-weight: bold;
+    color: gray;
+    text-decoration: none;
+}

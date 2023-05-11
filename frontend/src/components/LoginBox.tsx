@@ -1,8 +1,8 @@
 import React, { useContext } from 'react'
-import './HBox.css'
 import { OidcContext } from '../App'
 import { LoginProvider } from '../../../orchestration/env-properties'
 import { useAuth } from 'react-oidc-context'
+import ButtonLink from './ButtonLink'
 
 type Props = {
     style?: React.CSSProperties
@@ -21,6 +21,12 @@ const LoginBox: React.FC<Props> = ({style}) => {
     const auth = useAuth()
     const oidcContext = useContext(OidcContext)
     console.log('available providers: ', availableProviders)
+
+    if (availableProviders.length == 0) {
+        return <div style={style}>
+            <ButtonLink disabled={true}>Login Disabled</ButtonLink>
+        </div>
+    }
 
     // auth.isAuthenticated
 
