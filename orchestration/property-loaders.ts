@@ -31,20 +31,35 @@ export default function EnvProperties (environmentName: EnvironmentName) : Recor
     // overwrite with 'set' properties
     const definedProperties = getDefinedProperties(environmentName)
     Object.keys(definedProperties).forEach(key => {
-        properties[toEnvPropertyPattern(key)] = definedProperties[key]
+        const envPropertyName = toEnvPropertyPattern(key)
+        properties[envPropertyName] = unquotedStringify(definedProperties[key])
     })
 
     // fill any any missing properties with defaults
     const defaultProperties = getDefaultProperties(environmentName)
     Object.keys(defaultProperties).forEach(key => {
-        if (properties[toEnvPropertyPattern(key)] === undefined) {
-            properties[toEnvPropertyPattern(key)] = defaultProperties[key]
+        const envPropertyName = toEnvPropertyPattern(key)
+        if (properties[envPropertyName] === undefined) {
+            properties[envPropertyName] = unquotedStringify(defaultProperties[key])
         }
     })
-
     return properties
 }
 
-function toEnvPropertyPattern(name: string): string {
+export function unquotedStringify(val: any): string {
+    if (val === null) {
+        return ''
+    }
+    if (val === undefined) {
+        return ''
+    }
+    if (typeof val === 'string') {
+        return val
+    }
+    return JSON.stringify(val)
+    
+}
+
+export function toEnvPropertyPattern(name: string): string {
     return toUpper(snakeCase(name))
 }

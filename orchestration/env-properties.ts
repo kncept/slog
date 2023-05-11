@@ -6,6 +6,8 @@ export interface BlogProperties {
     // If you are hosting more than one instance of SuperSimpleBlog, you will need to name them all uniquely
     // default = SuperSimpleBlog
     blogName?: string
+
+    reactAppLoginProviders?: Array<LoginProvider>
   
 }
 
@@ -16,8 +18,15 @@ export interface FrontendProperties {
     reactAppApiEndpoint: URL
 }
 
-export interface AwsAccessKeys {
+export interface AwsAccessKeyProperties {
     awsAccessKeyId: string
     awsSecretAccessKey: string
     awsDefaultRegion: string
+}
+
+
+export interface LoginProvider { //ugh - react app prefix
+    providerName: string,
+    clientId: string
+    scopes: string, // space seperated list of scopes.
 }

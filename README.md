@@ -47,6 +47,7 @@ Use the run.ts command to make things work.
 In the dev container, 
 `./run.ts start` will start up the the stack in dev mode
 `./run.ts deploy` will build and deploy the stack
+`./run.ts test` will run all unit tests
 
 If you are NOT using a dev container, then you will need to us ts-node.
 `ts-node run.ts start` and `ts-node run.ts deploy` are the equivalent commands
@@ -55,3 +56,6 @@ If you are NOT using a dev container, then you will need to us ts-node.
 ## Fork Customisation
 
 `cp devProperties.ts.template devProperties.ts` ==> Support for checked in dev properties
+
+If you want to commit secrets, I would suggest using the `https://github.com/commenthol/ansible-vault` library.
+

@@ -25,13 +25,19 @@ if (args.length > 3) {
 switch(args[2].toLowerCase()) {
     case 'help':
         showHelp()
-        break;
+        break
     case 'start':
     case 'dev':
         startDev()
-        break;
+        break
+    case 'build':
+        build()
+        break
     case 'deploy':
         deploy()
+        break
+    case 'test':
+        test()
         break
     default:
         console.log('Unknown command: ' + args[2])
@@ -58,6 +64,19 @@ async function startDev() {
             await exec(envName, 'frontend', 'npm',['start'])
         })
     ])
+}
+
+async function test() {
+    const envName = EnvironmentName.dev
+    await exec(envName, '.', 'npm', ['test'])
+    await exec(envName, 'frontend', 'npm', ['i'])
+    .then(async () => {
+        await exec(envName, 'frontend', 'npm',['test', '--', '--watchAll=false'])
+    })
+    await exec(envName, 'backend', 'npm', ['i'])
+    .then(async () => {
+        await exec(envName, 'backend', 'npm',['test'])
+    })
 }
 
 async function build() {

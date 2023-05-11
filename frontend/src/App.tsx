@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { createContext, useState } from 'react'
 // import logo from './logo.svg'
 import './App.css'
 import Post from './screens/Post'
@@ -36,10 +36,23 @@ const router = createBrowserRouter([
   },
 ])
 
+
+export const OidcContext = createContext<any>(null);
+
 const App: React.FC = () => {
+  const [oidcConfig, setOidcConfig] = useState<Record<string, string>>({
+    authority: "<your authority>",
+    client_id: "<your client id>",
+    redirect_uri: "<your redirect uri>",
+  })
   return (
     <div className="App">
-      <RouterProvider router={router}/>
+      <OidcContext.Provider value={{
+        config: oidcConfig,
+        setConfig: setOidcConfig
+      }}>
+        <RouterProvider router={router}/>
+      </OidcContext.Provider>
 
       {/* <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
