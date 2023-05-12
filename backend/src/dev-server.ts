@@ -1,7 +1,9 @@
 import * as http from 'http'
 import Router from './router'
+import path = require('path')
+import FilesystemStorage from './storage/filesystem-storage'
 
-const router: Router = new Router()
+const router: Router = new Router(new FilesystemStorage(path.join(__dirname, '..', '..', '.data')))
 
 
 const server = http.createServer((req, res) => {
@@ -27,17 +29,21 @@ const server = http.createServer((req, res) => {
         router.route(method, req.url || "", req.read())
         .then((value: any) => {
             addCorsHeaders()
-            res.writeHead(200)
-            if (value != null && value != undefined) {
-                res.write(JSON.stringify(value))
+            if (value === undefined) {
+                res.writeHead(404)
+            } else {
+                res.writeHead(200)
+                if (value != null) {
+                    res.write(JSON.stringify(value))
+                }
             }
             res.end()
         })
-        .catch((err: any) => {
+        .catch((err: Error) => {
             console.log(err)
             res.writeHead(500)
-            if (err != null && err != undefined) {
-                res.write(err)
+            if (err != null && err != undefined && err.message) {
+                res.write(err.message)
             }
             res.end()
         })

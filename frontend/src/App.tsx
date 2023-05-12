@@ -1,13 +1,14 @@
 import React, { createContext, useState } from 'react'
 // import logo from './logo.svg'
 import './App.css'
-import Post from './screens/Post'
+import ViewPost from './screens/ViewPost'
 import { RouterProvider, createBrowserRouter } from 'react-router-dom'
 import RootLayout from './screens/RootLayout'
 import RouterError from './screens/RouterError'
 import PostScroller from './screens/PostScroller'
 import { providers } from './components/LoginBox'
 import Privacy from './screens/Privacy'
+import DraftList from './screens/DraftList'
 
 // eslint-disable-next-line
 declare namespace NodeJS {
@@ -27,8 +28,12 @@ const router = createBrowserRouter([
     errorElement: <RouterError />,
     children: [
       {
+        path: 'drafts',
+        element: <DraftList />
+      },
+      {
         path: "posts/:id",
-        element: <Post />
+        element: <ViewPost />
       },
       {
         path: "privacy",

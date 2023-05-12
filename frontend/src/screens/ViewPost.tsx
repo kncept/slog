@@ -4,7 +4,7 @@ import {GetPost} from '../loaders'
 import { useParams } from 'react-router-dom'
 
 
-const Post: React.FC = () => {
+const ViewPost: React.FC = () => {
   const { id } = useParams()
   const [blog, setBlog] = React.useState<BlogPost | null>(null)
   
@@ -42,4 +42,4 @@ const Post: React.FC = () => {
   )
 }
 
-export default Post;
+export default ViewPost

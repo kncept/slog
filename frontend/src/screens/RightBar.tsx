@@ -3,9 +3,16 @@ import { Link } from 'react-router-dom'
 
 
 const RightBar: React.FC = () => {
+
+  // if logged in show 'drafts'
   
   return (
-    <div className='RightBar'>  
+    <div className='RightBar'> 
+        <span>
+            <ul>
+                <li><Link to={'/drafts'}>Drafts and New Posts</Link></li>
+            </ul>
+        </span>
         <span>
             <ul>
                 <li><Link to={'/posts/000'}>000 post</Link></li>

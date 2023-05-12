@@ -4,7 +4,7 @@
   "scripts": {
     "test": "jest",
     "cdk": "dk",
-    "dev": "nodemon --watch \"src/**\" src/dev_server.ts"
+    "dev": "nodemon --watch \"src/**\" src/dev-server.ts"
   },
   "devDependencies": {
     "@aws-sdk/client-lambda": "^3.326.0",

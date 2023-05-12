@@ -1,11 +1,12 @@
 // I must say, the Lambda V3 API and typescript offering from amazon is horrible
 import {Post} from '../../interface/Model'
 import {DateTime} from 'luxon'
+import Storage from './storage/storage'
 
 export default class Router {
-    storage: any
-    constructor(){
-
+    storage: Storage
+    constructor(storage: Storage){
+        this.storage = storage
     }
 
     async route(method: string, path: string, requestBody: any): Promise<any> {
@@ -24,19 +25,32 @@ export default class Router {
 
         if (path.startsWith("post/")) {
             let id = path.substring(5)
-
-            const post: Post = {
-                id,
-                title: "Title " + Math.random(),
-                contributors: [],
-                content: [],
-                created: DateTime.now().toISO() || "",
-                updated: DateTime.now().toISO() || "",
+            if (id === '') {
+                return this.storage.ListPosts()
+            } else {
+                return this.storage.GetPost(id)
             }
-            return post
+
+            // const post: Post = {
+            //     id,
+            //     title: "Title " + Math.random(),
+            //     contributors: [],
+            //     content: [],
+            //     created: DateTime.now().toISO() || "",
+            //     updated: DateTime.now().toISO() || "",
+            // }
+            // return post
         }
 
+        if (path.startsWith("draft/")) {
+            const id = path.substring(6)
+            if (id === '') {
+                return this.storage.ListDrafts()
+            } else {
+                return this.storage.GetDraft(id)
+            }
+        }
 
-        throw new Error("404 Not Found")
+        return undefined
     }
 }
