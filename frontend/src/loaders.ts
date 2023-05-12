@@ -63,3 +63,16 @@ export const GetDraft: (id: string) => Promise<Post> = (id) => {
   })
 }
 
+export const CreateDraft: (title: string) => Promise<Post> = (title) => {
+  return cache.lookup('create-draft', async (): Promise<Post> => {
+    return fetch(apiBase + '/create-draft/', {
+      method: 'POST',
+      headers: new Headers({
+        'Accept': 'application/json'
+      }),
+      body: JSON.stringify({title})
+    })
+    .then(async res => await res.json() as Post)
+  })
+}
+

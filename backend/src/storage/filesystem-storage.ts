@@ -2,12 +2,14 @@ import * as path from 'path'
 import { Post } from "../../../interface/Model"
 import Storage from "./storage"
 import * as fs from "fs"
+import { parse, stringify} from '@supercharge/json'
 
 
 interface FileOperations {
     mkdir(dirpath: string): Promise<void>
     list(dir: string): Promise<Array<string>>
     write(file: string, data: string | NodeJS.ArrayBufferView): Promise<void>
+    read(file: string): Promise<string>
 }
 class LocalFsOperations implements FileOperations {
 
@@ -45,6 +47,18 @@ class LocalFsOperations implements FileOperations {
             })
         })
     }
+
+    read(file: string): Promise<string> {
+        return new Promise((resolve, reject) => {
+            fs.readFile(file, (err, data) => {
+                if (err != null) {
+                    reject(err)
+                } else {
+                    resolve(data.toString())
+                }
+            })
+        })
+    }
 }
 
 export default class FilesystemStorage implements Storage {
@@ -59,31 +73,43 @@ export default class FilesystemStorage implements Storage {
         this.postStorageLocation = path.join(storageLocation, 'post')
         this.fsBackend.mkdir(this.postStorageLocation)
     }
+    
     async ListPosts(): Promise<Post[]> {
-        return this.fsBackend.list(this.postStorageLocation)
-        .then(postIds => postIds.map(id => {
-            const fsContents = fs.readFileSync(path.join(this.postStorageLocation, id, 'post.json'))
-            return JSON.parse(fsContents.toString()) as Post
-        }))
+        return this.doList(this.postStorageLocation)
     }
-    async GetPost(id: string): Promise<Post | undefined> {
-        return undefined
+    async ListDrafts(): Promise<Post[]> {
+        return this.doList(this.draftStorageLocation)
+    }
+    async doList(storageLocation: string): Promise<Post[]> {
+        return this.fsBackend.list(storageLocation)
+        .then(ids => {
+            const posts: Array<Post> = []
+            const postPromises: Array<Promise<Post>> = ids.map(async (id, index) =>
+                this.fsBackend.read(path.join(this.postStorageLocation, id, 'post.json'))
+                .then(data => posts[index] = parse(data) as Post)
+            )
+            Promise.all(postPromises)
+            return posts
+        })
     }
 
-    async ListDrafts(): Promise<Post[]> {
-        return this.fsBackend.list(this.draftStorageLocation)
-        .then(postIds => postIds.map(id => {
-            const fsContents = fs.readFileSync(path.join(this.postStorageLocation, id, 'draft.json'))
-            return JSON.parse(fsContents.toString()) as Post
-        }))
+    async GetPost(id: string): Promise<Post | undefined> {
+        return this.doGet(this.postStorageLocation, id)
     }
     async GetDraft(id: string): Promise<Post | undefined> {
-        return undefined
+        return this.doGet(this.draftStorageLocation, id)
     }
+    async doGet(storageLocation: string, id: string): Promise<Post | undefined> {
+        return this.fsBackend.read(path.join(storageLocation, id, 'post.json'))
+                .then(data => parse(data) as Post)
+    }
+
+
+
     async SaveDraft(id: string, draft: Post): Promise<void> {
-        const draftPath = path.join(this.draftStorageLocation, 'id')
+        const draftPath = path.join(this.draftStorageLocation, id)
         return this.fsBackend.mkdir(draftPath).then(() => {
-            this.fsBackend.write(path.join(draftPath, 'draft.json'), JSON.stringify(draft))
+            this.fsBackend.write(path.join(draftPath, 'draft.json'), stringify(draft))
         })
     }
 

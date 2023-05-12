@@ -26,7 +26,16 @@ const server = http.createServer((req, res) => {
         res.writeHead(204) // 204 NO CONTENT
         res.end()
     } else {
-        router.route(method, req.url || "", req.read())
+
+        // have to stream out the post data
+        let body: string = ''
+        if (method === 'POST') {
+            req.on('data', data => {
+                body = body + data.toString()
+            })
+        }
+
+        router.route(method, req.url || "", body)
         .then((value: any) => {
             addCorsHeaders()
             if (value === undefined) {

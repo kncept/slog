@@ -1,19 +1,17 @@
 import React from 'react'
-import './ButtonLink.css'
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
+import SimpleButton from './SimpleButton'
 
 type Props = {
-    children?: React.ReactNode
-    to?: string,
+    text: string
+    to: string,
     disabled?: boolean,
 }
 
 
-const ButtonLink: React.FC<Props> = ({children, to, disabled}) => {
-    if (disabled) {
-        return <span className='ButtonLink'>{children}</span>
-    }
-    return <Link to={to || ''} aria-disabled={true} className='ButtonLink'>{children}</Link>
+const ButtonLink: React.FC<Props> = ({text, to, disabled}) => {
+    const navigate = useNavigate()
+    return <SimpleButton disabled={disabled} text={text} onClick={() => {navigate(to)}}/>
 }
 
 export default ButtonLink
