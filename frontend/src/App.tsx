@@ -9,6 +9,7 @@ import PostScroller from './screens/PostScroller'
 import { providers } from './components/LoginBox'
 import Privacy from './screens/Privacy'
 import DraftList from './screens/DraftList'
+import DraftEdit from './screens/DraftEdit'
 
 // eslint-disable-next-line
 declare namespace NodeJS {
@@ -31,6 +32,11 @@ const router = createBrowserRouter([
         path: 'drafts',
         element: <DraftList />
       },
+      {
+        path: 'drafts/:id',
+        element: <DraftEdit />
+      },
+      
       {
         path: "posts/:id",
         element: <ViewPost />

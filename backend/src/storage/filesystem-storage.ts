@@ -81,16 +81,18 @@ export default class FilesystemStorage implements Storage {
         return this.doList(this.draftStorageLocation)
     }
     async doList(storageLocation: string): Promise<Post[]> {
-        return this.fsBackend.list(storageLocation)
-        .then(ids => {
+        return new Promise(async (resolve, reject) => {
             const posts: Array<Post> = []
-            const postPromises: Array<Promise<Post>> = ids.map(async (id, index) =>
-                this.fsBackend.read(path.join(this.postStorageLocation, id, 'post.json'))
-                .then(data => posts[index] = parse(data) as Post)
-            )
-            Promise.all(postPromises)
-            return posts
+            const postPromises = await this.fsBackend.list(storageLocation)
+            .then(ids => {
+                return ids.map((id, index) =>
+                    this.doGet(storageLocation, id)
+                    .then(data => posts[index] = data as Post)
+                )
+            })
+            Promise.all(postPromises).then(() => resolve(posts))
         })
+
     }
 
     async GetPost(id: string): Promise<Post | undefined> {
@@ -105,11 +107,10 @@ export default class FilesystemStorage implements Storage {
     }
 
 
-
     async SaveDraft(id: string, draft: Post): Promise<void> {
         const draftPath = path.join(this.draftStorageLocation, id)
         return this.fsBackend.mkdir(draftPath).then(() => {
-            this.fsBackend.write(path.join(draftPath, 'draft.json'), stringify(draft))
+            this.fsBackend.write(path.join(draftPath, 'post.json'), stringify(draft))
         })
     }
 

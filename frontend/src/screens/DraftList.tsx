@@ -39,16 +39,20 @@ const DraftList: React.FC = () => {
     </div>
   }
 
+  console.log(drafts)
+
   return <div>
       {drafts.map((draft, index) => {return <div key={index}>
-        <ButtonLink to={`/drafts/${draft.id}`} text='Edit' />{draft.title}
+        <form className='NewDraft'>
+        <ButtonLink to={`/drafts/${draft.id}`} text='Edit Draft' />{draft.title}
+        </form>
       </div>})}
       {drafts.length === 0 && <div>
         No Drafts yet
       </div>}
       {drafts.length < 5 && <div>
         <form className='NewDraft' onChange={setFormData}>
-        <SimpleButton text="Create Draft New" onClick={() => createNew(formData.title)}/>
+        <SimpleButton text="Draft New" onClick={() => createNew(formData.title)}/>
           <input name='title'/>
         </form>
         

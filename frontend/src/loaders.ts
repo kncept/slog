@@ -53,7 +53,7 @@ export const ListDrafts: () => Promise<Array<Post>> = () => {
 
 export const GetDraft: (id: string) => Promise<Post> = (id) => {
   return cache.lookup('draft:' + id, async (): Promise<Post> => {
-    return fetch(apiBase + '/draft/', {
+    return fetch(apiBase + '/draft/' + id, {
       method: 'GET',
       headers: new Headers({
         'Accept': 'application/json'

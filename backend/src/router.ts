@@ -12,9 +12,7 @@ export default class Router {
     }
 
     async route(method: string, path: string, requestBody: string): Promise<any> {
-        console.log('method', method)
-        console.log('path', path)
-        console.log('requestBody', requestBody)
+        console.log('router', {method, path, requestBody})
 
         if (path === null || path == undefined || path === "") {
             throw new Error("No path defined: " + path)
@@ -49,6 +47,7 @@ export default class Router {
             .then(async drafts => {
                 if (drafts.length < 5) {
                     const data = parse(requestBody)
+                    console.log('parsing' + requestBody + ' to', data)
                     const now = luxon.DateTime.now().toISO() || ''
                     const draftPost: Post = {
                         content: [],
@@ -69,7 +68,7 @@ export default class Router {
         if (method === 'GET' && path.startsWith("draft/")) {
             const id = path.substring(6)
             if (id === '') {
-                return this.storage.ListDrafts()   
+                return this.storage.ListDrafts()
             } else {
                 return this.storage.GetDraft(id)
             }

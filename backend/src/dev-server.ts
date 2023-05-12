@@ -1,10 +1,9 @@
 import * as http from 'http'
 import Router from './router'
-import path = require('path')
 import FilesystemStorage from './storage/filesystem-storage'
+import * as path from 'path'
 
 const router: Router = new Router(new FilesystemStorage(path.join(__dirname, '..', '..', '.data')))
-
 
 const server = http.createServer((req, res) => {
 
@@ -25,39 +24,44 @@ const server = http.createServer((req, res) => {
         addCorsHeaders()
         res.writeHead(204) // 204 NO CONTENT
         res.end()
-    } else {
-
-        // have to stream out the post data
+    } else if (method === 'POST') {
+        // have to stream out the post data ...
         let body: string = ''
-        if (method === 'POST') {
-            req.on('data', data => {
-                body = body + data.toString()
-            })
-        }
-
-        router.route(method, req.url || "", body)
-        .then((value: any) => {
-            addCorsHeaders()
-            if (value === undefined) {
-                res.writeHead(404)
-            } else {
-                res.writeHead(200)
-                if (value != null) {
-                    res.write(JSON.stringify(value))
-                }
-            }
-            res.end()
+        req.on('data', data => {
+            body = body + data.toString()
         })
-        .catch((err: Error) => {
-            console.log(err)
-            res.writeHead(500)
-            if (err != null && err != undefined && err.message) {
-                res.write(err.message)
-            }
-            res.end()
+        req.on('end', async() => {
+            respond(method, req.url || '', body, res, addCorsHeaders)
         })
+    } else if (method === 'GET') {
+        respond(method, req.url || '', '', res, addCorsHeaders)
     }
 })
+
+function respond(method: string, path: string, requestBody: string, res: http.ServerResponse<http.IncomingMessage>, addCorsHeaders: () => void) {
+    router.route(method, path, requestBody)
+    .then((value: any) => {
+        addCorsHeaders()
+        if (value === undefined) {
+            res.writeHead(404)
+        } else {
+            res.writeHead(200)
+            if (value != null) {
+                res.write(JSON.stringify(value))
+            }
+        }
+        res.end()
+    })
+    .catch((err: Error) => {
+        console.log(err)
+        res.writeHead(500)
+        if (err != null && err != undefined && err.message) {
+            res.write(err.message)
+        }
+        res.end()
+    })
+}
+
 server.listen(8080, "localhost", () => {
     console.log("dev backend is running")
 })

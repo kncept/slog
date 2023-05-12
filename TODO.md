@@ -1,17 +1,14 @@
 
 * github Actions
 
-
-* Add a pluggable persistence layer, so that in memory stuff works
-  Also postgres - pluggable into dev and auto-plugged (if not manually configured) into prod
-
 * work out login/sso/oauth/oidc details.
 ==> provider setup links
  - none - need to handle no login nicely ()
  - google - https://developers.google.com/identity/openid-connect/openid-connect
  - github - https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app
 
-* online 'new post'
+* Draft Post to include a 'markdown' editor.
+  possibly change model to 'markdown' and 'media references' - need a nice way to embed images that _works_... hmm...
   including a 'media upload' (pics, etc)
 
 * versioning, so that initial dev and further 
