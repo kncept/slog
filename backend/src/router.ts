@@ -74,6 +74,15 @@ export default class Router {
             }
         }
 
+        // if (method === 'POST' && path.startsWith("draft/")) {
+        //     const id = path.substring(6)
+        //     if (id === '') {
+        //         return this.storage.ListDrafts()
+        //     } else {
+        //         return this.storage.GetDraft(id)
+        //     }
+        // }
+
         return undefined
     }
 }

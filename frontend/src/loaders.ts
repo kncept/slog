@@ -70,7 +70,20 @@ export const CreateDraft: (title: string) => Promise<Post> = (title) => {
       headers: new Headers({
         'Accept': 'application/json'
       }),
-      body: JSON.stringify({title})
+      body: JSON.stringify({title}),
+    })
+    .then(async res => await res.json() as Post)
+  })
+}
+
+export const SaveDraft: (post: Post) => Promise<Post> = (post) => {
+  return cache.lookup('draft:' + post.id, async (): Promise<Post> => {
+    return fetch(apiBase + '/draft/' + post.id, {
+      method: 'POST',
+      headers: new Headers({
+        'Accept': 'application/json'
+      }),
+      body: JSON.stringify(post),
     })
     .then(async res => await res.json() as Post)
   })
