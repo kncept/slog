@@ -6,5 +6,6 @@ export default interface Storage {
 
     ListDrafts(): Promise<Array<Post>>
     GetDraft(id: string): Promise<Post | undefined>
-    SaveDraft(id: string, draft: Post): Promise<void>
+    CreateDraft(draft: Post): Promise<void>
+    UpdateDraft(draft: Post): Promise<void>
 }

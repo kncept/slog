@@ -1,9 +1,8 @@
-import React, { useEffect, useReducer, useState } from 'react'
-import { Identified, Post } from '../../../interface/Model'
-import { CreateDraft, GetDraft, ListDrafts } from '../loaders'
-import ButtonLink from '../components/ButtonLink'
+import React, { useEffect, useState } from 'react'
+import { Post } from '../../../interface/Model'
+import { CreateDraft, GetDraft, SaveDraft, } from '../loaders'
 import SimpleButton from '../components/SimpleButton'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import './DraftList.css'
 import MarkdownEditor, { MarkdownMode } from '../components/MarkdownEditor'
 
@@ -13,7 +12,6 @@ const DraftEdit: React.FC = () => {
   const { id } = useParams()
   const [draft, setDraft] = useState<Post>()
   const [markdown, setMarkdown] = useState<string>('')
-  const navigate = useNavigate()
 
   useEffect(() => {
     if (draft === undefined) {
@@ -29,7 +27,8 @@ const DraftEdit: React.FC = () => {
   }
 
   const save = () => {
-    
+    const updated = {...draft}
+    SaveDraft(updated).then(() => setDraft(updated as Post))
   }
 
   return <div>

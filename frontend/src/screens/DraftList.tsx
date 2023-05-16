@@ -39,8 +39,6 @@ const DraftList: React.FC = () => {
     </div>
   }
 
-  console.log(drafts)
-
   return <div>
       {drafts.map((draft, index) => {return <div key={index}>
         <form className='NewDraft'>

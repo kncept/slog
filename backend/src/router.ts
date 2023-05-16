@@ -3,7 +3,8 @@ import { Post } from '../../interface/Model'
 import * as luxon from 'luxon'
 import Storage from './storage/storage'
 import { randomUUID } from 'crypto'
-import { parse } from '@supercharge/json'
+import { parse, stringify} from '@supercharge/json'
+import PathExtractor from './path-extractor'
 
 export default class Router {
     storage: Storage
@@ -18,17 +19,15 @@ export default class Router {
             throw new Error("No path defined: " + path)
         }
         
-        // slice leading slash if present
-        if (path.startsWith("/")) {
-            path = path.substring(1)
-        }
-
-        if (method === 'GET' && path.startsWith("post/")) {
-            let id = path.substring(5)
-            if (id === '') {
-                return this.storage.ListPosts()
-            } else {
+        let extractor = new PathExtractor(path)
+        
+        if (method === 'GET' && extractor.current() === 'post') {
+            if (extractor.hasMorePath()) {
+                extractor = extractor.next()
+                const id = extractor.current()
                 return this.storage.GetPost(id)
+            } else {
+                return this.storage.ListPosts()
             }
 
             // const post: Post = {
@@ -42,7 +41,7 @@ export default class Router {
             // return post
         }
 
-        if (method === 'POST' && path.startsWith('create-draft')) {
+        if (method === 'POST' && extractor.current() === 'create-draft') {
             return this.storage.ListDrafts()
             .then(async drafts => {
                 if (drafts.length < 5) {
@@ -57,7 +56,7 @@ export default class Router {
                         title: data.title,
                         id: randomUUID(),
                     }
-                    await this.storage.SaveDraft(draftPost.id, draftPost)
+                    await this.storage.CreateDraft(draftPost)
                     return draftPost
                 } else {
                     throw new Error('Maximum number of drafts reached')
@@ -65,23 +64,22 @@ export default class Router {
             })
         }
 
-        if (method === 'GET' && path.startsWith("draft/")) {
-            const id = path.substring(6)
-            if (id === '') {
-                return this.storage.ListDrafts()
-            } else {
+        if (method === 'GET' && extractor.current() === 'draft') {
+            if (extractor.hasMorePath()) {
+                extractor = extractor.next()
+                const id = extractor.current()
                 return this.storage.GetDraft(id)
+            } else {
+                return this.storage.ListDrafts().then(posts => posts.sort((a, b) => {
+                    return luxon.DateTime.fromISO(a.created).toMillis() - luxon.DateTime.fromISO(b.created).toMillis()
+                }))
             }
         }
 
-        // if (method === 'POST' && path.startsWith("draft/")) {
-        //     const id = path.substring(6)
-        //     if (id === '') {
-        //         return this.storage.ListDrafts()
-        //     } else {
-        //         return this.storage.GetDraft(id)
-        //     }
-        // }
+        if (method === 'POST' && extractor.current() === 'draft') {
+            const post = parse(requestBody) as Post
+            this.storage.UpdateDraft(post)
+        }
 
         return undefined
     }

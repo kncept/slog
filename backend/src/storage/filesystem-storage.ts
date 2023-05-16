@@ -107,10 +107,16 @@ export default class FilesystemStorage implements Storage {
     }
 
 
-    async SaveDraft(id: string, draft: Post): Promise<void> {
-        const draftPath = path.join(this.draftStorageLocation, id)
+    async CreateDraft(draft: Post): Promise<void> {
+        const draftPath = path.join(this.draftStorageLocation, draft.id)
         return this.fsBackend.mkdir(draftPath).then(() => {
             this.fsBackend.write(path.join(draftPath, 'post.json'), stringify(draft))
+        })
+    }
+    async UpdateDraft(post: Post): Promise<void> {
+        const postPath = path.join(this.draftStorageLocation, post.id)
+        return this.fsBackend.mkdir(postPath).then(() => {
+            this.fsBackend.write(path.join(postPath, 'post.json'), stringify(post))
         })
     }
 
