@@ -13,18 +13,14 @@ export interface Contributor extends Identified {
 
 export interface Post extends Identified {
     title: string
-    created: string // luxon ?
-    updated: string
-    content: Array<PostPart>
+    postedMs: string // luxon ?
+    updatedMs: string
+    markdown: string // markdown content
     contributors: Array<Contributor>
 }
 
-export enum PostContentType {
-    Markdown = "MD",
-    Image = "Img",
-}
-
-export interface PostPart {
-    type: PostContentType
-    content: string
+export interface PostMetadata extends Identified {
+    createdDate: string // yyyymmdd
+    title: string
+    attachments: Array<string>
 }

@@ -12,7 +12,6 @@ interface FileOperations {
     read(file: string): Promise<string>
 }
 class LocalFsOperations implements FileOperations {
-
     mkdir(dirpath: string): Promise<void> {
         return new Promise((resolve, reject) => {
             fs.mkdir(dirpath, {recursive: true}, (err, _) => {
@@ -24,7 +23,6 @@ class LocalFsOperations implements FileOperations {
             })
         })
     }
-
     list(dir: string): Promise<string[]> {
         return new Promise((resolve, reject) => {
             fs.readdir(dir, (err, files) => {
@@ -35,7 +33,6 @@ class LocalFsOperations implements FileOperations {
             })
         })
     }
-
     write(file: string, data: string | NodeJS.ArrayBufferView): Promise<void> {
         return new Promise((resolve, reject) => {
             fs.writeFile(file, data, err => {
@@ -47,7 +44,6 @@ class LocalFsOperations implements FileOperations {
             })
         })
     }
-
     read(file: string): Promise<string> {
         return new Promise((resolve, reject) => {
             fs.readFile(file, (err, data) => {
@@ -118,6 +114,10 @@ export default class FilesystemStorage implements Storage {
         return this.fsBackend.mkdir(postPath).then(() => {
             this.fsBackend.write(path.join(postPath, 'post.json'), stringify(post))
         })
+    }
+    async AddDraftMedia(id: string, filename: string, data: Buffer): Promise<void> {
+        const postPath = path.join(this.draftStorageLocation, id)
+        return this.fsBackend.write(path.join(postPath, filename), data)
     }
 
 }

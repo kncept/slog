@@ -5,6 +5,7 @@ import Storage from './storage/storage'
 import { randomUUID } from 'crypto'
 import { parse, stringify} from '@supercharge/json'
 import PathExtractor from './path-extractor'
+import { writeFileSync } from 'fs'
 
 export default class Router {
     storage: Storage
@@ -12,9 +13,7 @@ export default class Router {
         this.storage = storage
     }
 
-    async route(method: string, path: string, requestBody: string): Promise<any> {
-        console.log('router', {method, path, requestBody})
-
+    async route(method: string, path: string, headers: Record<string, string>, requestBody: Buffer | undefined): Promise<any> {
         if (path === null || path == undefined || path === "") {
             throw new Error("No path defined: " + path)
         }
@@ -45,7 +44,7 @@ export default class Router {
             return this.storage.ListDrafts()
             .then(async drafts => {
                 if (drafts.length < 5) {
-                    const data = parse(requestBody)
+                    const data = parse(requestBody!.toString()) // TODO: content-type this
                     console.log('parsing' + requestBody + ' to', data)
                     const now = luxon.DateTime.now().toISO() || ''
                     const draftPost: Post = {
@@ -72,15 +71,47 @@ export default class Router {
             } else {
                 return this.storage.ListDrafts().then(posts => posts.sort((a, b) => {
                     return luxon.DateTime.fromISO(a.created).toMillis() - luxon.DateTime.fromISO(b.created).toMillis()
-                }))
+                })) 
             }
         }
 
         if (method === 'POST' && extractor.current() === 'draft') {
-            const post = parse(requestBody) as Post
+            const post = parse(requestBody!.toString()) as Post
             this.storage.UpdateDraft(post)
         }
 
+        // well, this is bulky. need to fix this 
+        if (method === 'POST' && extractor.current() === 'image') {
+            if (extractor.hasMorePath()) {
+                extractor = extractor.next()
+                if (extractor.current() === "post" || extractor.current() === "draft") {
+                    const type = extractor.current()
+                    if (extractor.hasMorePath()) {
+                        extractor = extractor.next()
+                        const id = extractor.current()
+
+                        const cdHeader = extractHeader(headers, 'content-disposition') || ''
+                        console.log('write image: ', {type, id, cdHeader})
+                        if (cdHeader.startsWith('file; filename=')) {
+                            const filename = cdHeader.substring(15)
+                            this.storage.AddDraftMedia(id, filename, requestBody!)
+                            // await writeFileSync('/workspaces/super-simple-blog/.data/' + id + '__' + filename, requestBody!)
+                            return true
+                        }
+                    }
+                }
+            }
+        }
         return undefined
     }
+}
+
+function extractHeader(headers: Record<string, string>, headerName: string) : string | undefined{
+    let value: string | undefined
+    Object.keys(headers).forEach (key => {
+        if (key.toLowerCase() === headerName.toLowerCase()) {
+            value = headers[key]
+        }
+    })
+    return value
 }

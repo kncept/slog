@@ -26,20 +26,35 @@ const server = http.createServer((req, res) => {
         res.end()
     } else if (method === 'POST') {
         // have to stream out the post data ...
-        let body: string = ''
+        let body = Buffer.from([])
+        // let body: string = ''
         req.on('data', data => {
-            body = body + data.toString()
+            body = Buffer.concat([body, data])
+            // body = body + data.toString()
         })
         req.on('end', async() => {
-            respond(method, req.url || '', body, res, addCorsHeaders)
+            respond(method, req.url || '', flattenHeaders(req.headers), body, res, addCorsHeaders)
         })
     } else if (method === 'GET') {
-        respond(method, req.url || '', '', res, addCorsHeaders)
+        respond(method, req.url || '', flattenHeaders(req.headers), undefined, res, addCorsHeaders)
     }
 })
 
-function respond(method: string, path: string, requestBody: string, res: http.ServerResponse<http.IncomingMessage>, addCorsHeaders: () => void) {
-    router.route(method, path, requestBody)
+function flattenHeaders(headers: NodeJS.Dict<string | string[]>): Record<string, string> {
+    const flat: Record<string, string> = {}
+    Object.keys(headers).forEach(key => {
+        const value = headers[key]
+        if (Array.isArray(value)) {
+            flat[key] = value[0]
+        } else {
+            flat[key] = value || ''
+        }
+    })
+    return flat
+}
+
+function respond(method: string, path: string, headers: Record<string, string>, requestBody: Buffer | undefined, res: http.ServerResponse<http.IncomingMessage>, addCorsHeaders: () => void) {
+    router.route(method, path, headers, requestBody)
     .then((value: any) => {
         addCorsHeaders()
         if (value === undefined) {

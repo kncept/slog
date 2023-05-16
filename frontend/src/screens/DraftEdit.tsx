@@ -4,7 +4,8 @@ import { CreateDraft, GetDraft, SaveDraft, } from '../loaders'
 import SimpleButton from '../components/SimpleButton'
 import { useParams } from 'react-router-dom'
 import './DraftList.css'
-import MarkdownEditor, { MarkdownMode } from '../components/MarkdownEditor'
+import Markdown, { MarkdownMode } from '../components/Markdown'
+import FileUpload from '../components/FileUpload'
 
 
 
@@ -38,9 +39,11 @@ const DraftEdit: React.FC = () => {
     </form>
     
     Content:
-    <MarkdownEditor mode={MarkdownMode.EDIT} value={markdown} setValue={setMarkdown} />
+    <Markdown postId={draft.id} mode={MarkdownMode.EDIT} value={markdown} setValue={setMarkdown} />
 
-    Need a section to upload media references
+    Need a section to handle upload media references, and list uploaded files that are part of a post.
+    
+    <FileUpload draftId={draft.id}/>
 
     <SimpleButton text='Save' onClick={() => save()} />
 

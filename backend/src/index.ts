@@ -1,7 +1,8 @@
 // I must say, the Lambda V3 API and typescript offering from amazon is horrible
 import Router from './router'
+import FilesystemStorage from './storage/filesystem-storage'
 
-const router = new Router()
+const router = new Router(new FilesystemStorage('.'))
 
 export const handler = async (event: any, context: any): Promise<any> => {
     const allowedOrigins: Array<string> = ['http://localhost:3000', process.env.PUBLIC_URL || ""]
@@ -41,7 +42,7 @@ export const handler = async (event: any, context: any): Promise<any> => {
     }
     
     try {
-        var res = await router.route(event.httpMethod, event.path, body)
+        var res = await router.route(event.httpMethod, event.path, event.headers, undefined)
         return {
             statusCode: "200",
             headers,
