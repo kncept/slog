@@ -67,7 +67,7 @@ export default class Router {
         }
 
         // well, this is bulky. need to fix this 
-        if (method === 'POST' && extractor.current() === 'image') {
+        if (extractor.current() === 'image') {
             if (extractor.hasMorePath()) {
                 extractor = extractor.next()
                 if (extractor.current() === "post" || extractor.current() === "draft") {
@@ -76,14 +76,26 @@ export default class Router {
                         extractor = extractor.next()
                         const id = extractor.current()
 
-                        const cdHeader = extractHeader(headers, 'content-disposition') || ''
-                        console.log('write image: ', {type, id, cdHeader})
-                        if (cdHeader.startsWith('file; filename=')) {
-                            const filename = cdHeader.substring(15)
-                            this.storage.DraftStorage().AddMedia(id, filename, requestBody!)
-                            // await writeFileSync('/workspaces/super-simple-blog/.data/' + id + '__' + filename, requestBody!)
-                            return true
+
+                        if(method === 'POST' && type == 'draft') {
+                            const cdHeader = extractHeader(headers, 'content-disposition') || ''
+                            console.log('write image: ', {type, id, cdHeader})
+                            if (cdHeader.startsWith('file; filename=')) {
+                                const filename = cdHeader.substring(15)
+                                this.storage.DraftStorage().AddMedia(id, filename, requestBody!)
+                                // await writeFileSync('/workspaces/super-simple-blog/.data/' + id + '__' + filename, requestBody!)
+                                return true
+                            }
+                        } else if (method === 'GET') {
+                            if (extractor.hasMorePath()) {
+                                extractor = extractor.next()
+                                const filename = extractor.current()
+                                // gotta set response headers. sigh
+                                if (type === 'post') return this.storage.PostStorage().GetMedia(id, filename)
+                                if (type === 'draft') return this.storage.DraftStorage().GetMedia(id, filename)
+                            }
                         }
+                        
                     }
                 }
             }
