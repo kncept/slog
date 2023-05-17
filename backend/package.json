@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@supercharge/json": "^2.0.0",
+    "ksuid": "^3.0.0",
     "luxon": "^3.3.0"
   }
 }

@@ -1,5 +1,5 @@
 import fetchPonyfill from 'fetch-ponyfill'
-import { Post } from '../../interface/Model';
+import { Post, PostMetadata } from '../../interface/Model';
 const {fetch, Headers} = fetchPonyfill({});
 
 let apiBase = process.env.REACT_APP_API_ENDPOINT || ""
@@ -38,7 +38,7 @@ export const GetPost: (id: string) => Promise<Post> = (id) => {
     })
 }
 
-export const ListDrafts: () => Promise<Array<Post>> = () => {
+export const ListDrafts: () => Promise<Array<PostMetadata>> = () => {
   return cache.lookup('drafts', async (): Promise<Array<Post>> => {
     return fetch(apiBase + '/draft/', {
       method: 'GET',

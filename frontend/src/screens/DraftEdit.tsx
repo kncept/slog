@@ -12,11 +12,10 @@ import FileUpload from '../components/FileUpload'
 const DraftEdit: React.FC = () => {
   const { id } = useParams()
   const [draft, setDraft] = useState<Post>()
-  const [markdown, setMarkdown] = useState<string>('')
 
   useEffect(() => {
     if (draft === undefined) {
-      GetDraft(id || '').then(draft => {setDraft(draft); setMarkdown('post.value??')})
+      GetDraft(id || '').then(setDraft)
     }
   },
   [id, draft])
@@ -25,6 +24,10 @@ const DraftEdit: React.FC = () => {
     return <div key='loading'>
       Draft Posts Loading
     </div>
+  }
+
+  const setMarkdown = (markdown: string) => {
+    setDraft({...draft, markdown})
   }
 
   const save = () => {
@@ -39,7 +42,7 @@ const DraftEdit: React.FC = () => {
     </form>
     
     Content:
-    <Markdown postId={draft.id} mode={MarkdownMode.EDIT} value={markdown} setValue={setMarkdown} />
+    <Markdown postId={draft.id} mode={MarkdownMode.EDIT} value={draft.markdown} setValue={setMarkdown} />
 
     Need a section to handle upload media references, and list uploaded files that are part of a post.
     

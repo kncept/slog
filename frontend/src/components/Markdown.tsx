@@ -48,7 +48,7 @@ const Markdown: React.FC<Props> = ({postId, value, setValue, mode}) => {
             autofocus: true,
             spellChecker: false,
         } // as SimpleMDE.Options;
-      }, [])
+      }, [imageBase])
 
     if (useSimpleMde && mode === MarkdownMode.EDIT) return <CatchErr>
         <SimpleMdeReact 

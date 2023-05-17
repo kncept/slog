@@ -1,11 +1,10 @@
 // I must say, the Lambda V3 API and typescript offering from amazon is horrible
-import { Post } from '../../interface/Model'
+import { Post, PostMetadata } from '../../interface/Model'
 import * as luxon from 'luxon'
 import Storage from './storage/storage'
-import { randomUUID } from 'crypto'
 import { parse, stringify} from '@supercharge/json'
 import PathExtractor from './path-extractor'
-import { writeFileSync } from 'fs'
+import KSUID from 'ksuid'
 
 export default class Router {
     storage: Storage
@@ -24,39 +23,27 @@ export default class Router {
             if (extractor.hasMorePath()) {
                 extractor = extractor.next()
                 const id = extractor.current()
-                return this.storage.GetPost(id)
+                return this.storage.PostStorage().GetPost(id)
             } else {
-                return this.storage.ListPosts()
+                return this.storage.PostStorage().ListPosts().then(sortPosts)
             }
-
-            // const post: Post = {
-            //     id,
-            //     title: "Title " + Math.random(),
-            //     contributors: [],
-            //     content: [],
-            //     created: DateTime.now().toISO() || "",
-            //     updated: DateTime.now().toISO() || "",
-            // }
-            // return post
         }
 
         if (method === 'POST' && extractor.current() === 'create-draft') {
-            return this.storage.ListDrafts()
+            return this.storage.DraftStorage().ListPosts()
             .then(async drafts => {
                 if (drafts.length < 5) {
                     const data = parse(requestBody!.toString()) // TODO: content-type this
-                    console.log('parsing' + requestBody + ' to', data)
-                    const now = luxon.DateTime.now().toISO() || ''
-                    const draftPost: Post = {
-                        content: [],
-                        contributors: [], // TODO - need to extract identity somehow
-                        created: now,
-                        updated: now,
+                    const now = luxon.DateTime.now().toMillis()
+                    const postMeta: PostMetadata = {
+                        attachments: [],
+                        contributors: [], // TODO: extract current logged in user
+                        id: KSUID.randomSync().string,
                         title: data.title,
-                        id: randomUUID(),
+                        updatedTs: luxon.DateTime.utc().toMillis(),
                     }
-                    await this.storage.CreateDraft(draftPost)
-                    return draftPost
+                    await this.storage.DraftStorage().Save({...postMeta, markdown: ''})
+                    return postMeta
                 } else {
                     throw new Error('Maximum number of drafts reached')
                 }
@@ -67,17 +54,16 @@ export default class Router {
             if (extractor.hasMorePath()) {
                 extractor = extractor.next()
                 const id = extractor.current()
-                return this.storage.GetDraft(id)
+                return this.storage.DraftStorage().GetPost(id)
             } else {
-                return this.storage.ListDrafts().then(posts => posts.sort((a, b) => {
-                    return luxon.DateTime.fromISO(a.created).toMillis() - luxon.DateTime.fromISO(b.created).toMillis()
-                })) 
+                return this.storage.DraftStorage().ListPosts().then(sortPosts)
             }
         }
 
         if (method === 'POST' && extractor.current() === 'draft') {
             const post = parse(requestBody!.toString()) as Post
-            this.storage.UpdateDraft(post)
+            await this.storage.DraftStorage().Save(post)
+            return true
         }
 
         // well, this is bulky. need to fix this 
@@ -94,7 +80,7 @@ export default class Router {
                         console.log('write image: ', {type, id, cdHeader})
                         if (cdHeader.startsWith('file; filename=')) {
                             const filename = cdHeader.substring(15)
-                            this.storage.AddDraftMedia(id, filename, requestBody!)
+                            this.storage.DraftStorage().AddMedia(id, filename, requestBody!)
                             // await writeFileSync('/workspaces/super-simple-blog/.data/' + id + '__' + filename, requestBody!)
                             return true
                         }
@@ -114,4 +100,14 @@ function extractHeader(headers: Record<string, string>, headerName: string) : st
         }
     })
     return value
+}
+
+function sortPosts(data: Array<PostMetadata>): Array<PostMetadata> {
+    return data.sort((a: PostMetadata, b: PostMetadata) => a.updatedTs - b.updatedTs)
+}
+
+// N.B. this is parsable by the fromSQL
+function formatTodaysDate() {
+    const date = luxon.DateTime.now()
+    return `${date.year}-${date.month}-${date.day}`
 }

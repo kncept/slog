@@ -1,5 +1,5 @@
 import React, { useEffect, useReducer, useState } from 'react'
-import { Post } from '../../../interface/Model'
+import { Post, PostMetadata } from '../../../interface/Model'
 import { CreateDraft, ListDrafts } from '../loaders'
 import ButtonLink from '../components/ButtonLink'
 import SimpleButton from '../components/SimpleButton'
@@ -14,8 +14,8 @@ const formReducer = (state: any, event: React.ChangeEvent<any>) => {
  }
 
 const DraftList: React.FC = () => {
-  const [drafts, setDrafts] = useState<Array<Post> | undefined>()
-  const [formData, setFormData] = useReducer(formReducer, {});
+  const [drafts, setDrafts] = useState<Array<PostMetadata>>()
+  const [formData, setFormData] = useReducer(formReducer, {})
   const navigate = useNavigate()
 
   useEffect(() => {

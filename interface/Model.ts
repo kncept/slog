@@ -11,16 +11,13 @@ export interface Contributor extends Identified {
     email: string | undefined
 }
 
-export interface Post extends Identified {
-    title: string
-    postedMs: string // luxon ?
-    updatedMs: string
-    markdown: string // markdown content
-    contributors: Array<Contributor>
+export interface Post extends PostMetadata {
+    markdown: string
 }
 
 export interface PostMetadata extends Identified {
-    createdDate: string // yyyymmdd
+    updatedTs: number // milliseconds UTC
     title: string
     attachments: Array<string>
+    contributors: Array<Contributor>
 }
