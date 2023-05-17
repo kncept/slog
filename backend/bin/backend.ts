@@ -9,6 +9,10 @@ const projectRootDir = path.join(__dirname, '..', '..')
 const blogName = process.env.BLOG_NAME
 
 const app = new cdk.App()
+
+// deploy the frontend via CDN
+
+
 new BackendStack(app, `${blogName}`, {
   projectRootDir
 });

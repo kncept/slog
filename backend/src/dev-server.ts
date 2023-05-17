@@ -1,9 +1,10 @@
 import * as http from 'http'
 import Router from './router'
-import FilesystemStorage from './storage/filesystem-storage'
 import * as path from 'path'
+import { FilesystemStorage } from './storage/storage'
+import { LocalFsOperations } from './storage/filesystem-storage'
 
-const router: Router = new Router(new FilesystemStorage(path.join(__dirname, '..', '..', '.data')))
+const router: Router = new Router(new FilesystemStorage(path.join(__dirname, '..', '..', '.data'), new LocalFsOperations()))
 
 const server = http.createServer((req, res) => {
 

@@ -1,8 +1,9 @@
 // I must say, the Lambda V3 API and typescript offering from amazon is horrible
 import Router from './router'
-import FilesystemStorage from './storage/filesystem-storage'
+import { S3FsOperations } from './storage/filesystem-storage'
+import { FilesystemStorage } from './storage/storage'
 
-const router = new Router(new FilesystemStorage('.'))
+const router = new Router(new FilesystemStorage('/', new S3FsOperations(process.env.BUCKET_NAME || '')))
 
 export const handler = async (event: any, context: any): Promise<any> => {
     const allowedOrigins: Array<string> = ['http://localhost:3000', process.env.PUBLIC_URL || ""]
