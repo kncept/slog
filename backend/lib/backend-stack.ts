@@ -45,17 +45,16 @@ export class BackendStack extends cdk.Stack {
     })
 
 
-    const s3BucketAcessPoint = vpc.addGatewayEndpoint(`${prefix}-vpc-endpoint`, {
-      service: ec2.GatewayVpcEndpointAwsService.S3,
-    })
-
-    s3BucketAcessPoint.addToPolicy(
-      new iam.PolicyStatement({
-        principals: [new iam.AnyPrincipal()],
-        actions: ['s3:*'],
-        resources: ['*'],
-      }),
-    )
+    // const s3BucketAcessPoint = vpc.addGatewayEndpoint(`${prefix}-vpc-endpoint`, {
+    //   service: ec2.GatewayVpcEndpointAwsService.S3,
+    // })
+    // s3BucketAcessPoint.addToPolicy(
+    //   new iam.PolicyStatement({
+    //     principals: [new iam.AnyPrincipal()],
+    //     actions: ['s3:*'],
+    //     resources: ['*'],
+    //   }),
+    // )
 
     const bucket = new s3.Bucket(this, `${prefix}-bucket`, {
     })

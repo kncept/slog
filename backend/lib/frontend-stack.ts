@@ -47,9 +47,13 @@ export class FrontendStack extends cdk.Stack {
     const bucket = new s3.Bucket(this, `${prefix}-s3`, {
       websiteIndexDocument: 'index.html',
       websiteErrorDocument: 'index.html',
-      publicReadAccess: true,
       removalPolicy: cdk.RemovalPolicy.DESTROY
     })
+
+    const originAccessIdentity = new cloudfront.OriginAccessIdentity(this, `${prefix}-OAI`, {
+      // comment: 'comment',
+    })
+    bucket.grantRead(originAccessIdentity)
 
     const distribution = new cloudfront.CloudFrontWebDistribution(this, `${prefix}-cloudfront`, {
       viewerCertificate: {
@@ -59,8 +63,14 @@ export class FrontendStack extends cdk.Stack {
           sslSupportMethod: 'sni-only',
         },
       },
+      errorConfigurations: [{
+        errorCode: 404,
+        responsePagePath: '/',
+        responseCode: 200,
+      }],
       originConfigs: [{
         s3OriginSource: {
+          originAccessIdentity,
           s3BucketSource: bucket
         },
         behaviors: [{ isDefaultBehavior: true }]

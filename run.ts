@@ -95,7 +95,7 @@ async function build() {
 async function deploy(args: Array<string>) {
     const envName = EnvironmentName.prod
     const cdkDeploy = (stackname: string): Promise<any> => {
-        return exec(envName, 'backend', 'npm',['run', 'cdk', 'deploy', stackname])
+        return exec(envName, 'backend', 'npm',['run', 'cdk', '--', 'deploy', '--output', `cdk.out.${stackname}`, stackname])
     }
 
     // if you pass in args, you better know what you're doing!
@@ -106,7 +106,8 @@ async function deploy(args: Array<string>) {
     }
 
     
-    const frontendBuild = build()
+    const frontendBuild = Promise.resolve()
+    // const frontendBuild = build()
     await exec(envName, 'backend', 'npm', ['i'])
     .then(async() => {
         // if there _is_ no top level hosted zone
