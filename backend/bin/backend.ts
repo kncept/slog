@@ -20,6 +20,7 @@ async function defineStacks() {
     hostedZoneName: extractDomainNameFromUrl()
   })
 
+  // Backend API/Lambda and S3 bucket
   new BackendStack(app, `${stackNameForBackend()}`, {
     projectRootDir,
     blogBaseName: superSimpleBaseBlogName(),
@@ -33,6 +34,7 @@ async function defineStacks() {
     domainName: fullyQualifiedFrontendDomainName(),
   })
   
+  // Cloudfront distribution of static frontend
   new FrontendStack(app, `${stackNameForFrontend()}`, {
     projectRootDir,
     blogBaseName: superSimpleBaseBlogName(),

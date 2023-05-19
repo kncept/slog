@@ -44,27 +44,22 @@ export class BackendStack extends cdk.Stack {
       vpcName: `${props.blogBaseName}-vpc`,
     })
 
-
-    // const s3BucketAcessPoint = vpc.addGatewayEndpoint(`${prefix}-vpc-endpoint`, {
-    //   service: ec2.GatewayVpcEndpointAwsService.S3,
-    // })
-    // s3BucketAcessPoint.addToPolicy(
-    //   new iam.PolicyStatement({
-    //     principals: [new iam.AnyPrincipal()],
-    //     actions: ['s3:*'],
-    //     resources: ['*'],
-    //   }),
-    // )
-
     const bucket = new s3.Bucket(this, `${prefix}-bucket`, {
     })
 
     new cdk.CfnOutput(this, 'BucketName', {
       value: bucket.bucketName,
     })
-    new cdk.CfnOutput(this, 'BucketArn', {
-      value: bucket.bucketArn,
+
+    const role = new iam.Role(this, `${prefix}-role`, {
+      assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
+      managedPolicies: [
+        iam.ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaVPCAccessExecutionRole"),
+        iam.ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaBasicExecutionRole")
+      ],
     })
+
+    bucket.grantReadWrite(role)
 
     const backendLambda = new lambdaNodeJs.NodejsFunction(this, `${prefix}-lambda-fn`, {
       functionName: `${props.blogBaseName}-lambda`,
@@ -82,6 +77,7 @@ export class BackendStack extends cdk.Stack {
         minify: true,
         externalModules: ['aws-sdk'],
       },
+      role,
       vpc
     })
     new cdk.CfnOutput(this, `${prefix}-lambda-arn`, {
@@ -90,13 +86,17 @@ export class BackendStack extends cdk.Stack {
 
     // compress all responses, and convert binary types to BINARY!
     const restApi = new apigateway.LambdaRestApi(this, `${prefix}-api-lambda`, {
-      restApiName: `${prefix}-api`,
+      restApiName: `${props.blogBaseName}-api`,
       handler: backendLambda,
-      description: 'Lambda Access API',
+      description: `${props.blogBaseName} Lambda Access API`,
       minCompressionSize: cdk.Size.bytes(0),
       binaryMediaTypes: [
         '*/*'
       ],
+      integrationOptions: {
+        allowTestInvoke: false,
+      },
+      endpointTypes: [apigateway.EndpointType.REGIONAL],
     })
     const apiDomainNameMountPoint = restApi.addDomainName(`${prefix}-api-domain-name`, {
       domainName: props.domainName,

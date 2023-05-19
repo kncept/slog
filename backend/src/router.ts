@@ -8,15 +8,16 @@ import KSUID from 'ksuid'
 
 export default class Router {
     storage: Storage
+    readyFlag: Promise<any>
     constructor(storage: Storage){
         this.storage = storage
+        this.readyFlag = storage.readyFlag
     }
 
     async route(method: string, path: string, headers: Record<string, string>, requestBody: Buffer | undefined): Promise<any> {
         if (path === null || path == undefined || path === "") {
             throw new Error("No path defined: " + path)
         }
-        
         let extractor = new PathExtractor(path)
         
         if (method === 'GET' && extractor.current() === 'post') {

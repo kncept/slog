@@ -52,7 +52,7 @@ function showHelp() {
     console.log("  Tools:")
     console.log("    build:      Builds the frontend")
     console.log("    deploy-ls:  Lists CDK stack names")
-    console.log("    deploy [x]: Parallel Deploy (only) of all [x] stacks")
+    console.log("    deploy [x]: Parallel Deploy (only) of all [x] stacks (see deploy-ls output)")
 }
 
 async function startDev() {
@@ -105,9 +105,7 @@ async function deploy(args: Array<string>) {
         return
     }
 
-    
-    const frontendBuild = Promise.resolve()
-    // const frontendBuild = build()
+    const frontendBuild = build()
     await exec(envName, 'backend', 'npm', ['i'])
     .then(async() => {
         // if there _is_ no top level hosted zone
