@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "scripts": {
     "test": "jest",
-    "cdk": "dk",
+    "cdk": "cdk",
     "dev": "nodemon --watch \"src/**\" src/dev-server.ts"
   },
   "devDependencies": {
@@ -23,6 +23,7 @@
     "typescript": "~4.9.5"
   },
   "dependencies": {
+    "@aws-sdk/client-route-53": "^3.332.0",
     "@aws-sdk/client-s3": "^3.332.0",
     "@supercharge/json": "^2.0.0",
     "ksuid": "^3.0.0",

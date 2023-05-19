@@ -6,11 +6,18 @@ import { Construct } from 'constructs'
 import * as lambda from 'aws-cdk-lib/aws-lambda'
 import * as lambdaNodeJs from 'aws-cdk-lib/aws-lambda-nodejs'
 import * as logs from 'aws-cdk-lib/aws-logs'
-import * as route53 from 'aws-cdk-lib/aws-route53'
 import * as apigateway from 'aws-cdk-lib/aws-apigateway'
+import { HostedZoneInfo } from '../tools/domain-tools'
+import * as route53 from 'aws-cdk-lib/aws-route53'
+import * as ec2 from 'aws-cdk-lib/aws-ec2'
+import * as iam from 'aws-cdk-lib/aws-iam'
+import * as s3 from 'aws-cdk-lib/aws-s3'
 
-export interface BackendStackProps extends cdk.StackProps {
+export interface BackendStackProps {
   projectRootDir: string
+  blogBaseName: string
+  hostedZone: HostedZoneInfo
+  domainName: string
 }
 
 export class BackendStack extends cdk.Stack {
@@ -19,50 +26,92 @@ export class BackendStack extends cdk.Stack {
     id: string,
     props: BackendStackProps
   ) {
-    super(scope, id, props)
+    super(scope, id, {})
+    const prefix = 'SSB-BE'
 
-    const prefix = 'SSB'
+    const hostedZone = route53.HostedZone.fromHostedZoneAttributes(this, `${prefix}-hostedzone`, {
+      hostedZoneId: props.hostedZone.id,
+      zoneName: props.hostedZone.name,
+    })
+    
 
-    // const zone = new route53.PublicHostedZone(this, `${prefix}-zone`, {
-    //   caaAmazon: true,
-    //   zoneName: 'TEMP'
-    // })
-    // new cdk.CfnOutput(this, 'ZoneArn', {
-    //   value: zone.hostedZoneArn,
-    // })
+    const apiCertificate = new cdk.aws_certificatemanager.Certificate(this, `${prefix}-api-cert`, {
+      domainName: props.domainName,
+      validation: cdk.aws_certificatemanager.CertificateValidation.fromDns(hostedZone)
+    })
 
-    // this is crazy inefficient if you don't locally install esbuild
-    // it downloads a nodejs builder from an aws ecr and runs an esbuild
-    // so install it LOCALLY!!
+    const vpc = new ec2.Vpc(this, `${prefix}-vpc`, {
+      vpcName: `${props.blogBaseName}-vpc`,
+    })
+
+
+    const s3BucketAcessPoint = vpc.addGatewayEndpoint(`${prefix}-vpc-endpoint`, {
+      service: ec2.GatewayVpcEndpointAwsService.S3,
+    })
+
+    s3BucketAcessPoint.addToPolicy(
+      new iam.PolicyStatement({
+        principals: [new iam.AnyPrincipal()],
+        actions: ['s3:*'],
+        resources: ['*'],
+      }),
+    )
+
+    const bucket = new s3.Bucket(this, `${prefix}-bucket`, {
+    })
+
+    new cdk.CfnOutput(this, 'BucketName', {
+      value: bucket.bucketName,
+    })
+    new cdk.CfnOutput(this, 'BucketArn', {
+      value: bucket.bucketArn,
+    })
+
     const backendLambda = new lambdaNodeJs.NodejsFunction(this, `${prefix}-lambda-fn`, {
-      functionName: `${prefix}-lambda`,
+      functionName: `${props.blogBaseName}-lambda`,
       handler: 'handler',
       runtime: lambda.Runtime.NODEJS_18_X,
+      description: `${props.blogBaseName} Lambda`,
       entry: path.join(props.projectRootDir, 'backend', 'src', 'index.ts'),
       environment: {
         PUBLIC_URL: process.env.PUBLIC_URL || '',
         ADMIN_USER: process.env.ADMIN_USER || '',
+        S3_BUCKET_NAME: bucket.bucketName
       },
       logRetention: logs.RetentionDays.ONE_MONTH,
       bundling: {
         minify: true,
         externalModules: ['aws-sdk'],
       },
+      vpc
+    })
+    new cdk.CfnOutput(this, `${prefix}-lambda-arn`, {
+      value: backendLambda.functionArn,
     })
 
     // compress all responses, and convert binary types to BINARY!
-    const restApi = new apigateway.LambdaRestApi(this, `${prefix}-rest-api`, {
+    const restApi = new apigateway.LambdaRestApi(this, `${prefix}-api-lambda`, {
       restApiName: `${prefix}-api`,
       handler: backendLambda,
-      description: 'Lambda Acccess API',
-      minimumCompressionSize: 0,
+      description: 'Lambda Access API',
+      minCompressionSize: cdk.Size.bytes(0),
       binaryMediaTypes: [
         '*/*'
       ],
     })
+    const apiDomainNameMountPoint = restApi.addDomainName(`${prefix}-api-domain-name`, {
+      domainName: props.domainName,
+      certificate: apiCertificate,
+    })
 
     new cdk.CfnOutput(this, 'RestApiUrl', {
       value: restApi.url,
+    })
+
+    new route53.CnameRecord(this, `${prefix}-dns-entry`, {
+      zone: hostedZone,
+      recordName: props.domainName.substring(0, props.domainName.length - (props.hostedZone.name.length + 1)),
+      domainName: apiDomainNameMountPoint!.domainNameAliasDomainName,
     })
   }
 }

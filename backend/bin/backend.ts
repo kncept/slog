@@ -3,16 +3,45 @@ import 'source-map-support/register'
 import * as cdk from 'aws-cdk-lib'
 import { BackendStack } from '../lib/backend-stack'
 import * as path from 'path'
-
+import { stackNameForBackend, stackNameForFrontend, stackNameForFrontendCertificate, stackNameForHostedZone, superSimpleBaseBlogName } from '../tools/name-tools'
+import { matchHostedZoneToDomainUrl, extractDomainNameFromUrl, fullyQualifiedApiDomainName, fullyQualifiedFrontendDomainName } from '../tools/domain-tools'
+import { HostedZoneStack } from '../lib/hosted-zone-stack'
+import { FrontendStack } from '../lib/frontend-stack'
+import { FrontendCertificateStack } from '../lib/frontend-certificate-stack'
 
 const projectRootDir = path.join(__dirname, '..', '..')
-const blogName = process.env.BLOG_NAME
 
-const app = new cdk.App()
+async function defineStacks() {
+  const app = new cdk.App()
 
-// deploy the frontend via CDN
+  const hostedZone = await matchHostedZoneToDomainUrl()
+  
+  new HostedZoneStack(app, `${stackNameForHostedZone()}`, {
+    hostedZoneName: extractDomainNameFromUrl()
+  })
 
+  new BackendStack(app, `${stackNameForBackend()}`, {
+    projectRootDir,
+    blogBaseName: superSimpleBaseBlogName(),
+    hostedZone: hostedZone!,
+    domainName: fullyQualifiedApiDomainName(),
+  })
 
-new BackendStack(app, `${blogName}`, {
-  projectRootDir
-});
+  // Cloudfront certificates have to be us-east-1, because aws
+  const feCertStack = new FrontendCertificateStack(app, `${stackNameForFrontendCertificate()}`, {
+    hostedZone: hostedZone!,
+    domainName: fullyQualifiedFrontendDomainName(),
+  })
+  
+  new FrontendStack(app, `${stackNameForFrontend()}`, {
+    projectRootDir,
+    blogBaseName: superSimpleBaseBlogName(),
+    hostedZone: hostedZone!,
+    domainName: fullyQualifiedFrontendDomainName(),
+    cert: feCertStack.cert
+  })
+
+}
+
+defineStacks()
+

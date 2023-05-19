@@ -2,12 +2,12 @@ import { AwsAccessKeyProperties, FrontendProperties } from "./orchestration/env-
 
 // add as many property types from orchestration/properties as required
 const properties : AwsAccessKeyProperties & FrontendProperties = {
-    publicUrl: ,
-    reactAppApiEndpoint: ,
+    publicUrl: 'https://',
+    reactAppApiEndpoint: 'https://api.',
 
     awsAccessKeyId: ,
     awsSecretAccessKey: ,
-    awsDefaultRegion: '
+    awsRegion: '
 
 }
 

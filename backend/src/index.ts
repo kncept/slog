@@ -2,10 +2,15 @@
 import Router from './router'
 import { S3FsOperations } from './storage/filesystem-storage'
 import { FilesystemStorage } from './storage/storage'
+import { LambdaProxyResponse } from './types'
 
-const router = new Router(new FilesystemStorage('/', new S3FsOperations(process.env.BUCKET_NAME || '')))
+const router = new Router(new FilesystemStorage('.', new S3FsOperations(process.env.S3_BUCKET_NAME || '')))
 
 export const handler = async (event: any, context: any): Promise<any> => {
+
+  console.log('event', event)
+  // console.log('context', context)
+
     const allowedOrigins: Array<string> = ['http://localhost:3000', process.env.PUBLIC_URL || ""]
 
     if (!allowedOrigins.includes(event.headers.origin)) {
@@ -45,10 +50,11 @@ export const handler = async (event: any, context: any): Promise<any> => {
     try {
         var res = await router.route(event.httpMethod, event.path, event.headers, undefined)
         return {
-            statusCode: "200",
+            isBase64Encoded: false,
+            statusCode: 200,
             headers,
             body: JSON.stringify(res),
-        }
+        } as LambdaProxyResponse
     } catch (err) {
         console.log('err', err)
         return {

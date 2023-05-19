@@ -1,6 +1,6 @@
 import path from 'path'
 import fs from 'fs'
-import {snakeCase, toUpper} from 'lodash'
+import { snakeCase, toUpper } from 'lodash'
 
 export enum EnvironmentName {
     dev = 'dev',
@@ -43,6 +43,12 @@ export default function EnvProperties (environmentName: EnvironmentName) : Recor
             properties[envPropertyName] = unquotedStringify(defaultProperties[key])
         }
     })
+
+    // now some property name hacking (for aws)
+    // if (properties['AWS_REGION']) {
+    //     properties['AWS_DEFAULT_REGION'] = properties['AWS_REGION']
+    // }
+
     return properties
 }
 

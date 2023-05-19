@@ -28,7 +28,7 @@ export interface FrontendProperties {
 export interface AwsAccessKeyProperties {
     awsAccessKeyId: string
     awsSecretAccessKey: string
-    awsDefaultRegion: string
+    awsRegion: string
 }
 
 
