@@ -3,9 +3,9 @@ import { Post, PostMetadata } from '../../interface/Model'
 import * as luxon from 'luxon'
 import Storage from './storage/storage'
 import { parse, stringify} from '@supercharge/json'
-import PathExtractor from './path-extractor'
 import KSUID from 'ksuid'
 import * as mime from 'mime-types'
+import { match } from 'node-match-path'
 
 export interface RouterResponse {
     statusCode: number
@@ -22,38 +22,46 @@ export default class Router {
     }
 
     async route(method: string, path: string, headers: Record<string, string>, requestBody: Buffer | undefined): Promise<RouterResponse> {
-        if (path === null || path == undefined || path === "") {
+        if (path === null || path === undefined || path === "") {
             throw new Error("No path defined: " + path)
         }
-        let extractor = new PathExtractor(path)
-        
-        if (method === 'GET' && extractor.current() === 'post') {
-            if (extractor.hasMorePath()) {
-                extractor = extractor.next()
-                const id = extractor.current()
-                try {
-                    const res = await this.storage.PostStorage().GetPost(id)
-                    return quickResponse(stringify(res))
-                } catch (err) {
-                    return {
-                        statusCode: 404,
-                    }
-                }
-            } else {
-                try {
-                    const res = await this.storage.PostStorage().ListPosts().then(sortPosts)
-                    return quickResponse(stringify(res))
-                } catch (err) {
-                    return {
-                        statusCode: 500,
-                    }
-                }
+
+        let params = match('/post/', path)
+        if (params.matches && method === 'GET') {
+            const res = await this.storage.PostStorage().ListPosts().then(sortPosts)
+            return quickResponse(stringify(res))
+        }
+
+        params = match('/post/:postId', path)
+        if (params.matches && method === 'GET') {
+            const id = params!.params!.postId
+            const res = await this.storage.PostStorage().GetPost(id)
+            return quickResponse(stringify(res))
+        }
+
+        params = match('/draft/', path)
+        if (params.matches && method === 'GET') {
+            const res = await this.storage.DraftStorage().ListPosts().then(sortPosts)
+            return quickResponse(stringify(res))
+        }
+        if (params.matches && method === 'POST') {
+            const post = parse(requestBody!.toString()) as Post
+            await this.storage.DraftStorage().Save(post)
+            return {
+                statusCode: 204, // accepted, 'No Content'
             }
         }
 
-        if (method === 'POST' && extractor.current() === 'create-draft') {
-            try {
-                const res = await this.storage.DraftStorage().ListPosts()
+        params = match('/draft/:postId', path)
+        if (params.matches && method === 'GET') {
+            const id = params!.params!.postId
+            const res = await this.storage.DraftStorage().GetPost(id)
+            return quickResponse(stringify(res))
+        }
+
+        params = match('/create-draft', path)
+        if (params.matches && method == 'POST') {
+            const res = await this.storage.DraftStorage().ListPosts()
                 .then(async drafts => {
                     if (drafts.length < 5) {
                         const data = parse(requestBody!.toString()) // TODO: content-type this
@@ -72,79 +80,30 @@ export default class Router {
                     }
                 })
                 return quickResponse(stringify(res))
-            } catch (err) {
+        }
+
+        params = match('/image/:type/:postId', path)
+        if (params.matches && method === 'POST' && params!.params!.type === 'draft') {
+            const id = params!.params!.postId
+            const cdHeader = extractHeader(headers, 'content-disposition') || ''
+            if (cdHeader.startsWith('file; filename=')) {
+                const filename = cdHeader.substring(15)
+                await this.storage.DraftStorage().AddMedia(id, filename, requestBody!)
                 return {
-                    statusCode: 500,
+                    statusCode: 204, // accepted, 'No Content'
                 }
             }
         }
 
-        if (method === 'GET' && extractor.current() === 'draft') {
-            if (extractor.hasMorePath()) {
-                extractor = extractor.next()
-                const id = extractor.current()
-                try {
-                    const res = await this.storage.DraftStorage().GetPost(id)
-                    return quickResponse(stringify(res))
-                } catch (err) {
-                    return {
-                        statusCode: 404
-                    }
-                }
-
-            } else {
-                try {
-                    const res = await this.storage.DraftStorage().ListPosts().then(sortPosts)
-                    return quickResponse(stringify(res))
-                } catch (err) {
-                    return {
-                        statusCode: 500,
-                    }
-                }
-            }
+        params = match('/image/:type/:postId/:filename', path)
+        if (params.matches && method === 'GET') {
+            const id = params!.params!.postId
+            const type = params!.params!.type
+            const filename = params!.params!.filename
+            if (type === 'post') return bufferResponse(await this.storage.PostStorage().GetMedia(id, filename), filename)
+            if (type === 'draft') return bufferResponse(await this.storage.DraftStorage().GetMedia(id, filename), filename)
         }
 
-        if (method === 'POST' && extractor.current() === 'draft') {
-            const post = parse(requestBody!.toString()) as Post
-            await this.storage.DraftStorage().Save(post)
-            return {
-                statusCode: 204, // accepted, 'No Content'
-            }
-        }
-
-        // well, this is bulky. need to fix this 
-        if (extractor.current() === 'image') {
-            if (extractor.hasMorePath()) {
-                extractor = extractor.next()
-                if (extractor.current() === "post" || extractor.current() === "draft") {
-                    const type = extractor.current()
-                    if (extractor.hasMorePath()) {
-                        extractor = extractor.next()
-                        const id = extractor.current()
-
-                        if(method === 'POST' && type == 'draft') {
-                            const cdHeader = extractHeader(headers, 'content-disposition') || ''
-                            if (cdHeader.startsWith('file; filename=')) {
-                                const filename = cdHeader.substring(15)
-                                await this.storage.DraftStorage().AddMedia(id, filename, requestBody!)
-                                return {
-                                    statusCode: 204, // accepted, 'No Content'
-                                }
-                            }
-                        } else if (method === 'GET') {
-                            if (extractor.hasMorePath()) {
-                                extractor = extractor.next()
-                                const filename = extractor.current()
-                                // gotta set response headers. sigh
-                                if (type === 'post') return bufferResponse(await this.storage.PostStorage().GetMedia(id, filename), filename)
-                                if (type === 'draft') return bufferResponse(await this.storage.DraftStorage().GetMedia(id, filename), filename)
-                            }
-                        }
-                        
-                    }
-                }
-            }
-        }
         return {
             statusCode: 404,
         }
