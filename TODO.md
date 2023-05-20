@@ -19,3 +19,5 @@
   using a $DIRECTIVE; directive, tied to $ANSIBLE_VAULT
 
 * Allow Frontend and Backend to be in different domain names (top level domain name stuff)
+
+* Indicator Display for 'uploaded images' and 'used uploaded media'
