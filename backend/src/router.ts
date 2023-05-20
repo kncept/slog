@@ -143,9 +143,3 @@ function extractHeader(headers: Record<string, string>, headerName: string) : st
 function sortPosts(data: Array<PostMetadata>): Array<PostMetadata> {
     return data.sort((a: PostMetadata, b: PostMetadata) => a.updatedTs - b.updatedTs)
 }
-
-// N.B. this is parsable by the fromSQL
-function formatTodaysDate() {
-    const date = luxon.DateTime.now()
-    return `${date.year}-${date.month}-${date.day}`
-}
