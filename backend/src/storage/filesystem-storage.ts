@@ -74,21 +74,15 @@ export class S3FsOperations implements FileOperations {
     // TODO: listing continuations
     list(dir: string): Promise<string[]> {
         if (!dir.endsWith('/')) dir = dir + '/'
-        console.log('S3 LIST::', dir)
         const input: ListObjectsV2CommandInput = { // ListObjectsV2Request
             Bucket: this.bucketName, // required
             // Delimiter: "/",
-            // EncodingType: "url",
             MaxKeys: 500,
             Prefix: dir,
             // ContinuationToken: "STRING_VALUE",
-            // FetchOwner: true || false,
-            // StartAfter: "STRING_VALUE",
-            // RequestPayer: "requester",
-            // ExpectedBucketOwner: "STRING_VALUE",
           }
         return this.client.send(new ListObjectsV2Command(input))
-        .then(output => {console.log('S3 LIST got::', output); return output})
+        // .then(output => {console.log('S3 LIST ' + dir + ' got:', output); return output})
         .then(output => {
             if (output.KeyCount === 0) return []
             let contents = output.Contents!.map(c => {
@@ -102,30 +96,26 @@ export class S3FsOperations implements FileOperations {
                 // otherwise the listing includes subdirectories... filter them out
                 return ''
             })
-            contents = contents.filter(c => c !== '') // huh - gotta filter out the folder itself
+            contents = contents.filter(c => c !== '') // filter out anything that ends up blank
             return contents
         })
     }
     write(file: string, data: string | NodeJS.ArrayBufferView): Promise<void> {
-        console.log("S3 Write:", file)
         const input: PutObjectCommandInput = {
             "Body": data,
             "Bucket": this.bucketName,
             "Key": file,
           }
           return this.client.send(new PutObjectCommand(input))
-          .then(v => console.log('S3 wrote: ', v))
           .then(() => {})
     }
     async read(file: string): Promise<Buffer> {
-        console.log("S3 read start:", file)
         return new Promise(async (resolve, reject) => {
             const input: GetObjectCommandInput = {
                 Bucket: this.bucketName,
                 Key: file
             }
             const response = await this.client.send(new GetObjectCommand(input))
-            console.log("S3 read resp:", response)
             const buf = await response.Body!.transformToByteArray()
             resolve(Buffer.from(buf))
         })

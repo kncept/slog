@@ -56,16 +56,13 @@ function flattenHeaders(headers: NodeJS.Dict<string | string[]>): Record<string,
 
 function respond(method: string, path: string, headers: Record<string, string>, requestBody: Buffer | undefined, res: http.ServerResponse<http.IncomingMessage>, addCorsHeaders: () => void) {
     router.route(method, path, headers, requestBody)
-    .then((value: any) => {
+    .then((value) => {
         addCorsHeaders()
-        if (value === undefined) {
-            res.writeHead(404)
-        } else {
-            res.writeHead(200)
-            if (value != null) {
-                res.write(JSON.stringify(value))
-            }
+        if(value.headers) {
+            Object.keys(value.headers).forEach(key => res.setHeader(key, value.headers![key]))
         }
+        res.writeHead(value.statusCode)
+        if (value.body) res.write(value.body!)
         res.end()
     })
     .catch((err: Error) => {

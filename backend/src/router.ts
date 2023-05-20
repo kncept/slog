@@ -5,6 +5,13 @@ import Storage from './storage/storage'
 import { parse, stringify} from '@supercharge/json'
 import PathExtractor from './path-extractor'
 import KSUID from 'ksuid'
+import * as mime from 'mime-types'
+
+export interface RouterResponse {
+    statusCode: number
+    headers?: Record<string, string>
+    body?: Buffer | string | undefined
+}
 
 export default class Router {
     storage: Storage
@@ -14,7 +21,7 @@ export default class Router {
         this.readyFlag = storage.readyFlag
     }
 
-    async route(method: string, path: string, headers: Record<string, string>, requestBody: Buffer | undefined): Promise<any> {
+    async route(method: string, path: string, headers: Record<string, string>, requestBody: Buffer | undefined): Promise<RouterResponse> {
         if (path === null || path == undefined || path === "") {
             throw new Error("No path defined: " + path)
         }
@@ -24,47 +31,85 @@ export default class Router {
             if (extractor.hasMorePath()) {
                 extractor = extractor.next()
                 const id = extractor.current()
-                return this.storage.PostStorage().GetPost(id)
+                try {
+                    const res = await this.storage.PostStorage().GetPost(id)
+                    return quickResponse(stringify(res))
+                } catch (err) {
+                    return {
+                        statusCode: 404,
+                    }
+                }
             } else {
-                return this.storage.PostStorage().ListPosts().then(sortPosts)
+                try {
+                    const res = await this.storage.PostStorage().ListPosts().then(sortPosts)
+                    return quickResponse(stringify(res))
+                } catch (err) {
+                    return {
+                        statusCode: 500,
+                    }
+                }
             }
         }
 
         if (method === 'POST' && extractor.current() === 'create-draft') {
-            return this.storage.DraftStorage().ListPosts()
-            .then(async drafts => {
-                if (drafts.length < 5) {
-                    const data = parse(requestBody!.toString()) // TODO: content-type this
-                    const now = luxon.DateTime.now().toMillis()
-                    const postMeta: PostMetadata = {
-                        attachments: [],
-                        contributors: [], // TODO: extract current logged in user
-                        id: KSUID.randomSync().string,
-                        title: data.title,
-                        updatedTs: luxon.DateTime.utc().toMillis(),
+            try {
+                const res = await this.storage.DraftStorage().ListPosts()
+                .then(async drafts => {
+                    if (drafts.length < 5) {
+                        const data = parse(requestBody!.toString()) // TODO: content-type this
+                        const now = luxon.DateTime.now().toMillis()
+                        const postMeta: PostMetadata = {
+                            attachments: [],
+                            contributors: [], // TODO: extract current logged in user
+                            id: KSUID.randomSync().string,
+                            title: data.title,
+                            updatedTs: luxon.DateTime.utc().toMillis(),
+                        }
+                        await this.storage.DraftStorage().Save({...postMeta, markdown: ''})
+                        return postMeta
+                    } else {
+                        throw new Error('Maximum number of drafts reached')
                     }
-                    await this.storage.DraftStorage().Save({...postMeta, markdown: ''})
-                    return postMeta
-                } else {
-                    throw new Error('Maximum number of drafts reached')
+                })
+                return quickResponse(stringify(res))
+            } catch (err) {
+                return {
+                    statusCode: 500,
                 }
-            })
+            }
         }
 
         if (method === 'GET' && extractor.current() === 'draft') {
             if (extractor.hasMorePath()) {
                 extractor = extractor.next()
                 const id = extractor.current()
-                return this.storage.DraftStorage().GetPost(id)
+                try {
+                    const res = await this.storage.DraftStorage().GetPost(id)
+                    return quickResponse(stringify(res))
+                } catch (err) {
+                    return {
+                        statusCode: 404
+                    }
+                }
+
             } else {
-                return this.storage.DraftStorage().ListPosts().then(sortPosts)
+                try {
+                    const res = await this.storage.DraftStorage().ListPosts().then(sortPosts)
+                    return quickResponse(stringify(res))
+                } catch (err) {
+                    return {
+                        statusCode: 500,
+                    }
+                }
             }
         }
 
         if (method === 'POST' && extractor.current() === 'draft') {
             const post = parse(requestBody!.toString()) as Post
             await this.storage.DraftStorage().Save(post)
-            return true
+            return {
+                statusCode: 204, // accepted, 'No Content'
+            }
         }
 
         // well, this is bulky. need to fix this 
@@ -77,23 +122,22 @@ export default class Router {
                         extractor = extractor.next()
                         const id = extractor.current()
 
-
                         if(method === 'POST' && type == 'draft') {
                             const cdHeader = extractHeader(headers, 'content-disposition') || ''
-                            console.log('write image: ', {type, id, cdHeader})
                             if (cdHeader.startsWith('file; filename=')) {
                                 const filename = cdHeader.substring(15)
-                                this.storage.DraftStorage().AddMedia(id, filename, requestBody!)
-                                // await writeFileSync('/workspaces/super-simple-blog/.data/' + id + '__' + filename, requestBody!)
-                                return true
+                                await this.storage.DraftStorage().AddMedia(id, filename, requestBody!)
+                                return {
+                                    statusCode: 204, // accepted, 'No Content'
+                                }
                             }
                         } else if (method === 'GET') {
                             if (extractor.hasMorePath()) {
                                 extractor = extractor.next()
                                 const filename = extractor.current()
                                 // gotta set response headers. sigh
-                                if (type === 'post') return this.storage.PostStorage().GetMedia(id, filename)
-                                if (type === 'draft') return this.storage.DraftStorage().GetMedia(id, filename)
+                                if (type === 'post') return bufferResponse(await this.storage.PostStorage().GetMedia(id, filename), filename)
+                                if (type === 'draft') return bufferResponse(await this.storage.DraftStorage().GetMedia(id, filename), filename)
                             }
                         }
                         
@@ -101,7 +145,29 @@ export default class Router {
                 }
             }
         }
-        return undefined
+        return {
+            statusCode: 404,
+        }
+    }
+}
+
+function quickResponse(jsonResponse: string): RouterResponse {
+    return {
+        statusCode: 200,
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: jsonResponse
+    }
+}
+
+function bufferResponse(body: Buffer, filename: string): RouterResponse {
+    return {
+        statusCode: 200,
+        headers: {
+            'Content-Type': mime.lookup(filename.toLowerCase()) || 'application/octet-stream'
+        },
+        body
     }
 }
 

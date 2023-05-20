@@ -13,33 +13,12 @@ function bucketName(): string {
   return process.env.S3_BUCKET_NAME || ''
 }
 
-let router: Router | undefined
+const router: Router = new Router(new FilesystemStorage('.', new S3FsOperations(bucketName())))
 
 export const handler = async (event: any, context: any): Promise<any> => {
   console.log('event', event)
   // console.log('context', context)
-  try {
-    console.log('creating new router')
-    if (router === undefined) {
-      const fsOperations = new S3FsOperations(bucketName())
-      router = new Router(new FilesystemStorage('.', fsOperations))
-      console.log('awaiting ready')
-      await router.readyFlag // make sure that we've created the s3 directories.
-
-      console.log('about to list posts')
-      const dirs = await fsOperations.list('./posts')
-      console.log('listed: ', dirs)
-    }
-  } catch (err) {
-    console.log('Router Init Error', err)
-    return {
-      statusCode: "500",
-      headers: {
-        'Content-Type': 'text/plain'
-      },
-      body: JSON.stringify(err),
-    }
-  }
+  await router.readyFlag // make sure that we've created the s3 directories.
 
   // sigh... Origin header isn't always present
   let corsAllowedOriginResponse = '*'
@@ -84,7 +63,7 @@ export const handler = async (event: any, context: any): Promise<any> => {
     }
   }
 
-  headers['Content-Type'] = 'application/json'
+  // headers['Content-Type'] = 'application/json'
   
   let body: Buffer | undefined = undefined
   if (event.isBase64Encoded && event.body != null) {
@@ -93,25 +72,34 @@ export const handler = async (event: any, context: any): Promise<any> => {
   
   try {
       var res = await router.route(event.httpMethod, event.path, event.headers, body)
-      if (res === undefined) {
-        const lambdaResponse = {
-          isBase64Encoded: false,
-          statusCode: 404,
-          headers,
-      } as LambdaProxyResponse
-      console.log('undefined lambdaResponse', lambdaResponse)
-      return lambdaResponse
-      } else {
-        const lambdaResponse = {
-          isBase64Encoded: false,
-          statusCode: 200,
-          headers,
-          body: JSON.stringify(res),
-      } as LambdaProxyResponse
-      console.log('responsevalue lambdaResponse', lambdaResponse)
-      return lambdaResponse
+      if (res.body == undefined) {
+        return {
+          headers: res.headers,
+          statusCode: res.statusCode
+        } as LambdaProxyResponse
       }
-      
+      if (Buffer.isBuffer(res.body)) {
+        return {
+          headers: res.headers,
+          statusCode: res.statusCode,
+          isBase64Encoded: true,
+          body: (res.body as Buffer).toString('base64'),
+        } as LambdaProxyResponse
+      }
+      if (typeof res.body === 'string') {
+        return {
+          headers: res.headers,
+          statusCode: res.statusCode,
+          isBase64Encoded: false,
+          body: res.body as string
+        } as LambdaProxyResponse
+      }
+      console.log('Internal Server Error: Unable to determine type of ' + res.body)
+      return {
+        statusCode: 500,
+        isBase64Encoded: false,
+        body: 'Internal Server Error'
+      } as LambdaProxyResponse
   } catch (err) {
       console.log('err', err)
       return {
