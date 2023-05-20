@@ -72,15 +72,19 @@ export const handler = async (event: any, context: any): Promise<any> => {
   
   try {
       var res = await router.route(event.httpMethod, event.path, event.headers, body)
+      if(res.headers) {
+        Object.keys(res.headers).forEach(key => headers[key] = res.headers![key])
+      }
+
       if (res.body == undefined) {
         return {
-          headers: res.headers,
+          headers,
           statusCode: res.statusCode
         } as LambdaProxyResponse
       }
       if (Buffer.isBuffer(res.body)) {
         return {
-          headers: res.headers,
+          headers,
           statusCode: res.statusCode,
           isBase64Encoded: true,
           body: (res.body as Buffer).toString('base64'),
@@ -88,7 +92,7 @@ export const handler = async (event: any, context: any): Promise<any> => {
       }
       if (typeof res.body === 'string') {
         return {
-          headers: res.headers,
+          headers,
           statusCode: res.statusCode,
           isBase64Encoded: false,
           body: res.body as string
