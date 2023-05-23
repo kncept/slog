@@ -21,3 +21,11 @@ export interface PostMetadata extends Identified {
     attachments: Array<string>
     contributors: Array<Contributor>
 }
+
+
+export interface LoginProvider {
+    name: string
+
+    // type: string = oauth2 / oidc
+    authorizeUrl: string
+}

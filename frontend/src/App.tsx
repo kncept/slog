@@ -1,4 +1,4 @@
-import React, { createContext, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 // import logo from './logo.svg'
 import './App.css'
 import ViewPost from './screens/ViewPost'
@@ -6,16 +6,18 @@ import { RouterProvider, createBrowserRouter } from 'react-router-dom'
 import RootLayout from './screens/RootLayout'
 import RouterError from './screens/RouterError'
 import PostScroller from './screens/PostScroller'
-import { providers } from './components/LoginBox'
 import Privacy from './screens/Privacy'
 import DraftList from './screens/DraftList'
 import DraftEdit from './screens/DraftEdit'
+import { LoginProvider } from '../../interface/Model'
+import { LoginProviders } from './loaders'
+import { AuthProvider, AuthProviderCallback } from './AuthContext'
 
 // eslint-disable-next-line
 declare namespace NodeJS {
   interface ProcessEnv {
-    NODE_ENV: 'development' | 'production' | 'test'
-    PUBLIC_URL: string
+    // NODE_ENV: 'development' | 'production' | 'test'
+    // PUBLIC_URL: string
     REACT_APP_API_ENDPOINT: string
   }
 }
@@ -28,6 +30,10 @@ const router = createBrowserRouter([
     element: <RootLayout />,
     errorElement: <RouterError />,
     children: [
+      {
+        path: 'callback/:providerId',
+        element: <AuthProviderCallback />
+      },
       {
         path: 'drafts',
         element: <DraftList />
@@ -53,21 +59,23 @@ const router = createBrowserRouter([
   },
 ])
 
-export const OidcContext = createContext<any>(null)
+
 
 const App: React.FC = () => {
-  const availableProviders = providers()
-  const [oidcConfig, setOidcConfig] = useState<Record<string, string>>(
-    availableProviders.length === 1 ? availableProviders[0] as any as Record<string, string> : {}
-  )
+  // TODO - cache & refresh pattern on this
+  const [loginProviders, setLoginProviders] = useState<Array<LoginProvider>>()
+  
+  useEffect(() => {
+    if (loginProviders === undefined) {
+      LoginProviders().then(setLoginProviders)
+    }
+  }, [loginProviders])
+
   return (
     <div className="App">
-      <OidcContext.Provider key={oidcConfig.providerName} value={{
-        config: oidcConfig,
-        setConfig: setOidcConfig
-      }}>
+      <AuthProvider>
         <RouterProvider router={router}/>
-      </OidcContext.Provider>
+      </AuthProvider>
 
       {/* <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />

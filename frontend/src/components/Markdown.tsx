@@ -22,15 +22,6 @@ type Props = {
     mode: MarkdownMode,
 }
 
-
-
-// npm i react-simplemde-editor easymde
-const useSimpleMde = true
-
-
-// npm i @uiw/react-md-editor
-const useReactMdEditor = false
-
 const Markdown: React.FC<Props> = ({postId, value, setValue, mode}) => {
 
     let imageBase = `${apiBase}/image/post/${postId}/`
@@ -50,13 +41,13 @@ const Markdown: React.FC<Props> = ({postId, value, setValue, mode}) => {
         } // as SimpleMDE.Options;
       }, [imageBase])
 
-    if (useSimpleMde && mode === MarkdownMode.EDIT) return <CatchErr>
+    if (mode === MarkdownMode.EDIT) return <CatchErr>
         <SimpleMdeReact 
         options={autofocusNoSpellcheckerOptions}
         value={value}
         onChange={setValue} />
     </CatchErr>
-    if (useSimpleMde && mode === MarkdownMode.VIEW) return <CatchErr>
+    if (mode === MarkdownMode.VIEW) return <CatchErr>
         <ReactMarkdown transformImageUri={src => src.startsWith("http") ? src : `${imageBase}${src}`}>{value}</ReactMarkdown>
     </CatchErr>
     

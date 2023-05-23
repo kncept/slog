@@ -1,6 +1,6 @@
 import fetchPonyfill from 'fetch-ponyfill'
-import { Post, PostMetadata } from '../../interface/Model';
-const {fetch, Headers} = fetchPonyfill({});
+import { LoginProvider, Post, PostMetadata } from '../../interface/Model'
+const {fetch, Headers} = fetchPonyfill({})
 
 let apiBase = process.env.REACT_APP_API_ENDPOINT || ""
 while (apiBase.endsWith("/")) {
@@ -28,7 +28,7 @@ const cache = new Cache()
 
 export const GetPost: (id: string) => Promise<Post> = (id) => {
     return cache.lookup('post:' + id, async (): Promise<Post> => {
-      const res = await fetch(apiBase + '/post/' + id, {
+      const res = await fetch(`${apiBase}/post${id}`, {
         method: 'GET',
         headers: new Headers({
           "Accept": "application/json"
@@ -40,7 +40,7 @@ export const GetPost: (id: string) => Promise<Post> = (id) => {
 
 export const ListDrafts: () => Promise<Array<PostMetadata>> = () => {
   return cache.lookup('drafts', async (): Promise<Array<Post>> => {
-    return fetch(apiBase + '/draft/', {
+    return fetch(`${apiBase}/draft/`, {
       method: 'GET',
       headers: new Headers({
         'Accept': 'application/json'
@@ -53,7 +53,7 @@ export const ListDrafts: () => Promise<Array<PostMetadata>> = () => {
 
 export const GetDraft: (id: string) => Promise<Post> = (id) => {
   return cache.lookup('draft:' + id, async (): Promise<Post> => {
-    return fetch(apiBase + '/draft/' + id, {
+    return fetch(`${apiBase}/draft/${id}`, {
       method: 'GET',
       headers: new Headers({
         'Accept': 'application/json'
@@ -65,7 +65,7 @@ export const GetDraft: (id: string) => Promise<Post> = (id) => {
 
 export const CreateDraft: (title: string) => Promise<Post> = (title) => {
   return cache.lookup('create-draft', async (): Promise<Post> => {
-    return fetch(apiBase + '/create-draft/', {
+    return fetch(`${apiBase}/create-draft/`, {
       method: 'POST',
       headers: new Headers({
         'Accept': 'application/json'
@@ -78,7 +78,7 @@ export const CreateDraft: (title: string) => Promise<Post> = (title) => {
 
 export const SaveDraft: (post: Post) => Promise<Post> = (post) => {
   return cache.lookup('draft:' + post.id, async (): Promise<Post> => {
-    return fetch(apiBase + '/draft/' + post.id, {
+    return fetch(`${apiBase}/draft/${post.id}`, {
       method: 'POST',
       headers: new Headers({
         'Accept': 'application/json'
@@ -89,3 +89,28 @@ export const SaveDraft: (post: Post) => Promise<Post> = (post) => {
   })
 }
 
+export const LoginProviders: () => Promise<Array<LoginProvider>> = async () => {
+  return cache.lookup('loginproviders', async (): Promise<Array<LoginProvider>> => {
+    return fetch(`${apiBase}/login/providers`, {
+      method: 'GET',
+      headers: new Headers({
+        'Accept': 'application/json'
+      })
+    })
+    .then(async res => await res.json() as Array<LoginProvider>)
+  })
+}
+export const LoginCallback: (authContextproviderId: string, params: Record<string, string>) => Promise<string> = async (providerId, params) => {
+  return cache.lookup('logincallback', async (): Promise<string> => {
+    console.log('login callback for ', providerId)
+    return fetch(`${apiBase}/login/callback/${providerId}`, {
+      method: 'POST',
+      headers: new Headers({
+        'Accept': 'application/json'
+      }),
+      body: JSON.stringify(params)
+    })
+    .then(async res => await res.json())
+    .then(tokenObj => {console.log('loader.ts Lambda Auth Response:: ', tokenObj); return tokenObj.access_token})
+  })
+}

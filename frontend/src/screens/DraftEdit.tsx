@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Post } from '../../../interface/Model'
-import { CreateDraft, GetDraft, SaveDraft, } from '../loaders'
+import { GetDraft, SaveDraft, } from '../loaders'
 import SimpleButton from '../components/SimpleButton'
 import { useParams } from 'react-router-dom'
 import './DraftList.css'

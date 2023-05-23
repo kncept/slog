@@ -69,8 +69,10 @@ export class BackendStack extends cdk.Stack {
       entry: path.join(props.projectRootDir, 'backend', 'src', 'index.ts'),
       environment: {
         PUBLIC_URL: process.env.PUBLIC_URL || '',
+        REACT_APP_API_ENDPOINT: process.env.REACT_APP_API_ENDPOINT || '',
         ADMIN_USER: process.env.ADMIN_USER || '',
-        S3_BUCKET_NAME: bucket.bucketName
+        S3_BUCKET_NAME: bucket.bucketName,
+        LOGIN_PROVIDERS: process.env.LOGIN_PROVIDERS || '[]',
       },
       logRetention: logs.RetentionDays.ONE_MONTH,
       bundling: {

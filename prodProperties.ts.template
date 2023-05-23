@@ -9,6 +9,9 @@ const properties : AwsAccessKeyProperties & FrontendProperties = {
     awsSecretAccessKey: ,
     awsRegion: '
 
+    loginProviders: [
+    ]
+
 }
 
 export default properties

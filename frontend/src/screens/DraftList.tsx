@@ -1,5 +1,5 @@
 import React, { useEffect, useReducer, useState } from 'react'
-import { Post, PostMetadata } from '../../../interface/Model'
+import { PostMetadata } from '../../../interface/Model'
 import { CreateDraft, ListDrafts } from '../loaders'
 import ButtonLink from '../components/ButtonLink'
 import SimpleButton from '../components/SimpleButton'
@@ -27,7 +27,7 @@ const DraftList: React.FC = () => {
 
   const createNew = (title: string) => {
     if (title === undefined || title.trim() === '') {
-      console.log('enter a title')
+      // TODO: input validation feedback
     } else {
       CreateDraft(title.trim()).then(draft => navigate(`/drafts/${draft.id}`))
     }

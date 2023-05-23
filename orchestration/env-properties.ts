@@ -12,9 +12,7 @@ export interface BlogProperties {
     // but apparently isn't
     // eg: https://tasoskakour.com/blog/react-use-oauth2
     //
-    // till then, just use ONE LoginProvider
-    reactAppLoginProvider: LoginProvider
-    // reactAppLoginProviders?: Array<LoginProvider>
+    loginProviders: Array<LoginProvider>
   
 }
 
@@ -32,10 +30,25 @@ export interface AwsAccessKeyProperties {
 }
 
 
-export interface LoginProvider { //ugh - react app prefix
-    providerName: string,
 
-    authority: URL
-    client_id: string
-    redirectUri: URL
+export type LoginProvider = OAuth2Provider // OidcProvider | OAuth2Provider
+
+// TODO: Support direct Oidc as well
+// interface OidcProvider {
+//     name: string
+//     type: 'oidc'
+
+//     authority: URL
+//     clientId: string
+//     redirectUri: URL
+// }
+
+interface OAuth2Provider {
+    name: string
+    type: 'oauth2'
+
+    clientId: string
+    clientSecret: string
+    authorizeUrl: string // first GET redirect
+    accessTokenUrl: string
 }

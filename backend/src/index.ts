@@ -16,7 +16,7 @@ function bucketName(): string {
 const router: Router = new Router(new FilesystemStorage('.', new S3FsOperations(bucketName())))
 
 export const handler = async (event: any, context: any): Promise<any> => {
-  console.log('event', event)
+  // console.log('event', event)
   // console.log('context', context)
   await router.readyFlag // make sure that we've created the s3 directories.
 
@@ -25,7 +25,6 @@ export const handler = async (event: any, context: any): Promise<any> => {
   let originHeader = getHeader(event.headers, 'Origin')
   if (originHeader !== undefined && originHeader.endsWith('/')) originHeader = originHeader.substring(0, originHeader.length - 1)
   const allowedOrigins: Array<string | undefined> = [undefined, 'http://localhost:3000', frontendUrl().substring(0, frontendUrl().length - 1)]
-  console.log('CORS test log:', originHeader, allowedOrigins)
     if (!allowedOrigins.includes(originHeader)) {
       return {
         statusCode: 403,
@@ -40,7 +39,6 @@ export const handler = async (event: any, context: any): Promise<any> => {
   
   // play nice: redirect all root requests to the frontend
   if (event.path === '/') {
-    console.log('direct api access, redirecting to front page', process.env.PUBLIC_URL)
     return {
       statusCode: 303, // 'see other' = temporary redirect
       headers: {

@@ -1,7 +1,7 @@
 import { FrontendProperties } from "../env-properties"
 
 const properties : FrontendProperties = {
-    publicUrl: '/',
+    publicUrl: 'htto:localhost:3000/',
     reactAppApiEndpoint: 'http://localhost:8080/',
 }
 

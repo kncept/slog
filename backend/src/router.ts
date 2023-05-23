@@ -1,11 +1,17 @@
 // I must say, the Lambda V3 API and typescript offering from amazon is horrible
-import { Post, PostMetadata } from '../../interface/Model'
+import { LoginProvider, Post, PostMetadata } from '../../interface/Model'
 import * as luxon from 'luxon'
 import Storage from './storage/storage'
 import { parse, stringify} from '@supercharge/json'
 import KSUID from 'ksuid'
 import * as mime from 'mime-types'
 import { match } from 'node-match-path'
+import { LoginProvider as BackendLoginProvider } from '../../orchestration/env-properties'
+import fetch from 'isomorphic-fetch'
+
+const logonProviders = parse(process.env.LOGIN_PROVIDERS!) as Array<BackendLoginProvider>
+const frontendUrl = process.env.PUBLIC_URL!
+const backendUrl = process.env.REACT_APP_API_ENDPOINT!
 
 export interface RouterResponse {
     statusCode: number
@@ -104,8 +110,70 @@ export default class Router {
             if (type === 'draft') return bufferResponse(await this.storage.DraftStorage().GetMedia(id, filename), filename)
         }
 
+        params = match('/login/providers', path)
+        if (params.matches && method === 'GET') {
+            const availableProviders: Array<LoginProvider> = []
+
+            logonProviders.forEach(p => {
+
+                const urlParams = new URLSearchParams({
+                    client_id: p.clientId,
+                    redirect_uri: `${frontendUrl}callback/${p.name}`,
+                    scope: 'user',
+                    state: 'none',
+
+                })
+                const authorizeUrl = `${p.authorizeUrl}?${urlParams.toString()}`
+
+                // let authorizeUrl: string = `${p.authorizeUrl}?` + 
+                // `client_id=${encodeURIComponent(p.clientId)}&` +
+                // `redirect_uri=${encodeURIComponent(`${frontendUrl}/callback/${p.name.toLowerCase()}`)}&` + 
+                // `scope=user&state=none`
+
+                if (p.type === 'oauth2') {
+                    availableProviders.push({
+                        name: p.name,
+                        authorizeUrl,
+                    } as LoginProvider)
+                }
+            })
+            return quickResponse(stringify(availableProviders))
+        }
+
+        params = match('/login/callback/:providerId', path)
+        if (params.matches && method === 'POST') {
+            const providerId = params!.params!.providerId
+            for(let i = 0; i < logonProviders.length; i++) {
+                const p = logonProviders[i]
+                if (p.name === providerId) {
+
+                    const params = parse(requestBody!.toString()) as Record<string, string>
+
+                    const urlParams = new URLSearchParams({
+                        client_id: p.clientId,
+                        client_secret: p.clientSecret,
+                        redirect_uri: `${frontendUrl}callback/${p.name}`,
+                        code: params.code,
+                    })
+
+                    const response = await fetch(p.accessTokenUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                        },
+                        body: urlParams,
+                    }).then((res: any) => res.json())
+                    return quickResponse(stringify(response))
+                }
+            }
+        }
+
         return {
             statusCode: 404,
+            headers: {
+                'Content-Type': 'text/plain'
+            },
+            body: `NOT FOUND: ${method} ${path}`
         }
     }
 }
