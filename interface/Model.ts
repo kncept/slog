@@ -29,3 +29,11 @@ export interface LoginProvider {
     // type: string = oauth2 / oidc
     authorizeUrl: string
 }
+
+export interface AuthenticatedUser {
+    name: string // display name
+    email: string
+    providedBy: string
+    isAdmin: boolean
+    authToken: string
+}

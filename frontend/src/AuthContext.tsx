@@ -1,11 +1,16 @@
-import React, { createContext, useContext, useEffect, useState } from "react"
-import { LoginProvider } from "../../interface/Model"
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react"
+import { AuthenticatedUser, LoginProvider } from "../../interface/Model"
 import { LoginCallback, LoginProviders } from "./loaders"
 import { useNavigate, useParams, useSearchParams } from "react-router-dom"
+import { parse, stringify} from '@supercharge/json'
 
 
 const AuthContext = createContext<AuthContextType>(undefined as any as AuthContextType)
 export default AuthContext
+
+const localStorageKeys = {
+    user: 'user', //stores the json user
+}
 
 export interface AuthContextType {
     isLoading: boolean // INITIAL load
@@ -14,15 +19,7 @@ export interface AuthContextType {
     login(provider: LoginProvider): void // will probably trigger path reloads
     logout(): void
     callback(provider: LoginProvider, params: Record<string, string>): Promise<void> // needed for Oauth2 callbacks
-    currentUser: AuthUserType | null
-}
-
-export interface AuthUserType {
-    name: string // display name
-    email: string
-    providedBy: string
-    isAdmin: boolean
-    authToken: string
+    currentUser: AuthenticatedUser | null
 }
 
 const loadingContext: AuthContextType = {
@@ -41,8 +38,12 @@ export const AuthProviderCallback: React.FC = () => {
     const [callback, setCallback] = useState(true)
     const navigate = useNavigate()
 
-    const callbackContext: Record<string, string> = {}
-    searchParams.forEach((value, key) => callbackContext[key] = value)
+    const callbackContext = useMemo(() => {
+        const callbackContext: Record<string, string> = {}
+        searchParams.forEach((value, key) => callbackContext[key] = value)
+        return callbackContext
+    }, [searchParams])
+
 
     let isErr = false
     if (callbackContext.error) {
@@ -58,7 +59,7 @@ export const AuthProviderCallback: React.FC = () => {
             .then(() => navigate('/'))
         }
     }, [
-        authContext, callback, callbackContext, providerId
+        authContext, callback, callbackContext, providerId, isErr, navigate
     ])
 
     if (!isErr) {
@@ -74,20 +75,21 @@ export const AuthProviderCallback: React.FC = () => {
     // }
 
     return <>
-        {JSON.stringify(callbackContext)}
+        {stringify(callbackContext)}
     </>
 }
 
 export const AuthProvider: React.FC<{children?: React.ReactNode}> = ({children}) => {
-
-    // TODO: Load auth providers from local storage (and refresh)
-
-    // TODO: Load user from local storage. 
-
     const [auth, setAuth] = useState<AuthContextType>(loadingContext)
-
+    
     useEffect(() => {
         if (auth.isLoading) {
+            const userString = localStorage.getItem(localStorageKeys.user)
+            let currentUser: AuthenticatedUser | null = null
+            if (userString !== null && userString !== '') {
+                currentUser = parse(userString)
+            }            
+
             LoginProviders().then(providers => setAuth({
                 isLoading: false,
                 providers,
@@ -96,6 +98,7 @@ export const AuthProvider: React.FC<{children?: React.ReactNode}> = ({children})
                     window.location.href = provider.authorizeUrl
                 },
                 logout: () => {
+                    localStorage.removeItem(localStorageKeys.user)
                     setAuth(existing => {
                         return {
                             ...existing,
@@ -105,22 +108,17 @@ export const AuthProvider: React.FC<{children?: React.ReactNode}> = ({children})
                 },
                 callback: (provider: LoginProvider, params: Record<string, string>) => {
                     // load 'last url' and 'state hash' from Localstorage?
-                    return LoginCallback(provider.name, params).then(tokenResponse => {
+                    return LoginCallback(provider.name, params).then(authenticatedUser => {
+                        localStorage.setItem(localStorageKeys.user, stringify(authenticatedUser))
                         setAuth(existing => {
                             return {
                                 ...existing,
-                                currentUser: {
-                                    email: '',
-                                    isAdmin: true,
-                                    name: 'dunno',
-                                    providedBy: provider.name,
-                                    authToken: tokenResponse,
-                                }
+                                currentUser: authenticatedUser,
                             }
                         })
                     })
                 },
-                currentUser: null
+                currentUser,
             }))
         }
     }, [auth])
@@ -131,57 +129,3 @@ export const AuthProvider: React.FC<{children?: React.ReactNode}> = ({children})
         </AuthContext.Provider>
     </>
 }
-
-
-
-// export interface AuthContext {
-//     isLoading(): boolean
-
-//     providers(): Array<LoginProvider> // will error if called whilst loading
-//     login(provider: LoginProvider): void // will probably trigger path reloads
-//     onCallback(provider: LoginProvider): void // needed for Oauth2 callbacks
-  
-//     current(): {
-//       provider: LoginProvider | undefined, // undefined whilst loading
-//       user: any // TODO: need to be able to verify 'admin' privileges.
-//     }
-// }
-
-// export const AuthContext = createContext<AuthContext | undefined>(undefined)
-
-// export class AuthObjectClass implements AuthContext {
-//     constructor(){}
-//     isLoading(): boolean {
-//         return true
-//     }
-//     providers(): LoginProvider[] {
-//         throw new Error('No providers loaded. Please respect isLoading()')
-//     }
-//     login(provider: LoginProvider): void {
-//     }
-//     onCallback(provider: LoginProvider): void {
-//     }
-//     current(): { provider: LoginProvider | undefined; user: any } {
-//         return {
-//             provider: undefined,
-//             user: null,
-//         }
-//     }
-// }
-
-
-// export default function createAuthContext(providers: Array<LoginProvider> | undefined): AuthContext {
-//     return {
-//         providers,
-//         login: (provider => {
-//             console.log('do login')
-//         }),
-//         onCallback: (provider => {
-
-//         }),
-//         current: {
-//             provider: undefined,
-//             user: null
-//         }
-//     }
-// }

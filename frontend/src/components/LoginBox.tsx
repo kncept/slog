@@ -29,6 +29,7 @@ const LoginBox: React.FC<Props> = ({style}) => {
 
     if (authContext.currentUser !== null) {
         return <div style={style} key='logout'>
+            {authContext.currentUser.name}
             <SimpleButton text='Logout' onClick={authContext.logout}/>
         </div>
     }

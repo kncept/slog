@@ -1,5 +1,7 @@
 import fetchPonyfill from 'fetch-ponyfill'
-import { LoginProvider, Post, PostMetadata } from '../../interface/Model'
+import { AuthenticatedUser, LoginProvider, Post, PostMetadata } from '../../interface/Model'
+import { parse, stringify} from '@supercharge/json'
+
 const {fetch, Headers} = fetchPonyfill({})
 
 let apiBase = process.env.REACT_APP_API_ENDPOINT || ""
@@ -70,7 +72,7 @@ export const CreateDraft: (title: string) => Promise<Post> = (title) => {
       headers: new Headers({
         'Accept': 'application/json'
       }),
-      body: JSON.stringify({title}),
+      body: stringify({title}),
     })
     .then(async res => await res.json() as Post)
   })
@@ -83,7 +85,7 @@ export const SaveDraft: (post: Post) => Promise<Post> = (post) => {
       headers: new Headers({
         'Accept': 'application/json'
       }),
-      body: JSON.stringify(post),
+      body: stringify(post),
     })
     .then(async res => await res.json() as Post)
   })
@@ -100,16 +102,16 @@ export const LoginProviders: () => Promise<Array<LoginProvider>> = async () => {
     .then(async res => await res.json() as Array<LoginProvider>)
   })
 }
-export const LoginCallback: (authContextproviderId: string, params: Record<string, string>) => Promise<string> = async (providerId, params) => {
-  return cache.lookup('logincallback', async (): Promise<string> => {
+export const LoginCallback: (authContextproviderId: string, params: Record<string, string>) => Promise<AuthenticatedUser> = async (providerId, params) => {
+  return cache.lookup('logincallback', async (): Promise<AuthenticatedUser> => {
     return fetch(`${apiBase}/login/callback/${providerId}`, {
       method: 'POST',
       headers: new Headers({
         'Accept': 'application/json'
       }),
-      body: JSON.stringify(params)
+      body: stringify(params)
     })
     .then(async res => await res.json())
-    .then(tokenObj => {console.log('loader.ts Lambda Auth Response:: ', tokenObj); return tokenObj.access_token})
+
   })
 }

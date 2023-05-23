@@ -24,6 +24,7 @@ declare namespace NodeJS {
 interface Window { // eslint-disable-line
 }
 
+
 const router = createBrowserRouter([
   {
     path: "/",

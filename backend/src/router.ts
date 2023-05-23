@@ -1,5 +1,5 @@
 // I must say, the Lambda V3 API and typescript offering from amazon is horrible
-import { LoginProvider, Post, PostMetadata } from '../../interface/Model'
+import { AuthenticatedUser, LoginProvider, Post, PostMetadata } from '../../interface/Model'
 import * as luxon from 'luxon'
 import Storage from './storage/storage'
 import { parse, stringify} from '@supercharge/json'
@@ -12,6 +12,7 @@ import fetch from 'isomorphic-fetch'
 const logonProviders = parse(process.env.LOGIN_PROVIDERS!) as Array<BackendLoginProvider>
 const frontendUrl = process.env.PUBLIC_URL!
 const backendUrl = process.env.REACT_APP_API_ENDPOINT!
+const adminUser = process.env.ADMIN_USER || ''
 
 export interface RouterResponse {
     statusCode: number
@@ -115,7 +116,6 @@ export default class Router {
             const availableProviders: Array<LoginProvider> = []
 
             logonProviders.forEach(p => {
-
                 const urlParams = new URLSearchParams({
                     client_id: p.clientId,
                     redirect_uri: `${frontendUrl}callback/${p.name}`,
@@ -124,11 +124,6 @@ export default class Router {
 
                 })
                 const authorizeUrl = `${p.authorizeUrl}?${urlParams.toString()}`
-
-                // let authorizeUrl: string = `${p.authorizeUrl}?` + 
-                // `client_id=${encodeURIComponent(p.clientId)}&` +
-                // `redirect_uri=${encodeURIComponent(`${frontendUrl}/callback/${p.name.toLowerCase()}`)}&` + 
-                // `scope=user&state=none`
 
                 if (p.type === 'oauth2') {
                     availableProviders.push({
@@ -148,7 +143,6 @@ export default class Router {
                 if (p.name === providerId) {
 
                     const params = parse(requestBody!.toString()) as Record<string, string>
-
                     const urlParams = new URLSearchParams({
                         client_id: p.clientId,
                         client_secret: p.clientSecret,
@@ -156,14 +150,45 @@ export default class Router {
                         code: params.code,
                     })
 
-                    const response = await fetch(p.accessTokenUrl, {
+                    const oauthToken = await fetch(p.accessTokenUrl, {
                         method: 'POST',
                         headers: {
                             'Accept': 'application/json',
                         },
                         body: urlParams,
                     }).then((res: any) => res.json())
-                    return quickResponse(stringify(response))
+
+                    if (!oauthToken.error && oauthToken.access_token) {
+
+                        // TODO: make this generic... or dictionary ify this (and params) for streamlined definitions
+                        const userDetails = await fetch('https://api.github.com/user', {
+                            method: 'GET',
+                            headers: {
+                                'Accept': 'application/vnd.github+json',
+                                'Authorization': 'Bearer ' + oauthToken.access_token,
+
+                            }
+                        }).then((res: any) => res.json())
+                        console.log('userDetails', userDetails)
+
+                        let isAdmin = false
+                        if (adminUser.includes("@")) {
+                            isAdmin = adminUser === `${providerId}:${userDetails.email}`
+                        } else {
+                            isAdmin = adminUser === `${providerId}:${userDetails.login}`
+                        }
+
+                        // TODO: move to a Signed JWT with claims for 'email' and 'name' and 'admin'
+                        const authenticatedUser: AuthenticatedUser = {
+                            authToken: oauthToken.access_token,
+                            email: userDetails.email,
+                            name: userDetails.name || userDetails.login,
+                            providedBy: providerId,
+                            isAdmin,
+                        }
+                        return quickResponse(stringify(authenticatedUser))
+
+                    }
                 }
             }
         }
