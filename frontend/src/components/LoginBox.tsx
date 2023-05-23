@@ -9,6 +9,7 @@ type Props = {
 
 const LoginBox: React.FC<Props> = ({style}) => {
     const authContext = useContext(AuthContext)
+    console.log('LoginBox rendering', authContext.currentUser)
 
     const onSelectProvider = (providerName: string): void => {
         const provider = authContext.providers.filter(p => p.name === providerName)[0]
@@ -16,39 +17,40 @@ const LoginBox: React.FC<Props> = ({style}) => {
     }
 
     if (authContext.isLoading) {
-        return <div style={style}>
+        return <div style={style} key='loading'>
         <DropDownPicker
             disabled={true}
             text='Loading'
             values={[]}
             onSelect={() => {}}
         />
-        {/* <ButtonLink disabled={true}>Login Disabled</ButtonLink> */}
     </div>
     }
+
+    if (authContext.currentUser !== null) {
+        return <div style={style} key='logout'>
+            <SimpleButton text='Logout' onClick={authContext.logout}/>
+        </div>
+    }
+
     if (authContext.providers.length === 0) {
-        return <div style={style}>
+        return <div style={style} key='disabled'>
             <DropDownPicker
                 disabled={true}
                 text='Login Disabled'
                 values={[]}
                 onSelect={onSelectProvider}
             />
-            {/* <ButtonLink disabled={true}>Login Disabled</ButtonLink> */}
         </div>
     }
 
-    if (authContext.currentUser != null) {
-        <SimpleButton text='Logout' onClick={authContext.logout}/>
-    }
-
     if (authContext.providers.length === 1) {
-        return <div style={style}>
+        return <div style={style} key='single'>
             <SimpleButton text='Login' onClick={() => onSelectProvider(authContext.providers[0].name)}/>
         </div>
     }
 
-    return <div style={style}>
+    return <div style={style} key='select'>
         <DropDownPicker
             text='Login'
             values={authContext.providers.map(p => p.name)}

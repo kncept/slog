@@ -13,7 +13,7 @@ export interface AuthContextType {
     providers: Array<LoginProvider> // will error if called whilst loading
     login(provider: LoginProvider): void // will probably trigger path reloads
     logout(): void
-    callback(provider: LoginProvider, params: Record<string, string>): void // needed for Oauth2 callbacks
+    callback(provider: LoginProvider, params: Record<string, string>): Promise<void> // needed for Oauth2 callbacks
     currentUser: AuthUserType | null
 }
 
@@ -55,6 +55,7 @@ export const AuthProviderCallback: React.FC = () => {
             const provider = authContext.providers.filter(p => p.name === providerId)[0]
 
             authContext.callback(provider, callbackContext)
+            .then(() => navigate('/'))
         }
     }, [
         authContext, callback, callbackContext, providerId
@@ -104,8 +105,7 @@ export const AuthProvider: React.FC<{children?: React.ReactNode}> = ({children})
                 },
                 callback: (provider: LoginProvider, params: Record<string, string>) => {
                     // load 'last url' and 'state hash' from Localstorage?
-                    LoginCallback(provider.name, params).then(tokenResponse => {
-                        console.log('AuthContext.tsx token response:', tokenResponse)
+                    return LoginCallback(provider.name, params).then(tokenResponse => {
                         setAuth(existing => {
                             return {
                                 ...existing,

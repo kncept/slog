@@ -102,7 +102,6 @@ export const LoginProviders: () => Promise<Array<LoginProvider>> = async () => {
 }
 export const LoginCallback: (authContextproviderId: string, params: Record<string, string>) => Promise<string> = async (providerId, params) => {
   return cache.lookup('logincallback', async (): Promise<string> => {
-    console.log('login callback for ', providerId)
     return fetch(`${apiBase}/login/callback/${providerId}`, {
       method: 'POST',
       headers: new Headers({

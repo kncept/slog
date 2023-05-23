@@ -119,7 +119,7 @@ export default class Router {
                 const urlParams = new URLSearchParams({
                     client_id: p.clientId,
                     redirect_uri: `${frontendUrl}callback/${p.name}`,
-                    scope: 'user',
+                    scope: 'read:user read:email', // TODO: paramifiy this
                     state: 'none',
 
                 })
