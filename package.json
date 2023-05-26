@@ -4,7 +4,7 @@
   "description": "Orchestration management",
   "main": "index.js",
   "scripts": {
-    "run": "node run.ts",
+    "run.ts": "ts-node run.ts",
     "test": "jest"
   },
   "repository": {
@@ -25,6 +25,7 @@
     "ts-jest": "^29.1.0"
   },
   "dependencies": {
-    "lodash": "^4.17.21"
+    "lodash": "^4.17.21",
+    "ts-node": "^10.9.1"
   }
 }
