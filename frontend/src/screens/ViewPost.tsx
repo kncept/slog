@@ -1,7 +1,8 @@
 import React from 'react'
-import {Post as BlogPost, Identified} from '../../../interface/Model'
+import {Post as BlogPost} from '../../../interface/Model'
 import {GetPost} from '../loaders'
 import { useParams } from 'react-router-dom'
+import Markdown, { MarkdownMode } from '../components/Markdown'
 
 
 const ViewPost: React.FC = () => {
@@ -10,7 +11,7 @@ const ViewPost: React.FC = () => {
   
   React.useEffect(() => {
     if (blog== null || blog.id !== id) {
-      GetPost(id || "").then(setBlog)
+      GetPost(id!).then(setBlog)
     }
   }, [id, blog])
   
@@ -28,7 +29,7 @@ const ViewPost: React.FC = () => {
       </header>
       <div className="PostContent">
  
-        ++ body content ++
+      <Markdown postId={id!} mode={MarkdownMode.VIEW} value={blog.markdown} />
 
       </div>
       {blog.contributors.map((contributor, index) => {
@@ -36,7 +37,6 @@ const ViewPost: React.FC = () => {
           {contributor.name}
       </div>
       })}
-
       
     </div>
   )

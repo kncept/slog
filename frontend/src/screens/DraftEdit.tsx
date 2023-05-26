@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { Post } from '../../../interface/Model'
 import { GetDraft, SaveDraft, } from '../loaders'
 import SimpleButton from '../components/SimpleButton'
@@ -6,19 +6,22 @@ import { useParams } from 'react-router-dom'
 import './DraftList.css'
 import Markdown, { MarkdownMode } from '../components/Markdown'
 import FileUpload from '../components/FileUpload'
+import AuthContext from '../AuthContext'
 
 
 
 const DraftEdit: React.FC = () => {
   const { id } = useParams()
   const [draft, setDraft] = useState<Post>()
+  const auth = useContext(AuthContext)
+  const user = auth.currentUser
 
   useEffect(() => {
-    if (draft === undefined) {
-      GetDraft(id || '').then(setDraft)
+    if (draft === undefined && user !== null) {
+      GetDraft(user, id!).then(setDraft)
     }
   },
-  [id, draft])
+  [id, draft, auth])
 
   if (draft === undefined) {
     return <div key='loading'>
@@ -32,7 +35,7 @@ const DraftEdit: React.FC = () => {
 
   const save = () => {
     const updated = {...draft}
-    SaveDraft(updated).then(() => setDraft(updated as Post))
+    SaveDraft(user!, updated).then(() => setDraft(updated as Post))
   }
 
   return <div>

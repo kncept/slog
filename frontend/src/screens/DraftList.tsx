@@ -1,10 +1,11 @@
-import React, { useEffect, useReducer, useState } from 'react'
+import React, { useContext, useEffect, useReducer, useState } from 'react'
 import { PostMetadata } from '../../../interface/Model'
 import { CreateDraft, ListDrafts } from '../loaders'
 import ButtonLink from '../components/ButtonLink'
 import SimpleButton from '../components/SimpleButton'
 import { useNavigate } from 'react-router-dom'
 import './DraftList.css'
+import AuthContext from '../AuthContext'
 
 const formReducer = (state: any, event: React.ChangeEvent<any>) => {
   return {
@@ -17,19 +18,21 @@ const DraftList: React.FC = () => {
   const [drafts, setDrafts] = useState<Array<PostMetadata>>()
   const [formData, setFormData] = useReducer(formReducer, {})
   const navigate = useNavigate()
+  const auth = useContext(AuthContext)
+  const user = auth.currentUser!
 
   useEffect(() => {
     if (drafts === undefined) {
-      ListDrafts().then(setDrafts)
+      ListDrafts(user).then(setDrafts)
     }
   },
-  [drafts])
+  [drafts, user])
 
   const createNew = (title: string) => {
     if (title === undefined || title.trim() === '') {
       // TODO: input validation feedback
     } else {
-      CreateDraft(title.trim()).then(draft => navigate(`/drafts/${draft.id}`))
+      CreateDraft(user, title.trim()).then(draft => navigate(`/drafts/${draft.id}`))
     }
   }
   

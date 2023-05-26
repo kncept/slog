@@ -12,6 +12,7 @@ import DraftEdit from './screens/DraftEdit'
 import { LoginProvider } from '../../interface/Model'
 import { LoginProviders } from './loaders'
 import { AuthProvider, AuthProviderCallback } from './AuthContext'
+import Authenticated from './components/Authenticated'
 
 // eslint-disable-next-line
 declare namespace NodeJS {
@@ -37,11 +38,11 @@ const router = createBrowserRouter([
       },
       {
         path: 'drafts',
-        element: <DraftList />
+        element: <Authenticated admin={true}><DraftList /></Authenticated>
       },
       {
         path: 'drafts/:id',
-        element: <DraftEdit />
+        element: <Authenticated admin={true}><DraftEdit /></Authenticated>
       },
       
       {

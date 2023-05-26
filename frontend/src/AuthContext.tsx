@@ -1,8 +1,9 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react"
-import { AuthenticatedUser, LoginProvider } from "../../interface/Model"
-import { LoginCallback, LoginProviders } from "./loaders"
-import { useNavigate, useParams, useSearchParams } from "react-router-dom"
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { AuthenticatedUser, LoginProvider } from '../../interface/Model'
+import { LoginCallback, LoginProviders } from './loaders'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { parse, stringify} from '@supercharge/json'
+import * as jose from 'jose'
 
 
 const AuthContext = createContext<AuthContextType>(undefined as any as AuthContextType)
@@ -110,6 +111,15 @@ export const AuthProvider: React.FC<{children?: React.ReactNode}> = ({children})
                     // load 'last url' and 'state hash' from Localstorage?
                     return LoginCallback(provider.name, params).then(authenticatedUser => {
                         localStorage.setItem(localStorageKeys.user, stringify(authenticatedUser))
+
+                        const tokenClaims = jose.decodeJwt(authenticatedUser.authToken)
+                        // jose.jwtVerify(authenticatedUser.authToken, '')
+                        // const tokenClaims = jwt.decode(authenticatedUser.authToken)
+                        console.log('token claims: ', tokenClaims)
+                        // jwt.verify(authenticatedUser.authToken, null as any as jwt.Secret, {
+                        //     issuer: 'super-simple-blog'
+                        // })
+                        
                         setAuth(existing => {
                             return {
                                 ...existing,

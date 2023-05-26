@@ -8,11 +8,15 @@ import * as mime from 'mime-types'
 import { match } from 'node-match-path'
 import { LoginProvider as BackendLoginProvider } from '../../orchestration/env-properties'
 import fetch from 'isomorphic-fetch'
+import jwt, { JsonWebTokenError } from 'jsonwebtoken'
+import { currentKeyPair } from './crypto-utils'
 
 const logonProviders = parse(process.env.LOGIN_PROVIDERS!) as Array<BackendLoginProvider>
 const frontendUrl = process.env.PUBLIC_URL!
 const backendUrl = process.env.REACT_APP_API_ENDPOINT!
 const adminUser = process.env.ADMIN_USER || ''
+
+const keyPair = currentKeyPair()
 
 export interface RouterResponse {
     statusCode: number
@@ -33,6 +37,22 @@ export default class Router {
             throw new Error("No path defined: " + path)
         }
 
+        console.log('inbound headers', headers)
+        let requestorIsAuthorized = false
+        let requestorIsAdmin = false
+        if ((extractHeader(headers, 'Authorization') || '').startsWith('Bearer: ')) {
+            let authJwt = extractHeader(headers, 'Authorization')!.substring(8)
+            console.log('inbound jwt: ', jwt)
+
+            const claims = jwt.verify(authJwt, (await keyPair).publicKey) as any
+            console.log('JWT Claims:: ', claims)
+            requestorIsAuthorized = true
+            if (claims.isAdmin) {
+                requestorIsAdmin = true
+            }
+
+        }
+
         let params = match('/post/', path)
         if (params.matches && method === 'GET') {
             const res = await this.storage.PostStorage().ListPosts().then(sortPosts)
@@ -48,6 +68,7 @@ export default class Router {
 
         params = match('/draft/', path)
         if (params.matches && method === 'GET') {
+            if (!requestorIsAdmin) return unauthorizedResponse
             const res = await this.storage.DraftStorage().ListPosts().then(sortPosts)
             return quickResponse(stringify(res))
         }
@@ -61,6 +82,7 @@ export default class Router {
 
         params = match('/draft/:postId', path)
         if (params.matches && method === 'GET') {
+            if (!requestorIsAdmin) return unauthorizedResponse
             const id = params!.params!.postId
             const res = await this.storage.DraftStorage().GetPost(id)
             return quickResponse(stringify(res))
@@ -68,6 +90,7 @@ export default class Router {
 
         params = match('/create-draft', path)
         if (params.matches && method == 'POST') {
+            if (!requestorIsAdmin) return unauthorizedResponse
             const res = await this.storage.DraftStorage().ListPosts()
                 .then(async drafts => {
                     if (drafts.length < 5) {
@@ -91,6 +114,7 @@ export default class Router {
 
         params = match('/image/:type/:postId', path)
         if (params.matches && method === 'POST' && params!.params!.type === 'draft') {
+            if (!requestorIsAdmin) return unauthorizedResponse
             const id = params!.params!.postId
             const cdHeader = extractHeader(headers, 'content-disposition') || ''
             if (cdHeader.startsWith('file; filename=')) {
@@ -178,9 +202,25 @@ export default class Router {
                             isAdmin = adminUser === `${providerId}:${userDetails.login}`
                         }
 
+                        // use RS256.
+                        // HS series are symetrical
+
+                        
+                        const authToken = jwt.sign({
+                            authToken: oauthToken.access_token,
+                            email: userDetails.email,
+                            name: userDetails.name || userDetails.login,
+                            isAdmin,
+                        }, (await keyPair).publicKey, {
+                            algorithm: 'HS512',
+                            issuer: 'super-simple-blog'
+                        })
+
+                        // jwt.verify(authToken, 'private-key')
+
                         // TODO: move to a Signed JWT with claims for 'email' and 'name' and 'admin'
                         const authenticatedUser: AuthenticatedUser = {
-                            authToken: oauthToken.access_token,
+                            authToken,
                             email: userDetails.email,
                             name: userDetails.name || userDetails.login,
                             providedBy: providerId,
@@ -201,6 +241,10 @@ export default class Router {
             body: `NOT FOUND: ${method} ${path}`
         }
     }
+}
+
+const unauthorizedResponse: RouterResponse = {
+    statusCode: 403,
 }
 
 function quickResponse(jsonResponse: string): RouterResponse {

@@ -18,7 +18,7 @@ export enum MarkdownMode {
 type Props = {
     postId: string
     value: string
-    setValue: (value: string) => void
+    setValue?: (value: string) => void
     mode: MarkdownMode,
 }
 

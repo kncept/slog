@@ -1,12 +1,17 @@
 import fetchPonyfill from 'fetch-ponyfill'
 import { AuthenticatedUser, LoginProvider, Post, PostMetadata } from '../../interface/Model'
 import { parse, stringify} from '@supercharge/json'
+import { AuthContextType } from './AuthContext'
 
 const {fetch, Headers} = fetchPonyfill({})
 
 let apiBase = process.env.REACT_APP_API_ENDPOINT || ""
 while (apiBase.endsWith("/")) {
   apiBase = apiBase.slice(0, -1)
+}
+
+const ContentTypes = {
+  json: 'application/json'
 }
 
 // super basic parallel request cache
@@ -27,64 +32,65 @@ class Cache {
   }
 }
 const cache = new Cache()
+function headers(user: AuthenticatedUser, contentType: string | undefined, acceptType: string | undefined): Headers {
+  const h: Record<string, string> = {}
+  h['Authorization'] = 'Bearer: ' + user.authToken
+  if (contentType) h['Content-Type'] = contentType
+  if (acceptType) h['Accept'] = acceptType
+  return new Headers(h)
+}
 
 export const GetPost: (id: string) => Promise<Post> = (id) => {
     return cache.lookup('post:' + id, async (): Promise<Post> => {
       const res = await fetch(`${apiBase}/post${id}`, {
         method: 'GET',
-        headers: new Headers({
-          "Accept": "application/json"
-        })
+        headers: new Headers({'Accept': ContentTypes.json})
       })
       return await res.json() as Post
     })
 }
 
-export const ListDrafts: () => Promise<Array<PostMetadata>> = () => {
+export const ListDrafts: (user: AuthenticatedUser) => Promise<Array<PostMetadata>> = (user) => {
+  if (user === undefined || user === null) throw new Error('Authentication required')
   return cache.lookup('drafts', async (): Promise<Array<Post>> => {
     return fetch(`${apiBase}/draft/`, {
       method: 'GET',
-      headers: new Headers({
-        'Accept': 'application/json'
-      })
+      headers: headers(user, undefined, ContentTypes.json),
     })
     .then(async res => await res.json() as Array<Post>)
   })
 }
 
 
-export const GetDraft: (id: string) => Promise<Post> = (id) => {
+export const GetDraft: (user: AuthenticatedUser, id: string) => Promise<Post> = (user, id) => {
+  if (user === undefined || user === null) throw new Error('Authentication required')
   return cache.lookup('draft:' + id, async (): Promise<Post> => {
     return fetch(`${apiBase}/draft/${id}`, {
       method: 'GET',
-      headers: new Headers({
-        'Accept': 'application/json'
-      })
+      headers: headers(user, undefined, ContentTypes.json),
     })
     .then(async res => await res.json() as Post)
   })
 }
 
-export const CreateDraft: (title: string) => Promise<Post> = (title) => {
+export const CreateDraft: (user: AuthenticatedUser, title: string) => Promise<Post> = (user, title) => {
+  if (user === undefined || user === null) throw new Error('Authentication required')
   return cache.lookup('create-draft', async (): Promise<Post> => {
     return fetch(`${apiBase}/create-draft/`, {
       method: 'POST',
-      headers: new Headers({
-        'Accept': 'application/json'
-      }),
+      headers: headers(user, ContentTypes.json, ContentTypes.json),
       body: stringify({title}),
     })
     .then(async res => await res.json() as Post)
   })
 }
 
-export const SaveDraft: (post: Post) => Promise<Post> = (post) => {
+export const SaveDraft: (user: AuthenticatedUser, post: Post) => Promise<Post> = (user, post) => {
+  if (user === undefined || user === null) throw new Error('Authentication required')
   return cache.lookup('draft:' + post.id, async (): Promise<Post> => {
     return fetch(`${apiBase}/draft/${post.id}`, {
       method: 'POST',
-      headers: new Headers({
-        'Accept': 'application/json'
-      }),
+      headers: headers(user, ContentTypes.json, ContentTypes.json),
       body: stringify(post),
     })
     .then(async res => await res.json() as Post)
@@ -107,7 +113,8 @@ export const LoginCallback: (authContextproviderId: string, params: Record<strin
     return fetch(`${apiBase}/login/callback/${providerId}`, {
       method: 'POST',
       headers: new Headers({
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
       }),
       body: stringify(params)
     })
