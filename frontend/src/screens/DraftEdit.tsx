@@ -21,7 +21,7 @@ const DraftEdit: React.FC = () => {
       GetDraft(user, id!).then(setDraft)
     }
   },
-  [id, draft, auth])
+  [id, draft, user])
 
   if (draft === undefined) {
     return <div key='loading'>

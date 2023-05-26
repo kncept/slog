@@ -1,5 +1,5 @@
 import React, { ChangeEvent, useState } from 'react'
-import SimpleButton from './SimpleButton'
+// import SimpleButton from './SimpleButton'
 // import Uploady from '@rpldy/uploady'
 // import UploadButton from "@rpldy/upload-button"
 

@@ -7,7 +7,7 @@ import { EnvironmentName } from './orchestration/property-loaders'
 process.on('unhandledRejection', (reason, promise) => {
     console.log('Unhandled rejection at ', promise, `reason: ${reason}`)
     process.exit(1)
-  })
+})
 
 const args = process.argv
 // args[0] = node binary

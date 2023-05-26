@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from '
 import { JwtAuthClaims, LoginProvider } from '../../interface/Model'
 import { LoginCallback, LoginProviders } from './loaders'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { parse, stringify} from '@supercharge/json'
+import { stringify} from '@supercharge/json'
 import * as jose from 'jose'
 
 
