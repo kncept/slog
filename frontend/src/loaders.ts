@@ -42,11 +42,11 @@ function headers(user: AuthenticatedUser, contentType: string | undefined, accep
 
 export const GetPost: (id: string) => Promise<Post> = (id) => {
     return cache.lookup('post:' + id, async (): Promise<Post> => {
-      const res = await fetch(`${apiBase}/post${id}`, {
+      return fetch(`${apiBase}/post${id}`, {
         method: 'GET',
         headers: new Headers({'Accept': ContentTypes.json})
       })
-      return await res.json() as Post
+      .then(res => res.json())
     })
 }
 
@@ -57,7 +57,7 @@ export const ListDrafts: (user: AuthenticatedUser) => Promise<Array<PostMetadata
       method: 'GET',
       headers: headers(user, undefined, ContentTypes.json),
     })
-    .then(async res => await res.json() as Array<Post>)
+    .then(res => res.json())
   })
 }
 
@@ -69,7 +69,7 @@ export const GetDraft: (user: AuthenticatedUser, id: string) => Promise<Post> = 
       method: 'GET',
       headers: headers(user, undefined, ContentTypes.json),
     })
-    .then(async res => await res.json() as Post)
+    .then(res => res.json())
   })
 }
 
@@ -81,7 +81,7 @@ export const CreateDraft: (user: AuthenticatedUser, title: string) => Promise<Po
       headers: headers(user, ContentTypes.json, ContentTypes.json),
       body: stringify({title}),
     })
-    .then(async res => await res.json() as Post)
+    .then(res => res.json())
   })
 }
 
@@ -93,7 +93,7 @@ export const SaveDraft: (user: AuthenticatedUser, post: Post) => Promise<Post> =
       headers: headers(user, ContentTypes.json, ContentTypes.json),
       body: stringify(post),
     })
-    .then(async res => await res.json() as Post)
+    .then(res => res.json())
   })
 }
 
@@ -105,7 +105,7 @@ export const LoginProviders: () => Promise<Array<LoginProvider>> = async () => {
         'Accept': 'application/json'
       })
     })
-    .then(async res => await res.json() as Array<LoginProvider>)
+    .then(res => res.json())
   })
 }
 export const LoginCallback: (authContextproviderId: string, params: Record<string, string>) => Promise<string> = async (providerId, params) => {
@@ -118,7 +118,7 @@ export const LoginCallback: (authContextproviderId: string, params: Record<strin
       }),
       body: stringify(params)
     })
-    .then(async res => await res.text())
+    .then(res => res.text())
 
   })
 }
