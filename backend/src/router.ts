@@ -41,8 +41,8 @@ export default class Router {
 
         let requestorIsAuthorized = false
         let requestorIsAdmin = false
-        if ((extractHeader(headers, 'Authorization') || '').startsWith('Bearer: ')) {
-            let authJwt = extractHeader(headers, 'Authorization')!.substring(8)
+        if ((extractHeader(headers, 'Authorization') || '').startsWith('Bearer ')) {
+            let authJwt = extractHeader(headers, 'Authorization')!.substring(7)
             try {
                 const claims = jwt.verify(authJwt, (await keyPair).publicKey, {
                     algorithms: [

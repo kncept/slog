@@ -34,7 +34,7 @@ class Cache {
 const cache = new Cache()
 function headers(user: AuthenticatedUser, contentType: string | undefined, acceptType: string | undefined): Headers {
   const h: Record<string, string> = {}
-  h['Authorization'] = 'Bearer: ' + user.token()
+  h['Authorization'] = 'Bearer ' + user.token()
   if (contentType) h['Content-Type'] = contentType
   if (acceptType) h['Accept'] = acceptType
   return new Headers(h)
