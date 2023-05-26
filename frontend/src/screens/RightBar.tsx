@@ -6,12 +6,12 @@ import AuthContext from '../AuthContext'
 
 const RightBar: React.FC = () => {
     const auth = useContext(AuthContext)
-    let isAdmin = auth.currentUser?.admin || false
+    let admin = auth.currentUser?.admin() || false
 
   // if logged in show 'drafts'  
   return (
     <div className='RightBar'> 
-        {isAdmin && <span>
+        {admin && <span>
             <ul>
                 <li><ButtonLink text='Drafts and New Posts' to='/drafts'/></li>
             </ul>
