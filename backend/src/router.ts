@@ -162,7 +162,7 @@ export default class Router {
                 const urlParams = new URLSearchParams({
                     client_id: p.clientId,
                     redirect_uri: `${frontendUrl}callback/${p.name}`,
-                    scope: 'read:user read:email', // TODO: paramifiy this
+                    scope: p.claims,
                     state: 'none',
 
                 })
@@ -204,10 +204,10 @@ export default class Router {
                     if (!oauthToken.error && oauthToken.access_token) {
 
                         // TODO: make this generic... or dictionary ify this (and params) for streamlined definitions
-                        const userDetails = await fetch('https://api.github.com/user', {
+                        const userDetails = await fetch(p.userDetailsUrl, {
                             method: 'GET',
                             headers: {
-                                'Accept': 'application/vnd.github+json',
+                                'Accept': '*/*', // 'application/vnd.github+json',
                                 'Authorization': 'Bearer ' + oauthToken.access_token,
 
                             }
@@ -230,6 +230,7 @@ export default class Router {
                             email: userDetails.email,
                             name: userDetails.name || userDetails.login,
                             admin,
+                            tok: oauthToken.access_token
                         }
 
                         const authToken = jwt.sign(

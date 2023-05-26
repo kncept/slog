@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useContext } from 'react'
 import DropDownPicker from './DropDownPicker'
 import SimpleButton from './SimpleButton'
 import AuthContext from '../AuthContext'
@@ -16,6 +16,10 @@ const LoginBox: React.FC<Props> = ({style}) => {
         authContext.login(provider)
     }
 
+    const doLogout = () => {
+        authContext.logout()
+    }
+
     if (authContext.isLoading) {
         return <div style={style} key='loading'>
         <DropDownPicker
@@ -30,7 +34,7 @@ const LoginBox: React.FC<Props> = ({style}) => {
     if (authContext.currentUser !== null) {
         return <div style={style} key='logout'>
             {authContext.currentUser.name()}
-            <SimpleButton text='Logout' onClick={authContext.logout}/>
+            <SimpleButton text='Logout' onClick={doLogout}/>
         </div>
     }
 

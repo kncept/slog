@@ -31,17 +31,17 @@ export interface AwsAccessKeyProperties {
 
 
 
-export type LoginProvider = OAuth2Provider // OidcProvider | OAuth2Provider
+export type LoginProvider = OidcProvider | OAuth2Provider
 
 // TODO: Support direct Oidc as well
-// interface OidcProvider {
-//     name: string
-//     type: 'oidc'
+interface OidcProvider {
+    name: string
+    type: 'oidc'
 
-//     authority: URL
-//     clientId: string
-//     redirectUri: URL
-// }
+    baseUrl: string // config grabbed from /.well-known/openid-configuration
+
+    clientId: string // the public client id?
+}
 
 interface OAuth2Provider {
     name: string
@@ -50,5 +50,8 @@ interface OAuth2Provider {
     clientId: string
     clientSecret: string
     authorizeUrl: string // first GET redirect
-    accessTokenUrl: string
+    accessTokenUrl: string // swap for token
+    userDetailsUrl: string // use token to get user info
+
+    claims: string
 }

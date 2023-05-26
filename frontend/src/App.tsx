@@ -38,11 +38,11 @@ const router = createBrowserRouter([
       },
       {
         path: 'drafts',
-        element: <Authenticated admin={true}><DraftList /></Authenticated>
+        element: <Authenticated requireAdmin={true}><DraftList /></Authenticated>
       },
       {
         path: 'drafts/:id',
-        element: <Authenticated admin={true}><DraftEdit /></Authenticated>
+        element: <Authenticated requireAdmin={true}><DraftEdit /></Authenticated>
       },
       
       {
