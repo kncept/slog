@@ -1,7 +1,7 @@
 import fetchPonyfill from 'fetch-ponyfill'
-import { AuthenticatedUser, LoginProvider, Post, PostMetadata } from '../../interface/Model'
-import { parse, stringify} from '@supercharge/json'
-import { AuthContextType } from './AuthContext'
+import { LoginProvider, Post, PostMetadata } from '../../interface/Model'
+import { stringify} from '@supercharge/json'
+import { AuthenticatedUser } from './AuthContext'
 
 const {fetch, Headers} = fetchPonyfill({})
 
@@ -34,7 +34,7 @@ class Cache {
 const cache = new Cache()
 function headers(user: AuthenticatedUser, contentType: string | undefined, acceptType: string | undefined): Headers {
   const h: Record<string, string> = {}
-  h['Authorization'] = 'Bearer: ' + user.authToken
+  h['Authorization'] = 'Bearer: ' + user.token()
   if (contentType) h['Content-Type'] = contentType
   if (acceptType) h['Accept'] = acceptType
   return new Headers(h)
@@ -108,17 +108,17 @@ export const LoginProviders: () => Promise<Array<LoginProvider>> = async () => {
     .then(async res => await res.json() as Array<LoginProvider>)
   })
 }
-export const LoginCallback: (authContextproviderId: string, params: Record<string, string>) => Promise<AuthenticatedUser> = async (providerId, params) => {
-  return cache.lookup('logincallback', async (): Promise<AuthenticatedUser> => {
+export const LoginCallback: (authContextproviderId: string, params: Record<string, string>) => Promise<string> = async (providerId, params) => {
+  return cache.lookup('logincallback', async (): Promise<string> => {
     return fetch(`${apiBase}/login/callback/${providerId}`, {
       method: 'POST',
       headers: new Headers({
-        'Accept': 'application/json',
+        'Accept': 'application/jwt',
         'Content-Type': 'application/json',
       }),
       body: stringify(params)
     })
-    .then(async res => await res.json())
+    .then(async res => await res.text())
 
   })
 }

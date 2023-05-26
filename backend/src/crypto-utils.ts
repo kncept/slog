@@ -20,7 +20,7 @@ export async function currentKeyPair(): Promise<KeyPair> {
 export function generateKeyPair(): Promise<KeyPair> {
     return new Promise((resolve, reject) => {
         crypto.generateKeyPair('rsa', {
-            modulusLength: 1024,
+            modulusLength: 2048, // RS512 has a minimum key size of 2k
             publicKeyEncoding: {
                 type: 'pkcs1',
                 format: 'pem',

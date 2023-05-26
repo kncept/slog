@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react'
-import { AuthenticatedUser, LoginProvider } from '../../interface/Model'
+import { JwtAuthClaims, LoginProvider } from '../../interface/Model'
 import { LoginCallback, LoginProviders } from './loaders'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { parse, stringify} from '@supercharge/json'
@@ -11,6 +11,33 @@ export default AuthContext
 
 const localStorageKeys = {
     user: 'user', //stores the json user
+}
+
+export interface AuthenticatedUser {
+    token(): string
+    name(): string
+    admin(): boolean
+
+}
+
+class JwtUser implements AuthenticatedUser {
+    jwt: string
+    constructor(jwt: string) {
+        this.jwt = jwt
+        // jose.jwtVerify(this.jwt, pulicKey)
+    }
+    token(): string {
+        return this.jwt
+    }
+    parse(): JwtAuthClaims {
+        return jose.decodeJwt(this.jwt) as any as JwtAuthClaims
+    }
+    name(): string {
+        return this.parse().name
+    }
+    admin(): boolean {
+        return this.parse().admin
+    }
 }
 
 export interface AuthContextType {
@@ -85,11 +112,12 @@ export const AuthProvider: React.FC<{children?: React.ReactNode}> = ({children})
     
     useEffect(() => {
         if (auth.isLoading) {
-            const userString = localStorage.getItem(localStorageKeys.user)
+            const jwtString = localStorage.getItem(localStorageKeys.user)
             let currentUser: AuthenticatedUser | null = null
-            if (userString !== null && userString !== '') {
-                currentUser = parse(userString)
-            }            
+            if (jwtString !== null && jwtString !== '') {
+                currentUser = new JwtUser(jwtString)
+                // TOOD: verify & force a non logout if not valid
+            }
 
             LoginProviders().then(providers => setAuth({
                 isLoading: false,
@@ -109,10 +137,10 @@ export const AuthProvider: React.FC<{children?: React.ReactNode}> = ({children})
                 },
                 callback: (provider: LoginProvider, params: Record<string, string>) => {
                     // load 'last url' and 'state hash' from Localstorage?
-                    return LoginCallback(provider.name, params).then(authenticatedUser => {
-                        localStorage.setItem(localStorageKeys.user, stringify(authenticatedUser))
+                    return LoginCallback(provider.name, params).then(jwt => {
+                        localStorage.setItem(localStorageKeys.user, jwt)
 
-                        const tokenClaims = jose.decodeJwt(authenticatedUser.authToken)
+                        const tokenClaims = jose.decodeJwt(jwt)
                         // jose.jwtVerify(authenticatedUser.authToken, '')
                         // const tokenClaims = jwt.decode(authenticatedUser.authToken)
                         console.log('token claims: ', tokenClaims)
@@ -123,7 +151,7 @@ export const AuthProvider: React.FC<{children?: React.ReactNode}> = ({children})
                         setAuth(existing => {
                             return {
                                 ...existing,
-                                currentUser: authenticatedUser,
+                                currentUser: new JwtUser(jwt),
                             }
                         })
                     })

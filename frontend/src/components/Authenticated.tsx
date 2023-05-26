@@ -1,4 +1,4 @@
-import React, { FC, useContext } from 'react'
+import React, { FC, useContext, useEffect, useState } from 'react'
 import AuthContext from '../AuthContext'
 import { useNavigate } from 'react-router-dom'
 
@@ -11,16 +11,24 @@ type Props = {
 const Authenticated: FC<Props> = ({children, admin, redirect}) => {
     const navigate = useNavigate()
     const auth = useContext(AuthContext)
-    let isAdmin = auth.currentUser?.isAdmin || false
+    const isAdmin = auth.currentUser?.admin() || false
+    const [allowed, setAllowed] = useState(false)
+    const allow: () => void = () => {if (!allowed) setAllowed(true)}
 
     if (admin) {
-        if (isAdmin) return <>{children}</>
+        if (isAdmin) allow()
     } else {
-        if (auth.currentUser !== null) return <>{children}</>
+        if (auth.currentUser !== null) allow()
     }
 
-    if (redirect) navigate(redirect)
-    navigate('/')
+    useEffect(() => {
+        if (!allowed) {
+            if (redirect) navigate(redirect)
+            else navigate('/')
+        }
+    }, [redirect, allowed])
+   
+    if (allowed) return <>{children}</>
     return <></>
 }
 

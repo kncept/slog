@@ -30,10 +30,16 @@ export interface LoginProvider {
     authorizeUrl: string
 }
 
-export interface AuthenticatedUser {
+export interface JwtAuthClaims {
+    sub: string // JWT 'sub' claim (subject)
+    iat: number // issued at
+    iss: string // super-simple-blog
+
     name: string // display name
+    admin: boolean // use is authenticated as an admin
     email: string
-    providedBy: string
-    isAdmin: boolean
-    authToken: string
+
+    // providedBy: string
+    // authToken: string
+    // ==> rolled into sub
 }

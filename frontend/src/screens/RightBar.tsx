@@ -6,7 +6,7 @@ import AuthContext from '../AuthContext'
 
 const RightBar: React.FC = () => {
     const auth = useContext(AuthContext)
-    let isAdmin = auth.currentUser?.isAdmin || false
+    let isAdmin = auth.currentUser?.admin || false
 
   // if logged in show 'drafts'  
   return (
