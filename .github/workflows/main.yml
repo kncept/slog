@@ -33,7 +33,7 @@ jobs:
       - name: Create prodProperties.ts file
         run: echo "${PROD_PROPERTIES}" > prodProperties.ts
         env:
-          PROD_PROPERTIES: ${{ secrets.ProdProperties_ts }}
+          PROD_PROPERTIES: ${{ secrets.PROD_PROPERTIES }}
 
       - name: npm init
         run: npm ci
