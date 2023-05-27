@@ -11,47 +11,69 @@ while (apiBase.endsWith("/")) {
 }
 
 const ContentTypes = {
-  json: 'application/json'
+  json: 'application/json',
+  jwt: 'application/jwt',
 }
 
 // super basic parallel request cache
 class Cache {
   activeRequests: Record<string, any> = {}
-  async lookup(input: string, init: RequestInit): Promise<Response> {
-    let value = this.activeRequests[input]
+  async lookup(user: AuthenticatedUser | null, url: string, init: {
+    method: string,
+    headers: Record<string, string>
+    body?: string | undefined
+  }): Promise<Response> {
+
+    let key = user == null ? 'n' : user.admin()? 't' : 'f'
+    key = key + url
+
+    const headers: Record<string, string> = init.headers || {}
+    if (user !== null) {
+      headers['Authorization'] = 'Bearer ' + user.token()
+    }
+
+    let value = this.activeRequests[key]
     if (value !== null && value !== undefined) {
       return value
     }
-    value = fetch(input, init)
-    .then(response => {
-      delete this.activeRequests[input]
-      return response
+    value = fetch(url, {
+      method: init.method,
+      headers: new Headers(init.headers),
+      body: init.body,
+    })
+    .then(res => {
+      delete this.activeRequests[key]
+      return res
+    })
+    .then(res => {
+      if (res.status === 403 && user !== null) {
+        console.log('logging user out on 403')
+        user.logout()
+      }
+      if (res.status === 401 || (res.status === 403 && user === null)) {
+        console.log(`SHOULD redirect to a 'login required' screen`)
+      }
+      return res
     })
     return value
   }
 }
+
 const cache = new Cache()
-function headers(user: AuthenticatedUser, contentType: string | undefined, acceptType: string | undefined): Headers {
-  const h: Record<string, string> = {}
-  h['Authorization'] = 'Bearer ' + user.token()
-  if (contentType) h['Content-Type'] = contentType
-  if (acceptType) h['Accept'] = acceptType
-  return new Headers(h)
-}
 
 export const GetPost: (id: string) => Promise<Post> = (id) => {
-    return cache.lookup(`${apiBase}/post${id}`, {
+    return cache.lookup(null, `${apiBase}/post${id}`, {
       method: 'GET',
-      headers: new Headers({'Accept': ContentTypes.json})
+      headers: {'Accept': ContentTypes.json}
     })
     .then(res => res.json())
 }
 
 export const ListDrafts: (user: AuthenticatedUser) => Promise<Array<PostMetadata>> = (user) => {
   if (user === undefined || user === null) throw new Error('Authentication required')
-  return cache.lookup(`${apiBase}/draft/`, {
+  return cache.lookup(user, `${apiBase}/draft/`, {
     method: 'GET',
-    headers: headers(user, undefined, ContentTypes.json),
+    headers: {'Accept': ContentTypes.json}
   })
   .then(res => res.json())
 }
@@ -59,18 +81,18 @@ export const ListDrafts: (user: AuthenticatedUser) => Promise<Array<PostMetadata
 
 export const GetDraft: (user: AuthenticatedUser, id: string) => Promise<Post> = (user, id) => {
   if (user === undefined || user === null) throw new Error('Authentication required')
-    return cache.lookup(`${apiBase}/draft/${id}`, {
+    return cache.lookup(user, `${apiBase}/draft/${id}`, {
       method: 'GET',
-      headers: headers(user, undefined, ContentTypes.json),
+      headers: {'Accept': ContentTypes.json}
     })
     .then(res => res.json())
 }
 
 export const CreateDraft: (user: AuthenticatedUser, title: string) => Promise<Post> = (user, title) => {
   if (user === undefined || user === null) throw new Error('Authentication required')
-  return cache.lookup(`${apiBase}/create-draft/`, {
+  return cache.lookup(user, `${apiBase}/create-draft/`, {
     method: 'POST',
-    headers: headers(user, ContentTypes.json, ContentTypes.json),
+    headers: {'Accept': ContentTypes.json, 'Content-Type': ContentTypes.json},
     body: stringify({title}),
   })
   .then(res => res.json())
@@ -78,30 +100,25 @@ export const CreateDraft: (user: AuthenticatedUser, title: string) => Promise<Po
 
 export const SaveDraft: (user: AuthenticatedUser, post: Post) => Promise<Post> = (user, post) => {
   if (user === undefined || user === null) throw new Error('Authentication required')
-    return cache.lookup(`${apiBase}/draft`, {
+    return cache.lookup(user, `${apiBase}/draft`, {
       method: 'POST',
-      headers: headers(user, ContentTypes.json, ContentTypes.json),
+      headers: {'Accept': ContentTypes.json, 'Content-Type': ContentTypes.json},
       body: stringify(post),
     })
     .then(res => res.json())
 }
 
 export const LoginProviders: () => Promise<Array<LoginProvider>> = async () => {
-    return cache.lookup(`${apiBase}/login/providers`, {
+    return cache.lookup(null, `${apiBase}/login/providers`, {
       method: 'GET',
-      headers: new Headers({
-        'Accept': 'application/json'
-      })
+      headers: {'Accept': ContentTypes.json},
     })
     .then(res => res.json())
 }
 export const LoginCallback: (providerId: string, params: Record<string, string>) => Promise<string> = async (providerId, params) => {
-    return cache.lookup(`${apiBase}/login/callback/${providerId}`, {
+    return cache.lookup(null, `${apiBase}/login/callback/${providerId}`, {
       method: 'POST',
-      headers: new Headers({
-        'Accept': 'application/jwt',
-        'Content-Type': 'application/json',
-      }),
+      headers: {'Accept': ContentTypes.jwt, 'Content-Type': ContentTypes.json},
       body: stringify(params)
     })
     .then(res => res.text())

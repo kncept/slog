@@ -9,7 +9,6 @@ type Props = {
 
 const LoginBox: React.FC<Props> = ({style}) => {
     const authContext = useContext(AuthContext)
-    console.log('LoginBox rendering', authContext.currentUser)
 
     const onSelectProvider = (providerName: string): void => {
         const provider = authContext.providers.filter(p => p.name === providerName)[0]
