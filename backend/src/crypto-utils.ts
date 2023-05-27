@@ -1,6 +1,6 @@
 import crypto from 'crypto'
 
-interface KeyPair {
+export interface KeyPair {
     privateKey: string
     publicKey: string
 }
