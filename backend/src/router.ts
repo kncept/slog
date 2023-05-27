@@ -52,7 +52,6 @@ export default class Router {
                     ],
                     issuer: 'super-simple-blog'
                 }) as any as JwtAuthClaimsToSend
-                console.log('JWT Claims:: ', claims)
                 requestorIsAuthorized = true
                 if (claims.admin) {
                     requestorIsAdmin = true
@@ -216,7 +215,7 @@ export default class Router {
 
                                 }
                             }).then((res: any) => res.json())
-                            console.log('userDetails', userDetails)
+                            // console.log(p.name + ' userDetails', userDetails)
 
                             let admin = false
 
@@ -235,7 +234,7 @@ export default class Router {
                             // TODO: move to a Signed JWT with claims for 'email' and 'name' and 'admin'
                             const authenticatedUser: JwtAuthClaimsToSend = {
                                 // authToken,
-                                email: userDetails.email,
+                                email: userDetails.email || '',
                                 name: userDetails.name || userDetails.login,
                                 admin,
                                 tok: oauthToken.access_token
