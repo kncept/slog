@@ -114,32 +114,30 @@ export const AuthProviderCallback: React.FC = () => {
 
 export const AuthProvider: React.FC<{children?: React.ReactNode}> = ({children}) => {
     const [auth, setAuth] = useState<AuthContextType>(loadingContext)
-
-    const logout = () => {
-        localStorage.removeItem(localStorageKeys.user)
-        setAuth(existing => {return {
-        ...existing,
-        currentUser: null,
-    }})}
-    const login = (provider: LoginProvider) => {
-        //  not replace - don't want to lose our url history
-        window.location.href = provider.authorizeUrl
-    }
-    const callback = (provider: LoginProvider, params: Record<string, string>) => {
-        // load 'last url' and 'state hash' from Localstorage?
-        return LoginCallback(provider.name, params).then(jwt => {
-            localStorage.setItem(localStorageKeys.user, jwt)
-            setAuth(existing => {
-                return {
-                    ...existing,
-                    currentUser: new JwtUser(jwt, logout),
-                }
-            })
-        })
-    }
-    
     useEffect(() => {
         if (auth.isLoading) {
+            const logout = () => {
+                localStorage.removeItem(localStorageKeys.user)
+                setAuth(existing => {return {
+                ...existing,
+                currentUser: null,
+            }})}
+            const login = (provider: LoginProvider) => {
+                //  not replace - don't want to lose our url history
+                window.location.href = provider.authorizeUrl
+            }
+            const callback = (provider: LoginProvider, params: Record<string, string>) => {
+                // load 'last url' and 'state hash' from Localstorage?
+                return LoginCallback(provider.name, params).then(jwt => {
+                    localStorage.setItem(localStorageKeys.user, jwt)
+                    setAuth(existing => {
+                        return {
+                            ...existing,
+                            currentUser: new JwtUser(jwt, logout),
+                        }
+                    })
+                })
+            }
             
             const jwtString = localStorage.getItem(localStorageKeys.user)
             let currentUser: AuthenticatedUser | null = null
