@@ -9,11 +9,12 @@ const Authenticated: FC<{
 }> = ({children, requireAdmin, redirect}) => {
     const navigate = useNavigate()
     const auth = useContext(AuthContext)
+    const isLoading = auth.isLoading
     const userIsAdmin = auth.currentUser?.admin() || false
     const [allowed, setAllowed] = useState(false)
-    const allow: () => void = () => {if (!allowed) setAllowed(true)}
-    const disallow: () => void = () => {if (allowed) setAllowed(false)}
-
+    const allow: () => void = () => {if (!isLoading && !allowed) setAllowed(true)}
+    const disallow: () => void = () => {if (!isLoading && allowed) setAllowed(false)}
+    
     if (requireAdmin) {
         if (userIsAdmin) allow()
         else disallow()
@@ -23,11 +24,11 @@ const Authenticated: FC<{
     }
 
     useEffect(() => {
-        if (!allowed) {
+        if (!isLoading && !allowed) {
             if (redirect) navigate(redirect)
             else navigate('/')
         }
-    }, [redirect, allowed, navigate])
+    }, [allowed, isLoading, redirect, navigate])
    
     if (allowed) return <>{children}</>
     return <></>
