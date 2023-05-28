@@ -46,7 +46,7 @@ export class FilesystemStorage implements Storage {
     }
 
     DraftStorage(): PostCreator {
-        return new FileSystemPostCreator(this.draftStorageLocation, this.fsBackend)
+        return new FileSystemPostCreator(this.draftStorageLocation, this.postStorageLocation, this.fsBackend)
     }
 }
 
@@ -103,11 +103,28 @@ class FileSystemPostReader implements PostReader {
 }
 
 class FileSystemPostCreator extends FileSystemPostReader implements PostCreator {
-    constructor(storageLocation: string, fsBackend: FileOperations) {
+    publishLocation: string
+    constructor(storageLocation: string, publishLocation: string, fsBackend: FileOperations) {
         super(storageLocation, fsBackend)
+        this.publishLocation = publishLocation
     }
     PublishDraft(draftId: string, postId: string): Promise<void> {
-        throw new Error('Method not implemented.')
+        return new Promise(async (resolve, reject) => {
+            const postCreator: FileSystemPostCreator = new FileSystemPostCreator(this.publishLocation, '', this.fsBackend)
+            
+            const draftPath = this.calculatePostPath(draftId)
+            const postPath = postCreator.calculatePostPath(postId)
+
+            const post = await this.GetPost(draftId)
+            post.id = postId
+            await postCreator.Save(post) // move to drafts
+            await Promise.all(post.attachments.map(attachment => this.fsBackend.copy(
+                path.join(draftPath, attachment),
+                path.join(postPath, attachment),
+            )))
+            await this.DeletePost(draftId)
+            resolve()
+        })
     }
     AddMedia(postId: string, filename: string, data: Buffer): Promise<void> {
         if (filename.toLowerCase() === 'post.json' || filename.toLowerCase() === 'post.md') {

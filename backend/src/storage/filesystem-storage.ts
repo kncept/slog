@@ -9,6 +9,7 @@ export interface FileOperations {
     write(file: string, data: string | NodeJS.ArrayBufferView): Promise<void>
     read(file: string): Promise<Buffer>
     delete(file: string): Promise<void>
+    copy(src: string, dst: string): Promise<void>
 }
 
 export class LocalFsOperations implements FileOperations {
@@ -73,6 +74,17 @@ export class LocalFsOperations implements FileOperations {
         return new Promise((resolve, reject) => {
             fs.rm(file, (err) => {
                 if (err != null) {
+                    reject(err)
+                } else {
+                    resolve()
+                }
+            })
+        })
+    }
+    copy(src: string, dst: string): Promise<void> {
+        return new Promise((resolve, reject) => {
+            fs.copyFile(src, dst, (err) => {
+                if (err !== null) {
                     reject(err)
                 } else {
                     resolve()
@@ -168,5 +180,8 @@ export class S3FsOperations implements FileOperations {
             resolve()
 
         })
+    }
+    copy(src: string, dst: string): Promise<void> {
+        return Promise.reject('NOT YET IMPLEMENTED')
     }
 }

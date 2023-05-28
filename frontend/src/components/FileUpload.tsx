@@ -11,10 +11,11 @@ while (apiBase.endsWith("/")) {
 
 type Props = {
     draftId: string
+    onUpload: (filename: string) => void
 }
 
 // eg: https://codefrontend.com/file-upload-reactjs/
-const FileUpload: React.FC<Props> = ({draftId}) => {
+const FileUpload: React.FC<Props> = ({draftId, onUpload}) => {
     const auth = useContext(AuthContext)
     const [file, setFile] = useState<File>()
     const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -44,6 +45,7 @@ const FileUpload: React.FC<Props> = ({draftId}) => {
                 headers,
         })
         .then(() => setFile(undefined))
+        .then(() => onUpload(file.name))
     }
     return <div>
         <input type="file" onChange={handleFileChange} />
