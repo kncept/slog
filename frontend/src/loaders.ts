@@ -1,5 +1,5 @@
 import fetchPonyfill from 'fetch-ponyfill'
-import { LoginProvider, Post, PostMetadata } from '../../interface/Model'
+import { Identified, LoginProvider, Post, PostMetadata } from '../../interface/Model'
 import { stringify} from '@supercharge/json'
 import { AuthenticatedUser } from './AuthContext'
 
@@ -114,6 +114,14 @@ export const DeleteDraft: (user: AuthenticatedUser, id: string) => Promise<void>
     method: 'DELETE',
   })
   .then(res => {})
+}
+
+export const PublishDraft: (user: AuthenticatedUser, id: string) => Promise<Identified> = (user, id) => {
+  if (user === undefined || user === null) throw new Error('Authentication required')
+  return cache.lookup(user, `${apiBase}/publish-draft/${id}`, {
+    method: 'POST',
+  })
+  .then(res => res.json())
 }
 
 export const LoginProviders: () => Promise<Array<LoginProvider>> = async () => {

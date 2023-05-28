@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { Post } from '../../../interface/Model'
-import { DeleteDraft, GetDraft, SaveDraft, } from '../loaders'
+import { DeleteDraft, GetDraft, PublishDraft, SaveDraft, } from '../loaders'
 import SimpleButton from '../components/SimpleButton'
 import { useNavigate, useParams } from 'react-router-dom'
 import './DraftList.css'
@@ -43,6 +43,10 @@ const DraftEdit: React.FC = () => {
     DeleteDraft(user!, id!)
     .then(() => navigate('/drafts'))
   }
+  const publishDraft = () => {
+    PublishDraft(user!, id!)
+    .then((post) => navigate(`/posts/${post.id}`))
+  }
 
   return <div>
     <form className='TitleEdit'>
@@ -59,6 +63,7 @@ const DraftEdit: React.FC = () => {
 
     <SimpleButton text='Save' onClick={saveDraft} />
     <SimpleButton text='Delete' onClick={deleteDraft} />
+    <SimpleButton text='PUBLISH' onClick={publishDraft} />
 
   </div>
 }

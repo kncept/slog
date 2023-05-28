@@ -1,5 +1,5 @@
 // I must say, the Lambda V3 API and typescript offering from amazon is horrible
-import { JwtAuthClaims, LoginProvider, Post, PostMetadata } from '../../interface/Model'
+import { Identified, JwtAuthClaims, LoginProvider, Post, PostMetadata } from '../../interface/Model'
 import * as luxon from 'luxon'
 import Storage from './storage/storage'
 import { parse, stringify} from '@supercharge/json'
@@ -107,7 +107,7 @@ export default class Router {
             if (!requestorIsAuthorized) return unauthorizedResponse
             if (!requestorIsAdmin) return forbiddenResponse
             const id = params!.params!.postId
-            await this.storage.DraftStorage().DeleteDraft(id)
+            await this.storage.DraftStorage().DeletePost(id)
             return emptyResponse
         }
 
@@ -136,6 +136,18 @@ export default class Router {
                 return quickResponse(stringify(res))
         }
 
+        params = match('/publish-draft/:postId', path)
+        if (params.matches && method == 'POST') {
+            if (!requestorIsAuthorized) return unauthorizedResponse
+            if (!requestorIsAdmin) return forbiddenResponse
+            const id = params!.params!.postId
+            const newId = KSUID.randomSync().string
+            await this.storage.DraftStorage().PublishDraft(id, newId)
+            return quickResponse(stringify({
+                id: newId
+            } as Identified))
+        }
+
         params = match('/image/:type/:postId', path)
         if (params.matches && method === 'POST' && params!.params!.type === 'draft') {
             if (!requestorIsAuthorized) return unauthorizedResponse
@@ -156,8 +168,9 @@ export default class Router {
             const filename = params!.params!.filename
             if (type === 'post') return bufferResponse(await this.storage.PostStorage().GetMedia(id, filename), filename)
             if (type === 'draft') {
-                if (!requestorIsAuthorized) return unauthorizedResponse
-                if (!requestorIsAdmin) return forbiddenResponse
+                // TODO: work out how to secure draft media
+                // if (!requestorIsAuthorized) return unauthorizedResponse
+                // if (!requestorIsAdmin) return forbiddenResponse
                 return bufferResponse(await this.storage.DraftStorage().GetMedia(id, filename), filename)
             }
         }

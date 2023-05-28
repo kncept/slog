@@ -16,13 +16,13 @@ export interface PostReader {
     GetPost(postId: string): Promise<Post>
     GetMediaRef(postId: string, filename: string): Promise<string>
     GetMedia(postId: string, filename: string): Promise<Buffer>
+    DeletePost(postId: string): Promise<void>
 }
 
 export interface PostCreator extends PostReader{
     AddMedia(postId: string, filename: string, data: Buffer): Promise<void>
     Save(post: Post): Promise<void> // update only
-    PublishDraft(postId: string): Promise<void>
-    DeleteDraft(postId: string): Promise<void>
+    PublishDraft(draftId: string, postId: string): Promise<void>
 }
 
 export class FilesystemStorage implements Storage {
@@ -89,11 +89,16 @@ class FileSystemPostReader implements PostReader {
         const postPath = this.calculatePostPath(postId)
         return this.fsBackend.read(path.join(postPath, filename))
         // const postPath = this.calculatePostPath(post.id)
-        throw new Error('Method not implemented.')
     }
 
     calculatePostPath(postId: string): string {
         return path.join(this.storageLocation, postId)
+    }
+
+    DeletePost(postId: string): Promise<void> {
+        // return this.fsBackend.delete('.data/')
+        const postPath = this.calculatePostPath(postId) + '/'
+        return this.fsBackend.delete(postPath)
     }
 }
 
@@ -101,7 +106,7 @@ class FileSystemPostCreator extends FileSystemPostReader implements PostCreator 
     constructor(storageLocation: string, fsBackend: FileOperations) {
         super(storageLocation, fsBackend)
     }
-    PublishDraft(postId: string): Promise<void> {
+    PublishDraft(draftId: string, postId: string): Promise<void> {
         throw new Error('Method not implemented.')
     }
     AddMedia(postId: string, filename: string, data: Buffer): Promise<void> {
@@ -122,11 +127,6 @@ class FileSystemPostCreator extends FileSystemPostReader implements PostCreator 
             await this.fsBackend.write(path.join(postPath, 'post.json'), stringify(extractMetadata(post)))
             await this.fsBackend.write(path.join(postPath, 'post.md'), post.markdown)
         })
-    }
-    DeleteDraft(postId: string): Promise<void> {
-        // return this.fsBackend.delete('.data/')
-        const postPath = this.calculatePostPath(postId) + '/'
-        return this.fsBackend.delete(postPath)
     }
 }
 

@@ -1,4 +1,5 @@
-import React, { ChangeEvent, useState } from 'react'
+import React, { ChangeEvent, useContext, useState } from 'react'
+import AuthContext from '../AuthContext'
 // import SimpleButton from './SimpleButton'
 // import Uploady from '@rpldy/uploady'
 // import UploadButton from "@rpldy/upload-button"
@@ -14,6 +15,7 @@ type Props = {
 
 // eg: https://codefrontend.com/file-upload-reactjs/
 const FileUpload: React.FC<Props> = ({draftId}) => {
+    const auth = useContext(AuthContext)
     const [file, setFile] = useState<File>()
     const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
@@ -24,18 +26,22 @@ const FileUpload: React.FC<Props> = ({draftId}) => {
         if (!file) {
             return
         }
+        
+        const headers: Record<string, string> = {
+            'Content-Type': file.type,
+            'Content-Length': `${file.size}`, // 👈 Headers need to be a string
+            'Content-Disposition': `file; filename=${file.name}`,
+            'Content-Name': file.name,
+        }
+        if (auth.currentUser)
+            headers['Authorization'] = 'Bearer ' + auth.currentUser.token()
 
         // 👇 Uploading the file using the fetch API to the server
         fetch(`${apiBase}/image/draft/${draftId}`, {
                 method: 'POST',
                 body: file,
                 // 👇 Set headers manually for single file upload
-                headers: {
-                'content-type': file.type,
-                'content-length': `${file.size}`, // 👈 Headers need to be a string
-                'content-disposition': `file; filename=${file.name}`,
-                'content-name': file.name,
-            },
+                headers,
         })
         .then(() => setFile(undefined))
     }
