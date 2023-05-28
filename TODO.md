@@ -1,11 +1,12 @@
 * Fix empty landing page
 
-* Add 'Publish Draft' functionality
-
 * Update RHS post listing to pull... last 10
 * including date (!)
 
 * RHS post listing 'pagination' or 'cursor scroll' or something.
+
+* draft media to have a tick/cross for 'usage' (and able to be deleted)
+* save draft to have a clear -> loading -> tick -> clear cycled (edit based)
 
 * work out login/sso/oauth/oidc details.
 ==> provider setup links
