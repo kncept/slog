@@ -22,6 +22,7 @@ export interface PostCreator extends PostReader{
     AddMedia(postId: string, filename: string, data: Buffer): Promise<void>
     Save(post: Post): Promise<void> // update only
     PublishDraft(postId: string): Promise<void>
+    DeleteDraft(postId: string): Promise<void>
 }
 
 export class FilesystemStorage implements Storage {
@@ -121,6 +122,11 @@ class FileSystemPostCreator extends FileSystemPostReader implements PostCreator 
             await this.fsBackend.write(path.join(postPath, 'post.json'), stringify(extractMetadata(post)))
             await this.fsBackend.write(path.join(postPath, 'post.md'), post.markdown)
         })
+    }
+    DeleteDraft(postId: string): Promise<void> {
+        // return this.fsBackend.delete('.data/')
+        const postPath = this.calculatePostPath(postId) + '/'
+        return this.fsBackend.delete(postPath)
     }
 }
 

@@ -1,4 +1,5 @@
 // I must say, the Lambda V3 API and typescript offering from amazon is horrible
+import { currentKeyPair } from './crypto-utils'
 import Router from './router'
 import { S3FsOperations } from './storage/filesystem-storage'
 import { FilesystemStorage } from './storage/storage'
@@ -13,7 +14,10 @@ function bucketName(): string {
   return process.env.S3_BUCKET_NAME || ''
 }
 
-const router: Router = new Router(new FilesystemStorage('.', new S3FsOperations(bucketName())))
+const router: Router = new Router(
+  new FilesystemStorage('.', new S3FsOperations(bucketName())),
+  currentKeyPair(),
+)
 
 export const handler = async (event: any, context: any): Promise<any> => {
   // console.log('event', event)
@@ -51,7 +55,7 @@ export const handler = async (event: any, context: any): Promise<any> => {
   // headers['Access-Control-Allow-Headers'] = 'Content-Type'
   headers['Access-Control-Allow-Headers'] = '*'
   headers['Access-Control-Allow-Origin'] = corsAllowedOriginResponse
-  headers['Access-Control-Allow-Methods'] = 'OPTIONS,GET,POST'
+  headers['Access-Control-Allow-Methods'] = 'OPTIONS,GET,POST,DELETE'
 
   if (event.httpMethod == 'OPTIONS') {
     return {

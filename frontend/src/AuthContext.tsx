@@ -36,7 +36,12 @@ class JwtUser implements AuthenticatedUser {
     }
 
     parse(): JwtAuthClaims {
-        return jose.decodeJwt(this.jwt) as any as JwtAuthClaims
+        try {
+            return jose.decodeJwt(this.jwt) as any as JwtAuthClaims
+        } catch (err) {
+            this.logout()
+            return {} as JwtAuthClaims
+        }
     }
     name(): string {
         return this.parse().name

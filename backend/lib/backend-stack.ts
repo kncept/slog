@@ -78,8 +78,8 @@ export class BackendStack extends cdk.Stack {
         S3_BUCKET_NAME: bucket.bucketName,
         LOGIN_PROVIDERS: process.env.LOGIN_PROVIDERS || '[]',
 
-        KEY_PRIVATE: props.keyPair.privateKey,
-        KEY_PUBLIC: props.keyPair.publicKey,
+        PRIVATE_KEY: props.keyPair.privateKey,
+        PUBLIC_KEY: props.keyPair.publicKey,
 
       },
       logRetention: logs.RetentionDays.ONE_MONTH,

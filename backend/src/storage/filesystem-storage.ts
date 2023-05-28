@@ -1,5 +1,6 @@
 import * as fs from 'fs'
-import { S3Client, ListObjectsV2Request, ListObjectsV2Command, PutObjectCommand, PutObjectCommandInput, ListObjectsV2CommandInput, GetObjectCommand, GetObjectCommandInput } from '@aws-sdk/client-s3'
+import { S3Client, ListObjectsV2Request, ListObjectsV2Command, PutObjectCommand, PutObjectCommandInput, ListObjectsV2CommandInput, GetObjectCommand, GetObjectCommandInput, DeleteObjectCommand, DeleteObjectCommandInput } from '@aws-sdk/client-s3'
+import { resolve } from 'path'
 
 
 export interface FileOperations {
@@ -7,6 +8,7 @@ export interface FileOperations {
     list(dir: string): Promise<Array<string>>
     write(file: string, data: string | NodeJS.ArrayBufferView): Promise<void>
     read(file: string): Promise<Buffer>
+    delete(file: string): Promise<void>
 }
 
 export class LocalFsOperations implements FileOperations {
@@ -49,6 +51,31 @@ export class LocalFsOperations implements FileOperations {
                     reject(err)
                 } else {
                     resolve(data)
+                }
+            })
+        })
+    }
+    delete(file: string): Promise<void> {
+        if (file.endsWith('/')) {
+            return new Promise(async (resolve, reject) => {
+                const files = fs.readdirSync(file)
+                await Promise.all(files.map(f => this.delete(file + f)))
+
+                fs.rmdir(file, (err) => {
+                    if (err != null) {
+                        reject(err)
+                    } else {
+                        resolve()
+                    }
+                })
+            })
+        }
+        return new Promise((resolve, reject) => {
+            fs.rm(file, (err) => {
+                if (err != null) {
+                    reject(err)
+                } else {
+                    resolve()
                 }
             })
         })
@@ -109,7 +136,8 @@ export class S3FsOperations implements FileOperations {
           return this.client.send(new PutObjectCommand(input))
           .then(() => {})
     }
-    async read(file: string): Promise<Buffer> {
+    read(file: string): Promise<Buffer> {
+        console.log('S3fs reading ' + file)
         return new Promise(async (resolve, reject) => {
             const input: GetObjectCommandInput = {
                 Bucket: this.bucketName,
@@ -118,6 +146,27 @@ export class S3FsOperations implements FileOperations {
             const response = await this.client.send(new GetObjectCommand(input))
             const buf = await response.Body!.transformToByteArray()
             resolve(Buffer.from(buf))
+        })
+    }
+    delete(file: string): Promise<void> {
+        console.log('S3fs deleting ' + file)
+        return new Promise(async (resolve, reject) => {
+            if (file.endsWith('/')) {
+                console.log('manual s3 delete recurse')
+                const filenames = await this.list(file)
+                await Promise.all(filenames.map(f => this.delete(file + f)))
+                filenames.forEach(filename => console.log('s3 filename: ', filename))
+                // await all deletes on them all 
+            }
+            const input: DeleteObjectCommandInput = {
+                Bucket: this.bucketName,
+                Key: file
+            }
+            const response = await this.client.send(new DeleteObjectCommand(input))
+            console.log('S3 deleted file: ', file)
+            console.log('response: ', response)
+            resolve()
+
         })
     }
 }

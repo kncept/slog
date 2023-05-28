@@ -2,3 +2,6 @@ prodProperties.ts
 devProperties.ts
 node_modules
 .data
+
+privateKey.pem
+publicKey.pem

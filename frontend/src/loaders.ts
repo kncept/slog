@@ -20,7 +20,7 @@ class Cache {
   activeRequests: Record<string, any> = {}
   async lookup(user: AuthenticatedUser | null, url: string, init: {
     method: string,
-    headers: Record<string, string>
+    headers?: Record<string, string> | undefined
     body?: string | undefined
   }): Promise<Response> {
 
@@ -38,7 +38,7 @@ class Cache {
     }
     value = fetch(url, {
       method: init.method,
-      headers: new Headers(init.headers),
+      headers: new Headers(headers),
       body: init.body,
     })
     .then(res => {
@@ -62,7 +62,7 @@ class Cache {
 const cache = new Cache()
 
 export const GetPost: (id: string) => Promise<Post> = (id) => {
-    return cache.lookup(null, `${apiBase}/post${id}`, {
+    return cache.lookup(null, `${apiBase}/post/${id}`, {
       method: 'GET',
       headers: {'Accept': ContentTypes.json}
     })
@@ -98,14 +98,22 @@ export const CreateDraft: (user: AuthenticatedUser, title: string) => Promise<Po
   .then(res => res.json())
 }
 
-export const SaveDraft: (user: AuthenticatedUser, post: Post) => Promise<Post> = (user, post) => {
+export const SaveDraft: (user: AuthenticatedUser, post: Post) => Promise<void> = (user, post) => {
   if (user === undefined || user === null) throw new Error('Authentication required')
     return cache.lookup(user, `${apiBase}/draft`, {
       method: 'POST',
       headers: {'Accept': ContentTypes.json, 'Content-Type': ContentTypes.json},
       body: stringify(post),
     })
-    .then(res => res.json())
+    .then(res => {})
+}
+
+export const DeleteDraft: (user: AuthenticatedUser, id: string) => Promise<void> = (user, id) => {
+  if (user === undefined || user === null) throw new Error('Authentication required')
+  return cache.lookup(user, `${apiBase}/draft/${id}`, {
+    method: 'DELETE',
+  })
+  .then(res => {})
 }
 
 export const LoginProviders: () => Promise<Array<LoginProvider>> = async () => {

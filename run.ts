@@ -1,7 +1,9 @@
 #!/home/ubuntu/.local_node/bin/ts-node
+import { generateKeyPair } from './backend/src/crypto-utils'
 import { stackNameForBackend, stackNameForFrontend, stackNameForFrontendCertificate, stackNameForHostedZone } from './backend/tools/name-tools'
 import exec from './orchestration/exec'
 import { EnvironmentName } from './orchestration/property-loaders'
+import * as fs from 'fs'
 
 // ensure that we don't have any background promises fail without a real error
 process.on('unhandledRejection', (reason, promise) => {
@@ -35,6 +37,9 @@ switch(args[2].toLowerCase()) {
     case 'test':
         test()
         break
+    case 'keygen':
+        keygen()
+        break
     case 'deploy-ls':
         deployLs()
         break
@@ -51,6 +56,7 @@ function showHelp() {
     console.log("    deploy:    Builds and Deploys the stack")
     console.log("  Tools:")
     console.log("    build:      Builds the frontend")
+    console.log("    keygen:     Generates a pair of pem file keys")
     console.log("    deploy-ls:  Lists CDK stack names")
     console.log("    deploy [x]: Parallel Deploy (only) of all [x] stacks (see deploy-ls output)")
 }
@@ -80,6 +86,13 @@ async function test() {
     .then(async () => {
         await exec(envName, 'backend', 'npm',['test'])
     })
+}
+
+async function keygen() {
+    const keypair = generateKeyPair()
+    fs.writeFileSync('privateKey.pem', (await keypair).privateKey)
+    fs.writeFileSync('publicKey.pem', (await keypair).publicKey)
+    console.log('output to privateKey and publicKey pem files')
 }
 
 async function build() {

@@ -9,14 +9,12 @@ import { match } from 'node-match-path'
 import { LoginProvider as BackendLoginProvider } from '../../orchestration/env-properties'
 import fetch from 'isomorphic-fetch'
 import jwt from 'jsonwebtoken'
-import { currentKeyPair } from './crypto-utils'
+import { KeyPair } from './crypto-utils'
 
 const logonProviders = parse(process.env.LOGIN_PROVIDERS!) as Array<BackendLoginProvider>
 const frontendUrl = process.env.PUBLIC_URL!
 const backendUrl = process.env.REACT_APP_API_ENDPOINT!
 const adminUser = process.env.ADMIN_USER || ''
-
-const keyPair = currentKeyPair()
 
 type JwtAuthClaimsToSend = Omit<JwtAuthClaims, 'iat' | 'iss' | 'sub'>
 
@@ -29,9 +27,11 @@ export interface RouterResponse {
 export default class Router {
     storage: Storage
     readyFlag: Promise<any>
-    constructor(storage: Storage){
+    keyPair: Promise<KeyPair>
+    constructor(storage: Storage, keyPair: Promise<KeyPair>){
         this.storage = storage
         this.readyFlag = storage.readyFlag
+        this.keyPair = keyPair
     }
 
     async route(method: string, path: string, headers: Record<string, string>, requestBody: Buffer | undefined): Promise<RouterResponse> {
@@ -44,7 +44,7 @@ export default class Router {
         if ((extractHeader(headers, 'Authorization') || '').startsWith('Bearer ')) {
             let authJwt = extractHeader(headers, 'Authorization')!.substring(7)
             try {
-                const claims = jwt.verify(authJwt, (await keyPair).publicKey, {
+                const claims = jwt.verify(authJwt, (await this.keyPair).publicKey, {
                     algorithms: [
                         // 'RS256',
                         // 'RS384',
@@ -62,6 +62,8 @@ export default class Router {
                 if (anyErr.message === 'invalid signature') {
                     return forbiddenResponse
                 }
+
+                // return forbiddenResponse
             }
         }
 
@@ -90,9 +92,7 @@ export default class Router {
             if (!requestorIsAdmin) return forbiddenResponse
             const post = parse(requestBody!.toString()) as Post
             await this.storage.DraftStorage().Save(post)
-            return {
-                statusCode: 204, // accepted, 'No Content'
-            }
+            return emptyResponse
         }
 
         params = match('/draft/:postId', path)
@@ -102,6 +102,13 @@ export default class Router {
             const id = params!.params!.postId
             const res = await this.storage.DraftStorage().GetPost(id)
             return quickResponse(stringify(res))
+        }
+        if (params.matches && method === 'DELETE') {
+            if (!requestorIsAuthorized) return unauthorizedResponse
+            if (!requestorIsAdmin) return forbiddenResponse
+            const id = params!.params!.postId
+            await this.storage.DraftStorage().DeleteDraft(id)
+            return emptyResponse
         }
 
         params = match('/create-draft', path)
@@ -118,7 +125,7 @@ export default class Router {
                             contributors: [], // TODO: extract current logged in user
                             id: KSUID.randomSync().string,
                             title: data.title,
-                            updatedTs: luxon.DateTime.utc().toMillis(),
+                            updatedTs: now,
                         }
                         await this.storage.DraftStorage().Save({...postMeta, markdown: ''})
                         return postMeta
@@ -138,9 +145,7 @@ export default class Router {
             if (cdHeader.startsWith('file; filename=')) {
                 const filename = cdHeader.substring(15)
                 await this.storage.DraftStorage().AddMedia(id, filename, requestBody!)
-                return {
-                    statusCode: 204, // accepted, 'No Content'
-                }
+                return emptyResponse
             }
         }
 
@@ -150,7 +155,11 @@ export default class Router {
             const type = params!.params!.type
             const filename = params!.params!.filename
             if (type === 'post') return bufferResponse(await this.storage.PostStorage().GetMedia(id, filename), filename)
-            if (type === 'draft') return bufferResponse(await this.storage.DraftStorage().GetMedia(id, filename), filename)
+            if (type === 'draft') {
+                if (!requestorIsAuthorized) return unauthorizedResponse
+                if (!requestorIsAdmin) return forbiddenResponse
+                return bufferResponse(await this.storage.DraftStorage().GetMedia(id, filename), filename)
+            }
         }
 
         params = match('/login/providers', path)
@@ -242,7 +251,7 @@ export default class Router {
 
                             const authToken = jwt.sign(
                                 authenticatedUser,
-                                (await keyPair).privateKey,
+                                (await this.keyPair).privateKey,
                                 {
                                     algorithm: 'RS512',
                                     issuer: 'super-simple-blog',
@@ -283,6 +292,10 @@ const unauthorizedResponse: RouterResponse = {
 // forbidden, auth was provided (ie: reauth)
 const forbiddenResponse: RouterResponse = {
     statusCode: 403,
+}
+
+const emptyResponse: RouterResponse = {
+    statusCode: 204, // accepted, 'No Content'
 }
 
 function quickResponse(jsonResponse: string): RouterResponse {

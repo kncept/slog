@@ -6,11 +6,11 @@ export interface KeyPair {
 }
 
 export async function currentKeyPair(): Promise<KeyPair> {
-    if (process.env.KEY_PRIVATE === undefined || process.env.KEY_PRIVATE === '') {
+    if (process.env.PRIVATE_KEY === undefined || process.env.PRIVATE_KEY === '') {
         return generateKeyPair()
     }
-    const privateKey = process.env.KEY_PRIVATE!!
-    const publicKey = process.env.KEY_PUBLIC!!
+    const privateKey = process.env.PRIVATE_KEY!!
+    const publicKey = process.env.PUBLIC_KEY!!
     return {
         privateKey,
         publicKey,

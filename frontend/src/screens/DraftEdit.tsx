@@ -1,8 +1,8 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { Post } from '../../../interface/Model'
-import { GetDraft, SaveDraft, } from '../loaders'
+import { DeleteDraft, GetDraft, SaveDraft, } from '../loaders'
 import SimpleButton from '../components/SimpleButton'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import './DraftList.css'
 import Markdown, { MarkdownMode } from '../components/Markdown'
 import FileUpload from '../components/FileUpload'
@@ -15,6 +15,7 @@ const DraftEdit: React.FC = () => {
   const [draft, setDraft] = useState<Post>()
   const auth = useContext(AuthContext)
   const user = auth.currentUser
+  const navigate = useNavigate()
 
   useEffect(() => {
     if (draft === undefined && user !== null) {
@@ -33,9 +34,14 @@ const DraftEdit: React.FC = () => {
     setDraft({...draft, markdown})
   }
 
-  const save = () => {
+  const saveDraft = () => {
     const updated = {...draft}
-    SaveDraft(user!, updated).then(() => setDraft(updated as Post))
+    SaveDraft(user!, updated)
+    .then(() => setDraft(updated as Post))
+  }
+  const deleteDraft = () => {
+    DeleteDraft(user!, id!)
+    .then(() => navigate('/drafts'))
   }
 
   return <div>
@@ -51,7 +57,8 @@ const DraftEdit: React.FC = () => {
     
     <FileUpload draftId={draft.id}/>
 
-    <SimpleButton text='Save' onClick={() => save()} />
+    <SimpleButton text='Save' onClick={saveDraft} />
+    <SimpleButton text='Delete' onClick={deleteDraft} />
 
   </div>
 }
