@@ -2,7 +2,7 @@ import React, { useMemo } from 'react'
 import { SimpleMdeReact } from 'react-simplemde-editor'
 import 'easymde/dist/easymde.min.css'
 import CatchErr from './CatchErr'
-import { ReactMarkdown } from 'react-markdown/lib/react-markdown'
+import ReactMarkdown from 'react-markdown'
 import { renderToString } from 'react-dom/server'
 
 let apiBase = process.env.REACT_APP_API_ENDPOINT || ""
