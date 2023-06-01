@@ -1,12 +1,12 @@
 // I must say, the Lambda V3 API and typescript offering from amazon is horrible
+import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda'
 import { currentKeyPair } from './crypto-utils'
 import Router from './router'
 import { S3FsOperations } from './storage/filesystem-storage'
 import { FilesystemStorage } from './storage/storage'
-import { LambdaProxyResponse } from './types'
 
 function frontendUrl(): string {
-  let url = process.env.PUBLIC_URL || ""
+  let url = process.env.PUBLIC_URL || ''
   if (!url.endsWith('/')) url = url + '/'
   return url
 }
@@ -19,7 +19,7 @@ const router: Router = new Router(
   currentKeyPair(),
 )
 
-export const handler = async (event: any, context: any): Promise<any> => {
+export const handler = async (event: APIGatewayProxyEvent, context: Context): Promise<APIGatewayProxyResult> => {
   // console.log('event', event)
   // console.log('context', context)
   await router.readyFlag // make sure that we've created the s3 directories.
@@ -33,7 +33,7 @@ export const handler = async (event: any, context: any): Promise<any> => {
       return {
         statusCode: 403,
         headers: {
-          "Content-Type": "text/plain",
+          'Content-Type': 'text/plain',
         },
         body: 'Access Denied'
       }
@@ -46,8 +46,9 @@ export const handler = async (event: any, context: any): Promise<any> => {
     return {
       statusCode: 303, // 'see other' = temporary redirect
       headers: {
-        "Location": frontendUrl(),
-      }
+        'Location': frontendUrl(),
+      },
+      body: ''
     }
   }
 
@@ -61,17 +62,17 @@ export const handler = async (event: any, context: any): Promise<any> => {
     return {
       statusCode: 204,
       headers,
-      // body: 'OK'
+      body: ''
     }
   }
 
-  // headers['Content-Type'] = 'application/json'
-  
   let body: Buffer | undefined = undefined
-  if (event.isBase64Encoded && event.body != null) {
+  if (event.isBase64Encoded && event.body) {
     body = Buffer.from(event.body, 'base64')
   }
   
+  event.headers
+
   try {
       var res = await router.route(event.httpMethod, event.path, event.headers, body)
       if(res.headers) {
@@ -81,8 +82,9 @@ export const handler = async (event: any, context: any): Promise<any> => {
       if (res.body == undefined) {
         return {
           headers,
-          statusCode: res.statusCode
-        } as LambdaProxyResponse
+          statusCode: res.statusCode,
+          body: ''
+        }
       }
       if (Buffer.isBuffer(res.body)) {
         return {
@@ -90,7 +92,7 @@ export const handler = async (event: any, context: any): Promise<any> => {
           statusCode: res.statusCode,
           isBase64Encoded: true,
           body: (res.body as Buffer).toString('base64'),
-        } as LambdaProxyResponse
+        }
       }
       if (typeof res.body === 'string') {
         return {
@@ -98,23 +100,24 @@ export const handler = async (event: any, context: any): Promise<any> => {
           statusCode: res.statusCode,
           isBase64Encoded: false,
           body: res.body as string
-        } as LambdaProxyResponse
+        }
       }
       console.log('Internal Server Error: Unable to determine type of ' + res.body)
       return {
         statusCode: 500,
         isBase64Encoded: false,
         body: 'Internal Server Error'
-      } as LambdaProxyResponse
+      }
   } catch (err) {
       console.log('err', err)
       return {
-          statusCode: "500",
+          statusCode: 500,
+          body: ''
       }
   }
 }
 
-function getHeader(headers: Record<string, string>, name: string): string | undefined {
+function getHeader(headers: Record<string, string | undefined>, name: string): string | undefined {
   name = name.toLowerCase()
   const keys: Array<string> = Object.keys(headers)
   for(let i = 0; i < keys.length; i++) {

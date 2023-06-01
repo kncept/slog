@@ -29,7 +29,7 @@ export default class Router {
         this.keyPair = keyPair
     }
 
-    async route(method: string, path: string, headers: Record<string, string>, requestBody: Buffer | undefined): Promise<RouterResponse> {
+    async route(method: string, path: string, headers: Record<string, string | undefined>, requestBody: Buffer | undefined): Promise<RouterResponse> {
         if (path === null || path === undefined || path === "") {
             throw new Error("No path defined: " + path)
         }
@@ -208,7 +208,7 @@ function bufferResponse(body: Buffer, filename: string): RouterResponse {
     }
 }
 
-function extractHeader(headers: Record<string, string>, headerName: string) : string | undefined{
+function extractHeader(headers: Record<string, string | undefined>, headerName: string) : string | undefined{
     let value: string | undefined
     Object.keys(headers).forEach (key => {
         if (key.toLowerCase() === headerName.toLowerCase()) {
