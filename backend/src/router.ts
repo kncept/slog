@@ -1,22 +1,14 @@
 // I must say, the Lambda V3 API and typescript offering from amazon is horrible
-import { Identified, JwtAuthClaims, LoginProvider, Post, PostMetadata } from '../../interface/Model'
+import { Identified, JwtAuthClaims, Post, PostMetadata } from '../../interface/Model'
 import * as luxon from 'luxon'
 import Storage from './storage/storage'
 import { parse, stringify} from '@supercharge/json'
 import KSUID from 'ksuid'
 import * as mime from 'mime-types'
 import { match } from 'node-match-path'
-import { LoginProvider as BackendLoginProvider } from '../../orchestration/env-properties'
-import fetch from 'isomorphic-fetch'
-import jwt from 'jsonwebtoken'
+
 import { KeyPair } from './crypto-utils'
-
-const logonProviders = parse(process.env.LOGIN_PROVIDERS!) as Array<BackendLoginProvider>
-const frontendUrl = process.env.PUBLIC_URL!
-const backendUrl = process.env.REACT_APP_API_ENDPOINT!
-const adminUser = process.env.ADMIN_USER || ''
-
-type JwtAuthClaimsToSend = Omit<JwtAuthClaims, 'iat' | 'iss' | 'sub'>
+import { AsymetricJwtAuth, AuthResult, JwtAuthenticator } from './auth/jwt-auth'
 
 export interface RouterResponse {
     statusCode: number
@@ -28,6 +20,9 @@ export default class Router {
     storage: Storage
     readyFlag: Promise<any>
     keyPair: Promise<KeyPair>
+
+    auth: JwtAuthenticator
+
     constructor(storage: Storage, keyPair: Promise<KeyPair>){
         this.storage = storage
         this.readyFlag = storage.readyFlag
@@ -39,33 +34,9 @@ export default class Router {
             throw new Error("No path defined: " + path)
         }
 
-        let requestorIsAuthorized = false
-        let requestorIsAdmin = false
-        if ((extractHeader(headers, 'Authorization') || '').startsWith('Bearer ')) {
-            let authJwt = extractHeader(headers, 'Authorization')!.substring(7)
-            try {
-                const claims = jwt.verify(authJwt, (await this.keyPair).publicKey, {
-                    algorithms: [
-                        // 'RS256',
-                        // 'RS384',
-                        'RS512',
-                    ],
-                    issuer: 'super-simple-blog'
-                }) as any as JwtAuthClaimsToSend
-                requestorIsAuthorized = true
-                if (claims.admin) {
-                    requestorIsAdmin = true
-                }
-            } catch (err) {
-                const anyErr = err as any
-                //anyErr.name === 'JsonWebTokenError'
-                if (anyErr.message === 'invalid signature') {
-                    return forbiddenResponse
-                }
-
-                // return forbiddenResponse
-            }
-        }
+        if (this.auth === undefined) this.auth = new AsymetricJwtAuth(await this.keyPair)
+        const parsedAuth = this.auth.ParseAuth(extractHeader(headers, 'Authorization'))
+        if (parsedAuth.result === AuthResult.invalid) return forbiddenResponse
 
         let params = match('/post/', path)
         if (params.matches && method === 'GET') {
@@ -82,14 +53,14 @@ export default class Router {
 
         params = match('/draft/', path)
         if (params.matches && method === 'GET') {
-            if (!requestorIsAuthorized) return unauthorizedResponse
-            if (!requestorIsAdmin) return forbiddenResponse
+            if (parsedAuth.result === AuthResult.unauthorized) return unauthorizedResponse
+            if (!parsedAuth.claims?.admin) return forbiddenResponse
             const res = await this.storage.DraftStorage().ListPosts().then(sortPosts)
             return quickResponse(stringify(res))
         }
         if (params.matches && method === 'POST') {
-            if (!requestorIsAuthorized) return unauthorizedResponse
-            if (!requestorIsAdmin) return forbiddenResponse
+            if (parsedAuth.result === AuthResult.unauthorized) return unauthorizedResponse
+            if (!parsedAuth.claims?.admin) return forbiddenResponse
             const post = parse(requestBody!.toString()) as Post
             await this.storage.DraftStorage().Save(post)
             return emptyResponse
@@ -97,15 +68,15 @@ export default class Router {
 
         params = match('/draft/:postId', path)
         if (params.matches && method === 'GET') {
-            if (!requestorIsAuthorized) return unauthorizedResponse
-            if (!requestorIsAdmin) return forbiddenResponse
+            if (parsedAuth.result === AuthResult.unauthorized) return unauthorizedResponse
+            if (!parsedAuth.claims?.admin) return forbiddenResponse
             const id = params!.params!.postId
             const res = await this.storage.DraftStorage().GetPost(id)
             return quickResponse(stringify(res))
         }
         if (params.matches && method === 'DELETE') {
-            if (!requestorIsAuthorized) return unauthorizedResponse
-            if (!requestorIsAdmin) return forbiddenResponse
+            if (parsedAuth.result === AuthResult.unauthorized) return unauthorizedResponse
+            if (!parsedAuth.claims?.admin) return forbiddenResponse
             const id = params!.params!.postId
             await this.storage.DraftStorage().DeletePost(id)
             return emptyResponse
@@ -113,8 +84,8 @@ export default class Router {
 
         params = match('/create-draft', path)
         if (params.matches && method == 'POST') {
-            if (!requestorIsAuthorized) return unauthorizedResponse
-            if (!requestorIsAdmin) return forbiddenResponse
+            if (parsedAuth.result === AuthResult.unauthorized) return unauthorizedResponse
+            if (!parsedAuth.claims?.admin) return forbiddenResponse
             const res = await this.storage.DraftStorage().ListPosts()
                 .then(async drafts => {
                     if (drafts.length < 5) {
@@ -138,8 +109,8 @@ export default class Router {
 
         params = match('/publish-draft/:postId', path)
         if (params.matches && method == 'POST') {
-            if (!requestorIsAuthorized) return unauthorizedResponse
-            if (!requestorIsAdmin) return forbiddenResponse
+            if (parsedAuth.result === AuthResult.unauthorized) return unauthorizedResponse
+            if (!parsedAuth.claims?.admin) return forbiddenResponse
             const id = params!.params!.postId
             const newId = KSUID.randomSync().string
             await this.storage.DraftStorage().PublishDraft(id, newId)
@@ -150,8 +121,8 @@ export default class Router {
 
         params = match('/image/:type/:postId', path)
         if (params.matches && method === 'POST' && params!.params!.type === 'draft') {
-            if (!requestorIsAuthorized) return unauthorizedResponse
-            if (!requestorIsAdmin) return forbiddenResponse
+            if (parsedAuth.result === AuthResult.unauthorized) return unauthorizedResponse
+            if (!parsedAuth.claims?.admin) return forbiddenResponse
             const id = params!.params!.postId
             const cdHeader = extractHeader(headers, 'content-disposition') || ''
             if (cdHeader.startsWith('file; filename=')) {
@@ -169,122 +140,28 @@ export default class Router {
             if (type === 'post') return bufferResponse(await this.storage.PostStorage().GetMedia(id, filename), filename)
             if (type === 'draft') {
                 // TODO: work out how to secure draft media
-                // if (!requestorIsAuthorized) return unauthorizedResponse
-                // if (!requestorIsAdmin) return forbiddenResponse
+                // if (parsedAuth.result === AuthResult.unauthorized) return unauthorizedResponse
+                // if (!parsedAuth.claims?.admin) return forbiddenResponse
                 return bufferResponse(await this.storage.DraftStorage().GetMedia(id, filename), filename)
             }
         }
 
         params = match('/login/providers', path)
         if (params.matches && method === 'GET') {
-            const availableProviders: Array<LoginProvider> = []
-
-            logonProviders.forEach(p => {
-                if (p.type === 'oauth2') {
-                    const urlParams = new URLSearchParams({
-                        client_id: p.clientId,
-                        redirect_uri: `${frontendUrl}callback/${p.name}`,
-                        scope: p.claims,
-                        state: 'none',
-
-                    })
-                    const authorizeUrl = `${p.authorizeUrl}?${urlParams.toString()}`
-
-                    if (p.type === 'oauth2') {
-                        availableProviders.push({
-                            name: p.name,
-                            authorizeUrl,
-                        } as LoginProvider)
-                    }
-                } else if (p.type === 'oidc') {
-                    throw new Error('OIDC with autoconfigure not yet supported')
+            return quickResponse(stringify(this.auth.LoginProviders()))
+        }
+        params = match('/login/callback/:providerName', path)
+        if (params.matches && method === 'POST') {
+            const providerName = params!.params!.providerName
+            return this.auth.LoginCallback(providerName, parse(requestBody!.toString()) as Record<string, string>)
+            .then(jwt => { return {
+                    statusCode: 200,
+                    headers: {
+                        'Content-Type': 'application/jwt',
+                    },
+                    body: jwt,
                 }
             })
-            return quickResponse(stringify(availableProviders))
-        }
-
-        params = match('/login/callback/:providerId', path)
-        if (params.matches && method === 'POST') {
-            const providerId = params!.params!.providerId
-            for(let i = 0; i < logonProviders.length; i++) {
-                const p = logonProviders[i]
-                if (p.name === providerId) {
-                    if (p.type === 'oauth2') {
-                        const params = parse(requestBody!.toString()) as Record<string, string>
-                        const urlParams = new URLSearchParams({
-                            client_id: p.clientId,
-                            client_secret: p.clientSecret,
-                            redirect_uri: `${frontendUrl}callback/${p.name}`,
-                            code: params.code,
-                        })
-
-                        const oauthToken = await fetch(p.accessTokenUrl, {
-                            method: 'POST',
-                            headers: {
-                                'Accept': 'application/json',
-                            },
-                            body: urlParams,
-                        }).then((res: any) => res.json())
-
-                        if (!oauthToken.error && oauthToken.access_token) {
-
-                            // TODO: make this generic... or dictionary ify this (and params) for streamlined definitions
-                            const userDetails = await fetch(p.userDetailsUrl, {
-                                method: 'GET',
-                                headers: {
-                                    'Accept': '*/*', // 'application/vnd.github+json',
-                                    'Authorization': 'Bearer ' + oauthToken.access_token,
-
-                                }
-                            }).then((res: any) => res.json())
-                            // console.log(p.name + ' userDetails', userDetails)
-
-                            let admin = false
-
-                            // assumed common in 'user details endpoint' responses:
-                            // email name login id
-
-                            if (adminUser.includes("@")) {
-                                admin = adminUser === `${providerId}:${userDetails.email}`
-                            } else {
-                                admin = adminUser === `${providerId}:${userDetails.login}`
-                            }
-
-                            // jwt.verify(authToken, 'private-key')
-                            // const iat = Date.now() // for iat
-
-                            // TODO: move to a Signed JWT with claims for 'email' and 'name' and 'admin'
-                            const authenticatedUser: JwtAuthClaimsToSend = {
-                                // authToken,
-                                email: userDetails.email || '',
-                                name: userDetails.name || userDetails.login,
-                                admin,
-                                tok: oauthToken.access_token
-                            }
-
-                            const authToken = jwt.sign(
-                                authenticatedUser,
-                                (await this.keyPair).privateKey,
-                                {
-                                    algorithm: 'RS512',
-                                    issuer: 'super-simple-blog',
-                                    expiresIn: '1d',
-                                    subject:`${providerId}:${userDetails.id}`,
-                                })
-                            return {
-                                statusCode: 200,
-                                headers: {
-                                    'Content-Type': 'application/jwt',
-                                },
-                                body: authToken,
-                            }
-
-                        }
-                    } else if (p.type === 'oidc') {
-                        throw new Error('OIDC with autoconfigure not yet supported')
-                    }
-                }
-            }
         }
 
         return {
