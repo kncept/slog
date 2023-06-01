@@ -32,7 +32,7 @@ const invalid: ParsedAuth = {
 }
 
 export interface JwtAuthenticator {
-    ParseAuth: (header: string | undefined) => ParsedAuth
+    ParseAuth: (authorizationHeader: string | undefined, cookieHeader: string | undefined) => ParsedAuth
     LoginProviders: () => Array<LoginProvider>
     LoginCallback: (providerName: string, requestBody: Record<string, string>) => Promise<string> //JWT ... or null for failure?
 }
@@ -45,34 +45,17 @@ export class AsymetricJwtAuth implements JwtAuthenticator {
         this.keyPair = keyPair
     }
 
-    ParseAuth: (header: string | undefined) => ParsedAuth = (header) => {
-        if (header === undefined) return unauthenticated
-        if (!header.startsWith('Bearer ')) return unauthenticated
-
-        let authJwt = header.substring(7)
-        try {
-            const claims = jwt.verify(authJwt, this.keyPair.publicKey, {
-                algorithms: [
-                    // 'RS256',
-                    // 'RS384',
-                    'RS512',
-                ],
-                issuer: 'super-simple-blog'
-            }) as any as JwtAuthClaims
-            return {
-                result: AuthResult.authorized,
-                claims,
-            }
-        } catch (err) {
-            const anyErr = err as any
-            //anyErr.name === 'JsonWebTokenError'
-            if (anyErr.message === 'invalid signature') {
-                return invalid
-            }
-
-            // return forbiddenResponse
-            return invalid
+    ParseAuth: (header: string | undefined, cookieHeader: string | undefined) => ParsedAuth = (authorizationHeader, cookieHeader) => {
+        if (authorizationHeader !== undefined && authorizationHeader.startsWith('Bearer ')) {
+            const jwtString = authorizationHeader.substring(7)
+            return parseJwtString(jwtString, this.keyPair)
         }
+        if (cookieHeader) {
+            const jwtString = getCookie('jwt', cookieHeader)
+            if(jwtString) return parseJwtString(jwtString, this.keyPair)
+        }
+
+        return unauthenticated
     }
 
     LoginProviders: () => Array<LoginProvider> = () => {
@@ -180,3 +163,36 @@ export class AsymetricJwtAuth implements JwtAuthenticator {
     }
 
 }
+
+function parseJwtString(jwtString: string, keyPair: KeyPair): ParsedAuth {
+    try {
+        const claims = jwt.verify(jwtString, keyPair.publicKey, {
+            algorithms: [
+                // 'RS256',
+                // 'RS384',
+                'RS512',
+            ],
+            issuer: 'super-simple-blog'
+        }) as any as JwtAuthClaims
+        return {
+            result: AuthResult.authorized,
+            claims,
+        }
+    } catch (err) {
+        const anyErr = err as any
+        //anyErr.name === 'JsonWebTokenError'
+        if (anyErr.message === 'invalid signature') {
+            return invalid
+        }
+
+        // return forbiddenResponse
+        return invalid
+    }
+}
+
+function getCookie(name: string, cookieHeader: string) : string | undefined{
+    let matches = cookieHeader.match(new RegExp(
+      "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
+    ));
+    return matches ? decodeURIComponent(matches[1]) : undefined;
+  }

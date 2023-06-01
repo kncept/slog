@@ -4,11 +4,12 @@ import { LoginCallback, LoginProviders } from './loaders'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { stringify} from '@supercharge/json'
 import * as jose from 'jose'
-
+import Cookies from 'js-cookie'
 
 const AuthContext = createContext<AuthContextType>(undefined as any as AuthContextType)
 export default AuthContext
 
+const jwtCookieName = 'jwt'
 const localStorageKeys = {
     user: 'user', //stores the json user
 }
@@ -123,6 +124,7 @@ export const AuthProvider: React.FC<{children?: React.ReactNode}> = ({children})
         if (auth.isLoading) {
             const logout = () => {
                 localStorage.removeItem(localStorageKeys.user)
+                Cookies.remove(jwtCookieName)
                 setAuth(existing => {return {
                 ...existing,
                 currentUser: null,
@@ -135,6 +137,7 @@ export const AuthProvider: React.FC<{children?: React.ReactNode}> = ({children})
                 // load 'last url' and 'state hash' from Localstorage?
                 return LoginCallback(provider.name, params).then(jwt => {
                     localStorage.setItem(localStorageKeys.user, jwt)
+                    Cookies.set(jwtCookieName, jwt)
                     setAuth(existing => {
                         return {
                             ...existing,
@@ -148,7 +151,11 @@ export const AuthProvider: React.FC<{children?: React.ReactNode}> = ({children})
             let currentUser: AuthenticatedUser | null = null
             if (jwtString !== null && jwtString !== '') {
                 currentUser = new JwtUser(jwtString, logout)
+                Cookies.set(jwtCookieName, jwtString)
                 // TOOD: verify & force a non logout if not valid
+            }
+            if (currentUser === null) {
+                Cookies.remove(jwtCookieName)
             }
 
             LoginProviders().then(providers => {

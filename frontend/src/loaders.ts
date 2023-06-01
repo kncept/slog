@@ -5,8 +5,8 @@ import { AuthenticatedUser } from './AuthContext'
 
 const {fetch, Headers} = fetchPonyfill({})
 
-let apiBase = process.env.REACT_APP_API_ENDPOINT || ""
-while (apiBase.endsWith("/")) {
+let apiBase = process.env.REACT_APP_API_ENDPOINT || ''
+while (apiBase.endsWith('/')) {
   apiBase = apiBase.slice(0, -1)
 }
 
@@ -146,4 +146,16 @@ export const LoginCallback: (providerId: string, params: Record<string, string>)
       body: stringify(params)
     })
     .then(res => res.text())
+}
+
+
+
+function extractHeader(headers: Record<string, string | undefined>, headerName: string) : string | undefined{
+  let value: string | undefined
+  Object.keys(headers).forEach (key => {
+      if (key.toLowerCase() === headerName.toLowerCase()) {
+          value = headers[key]
+      }
+  })
+  return value
 }

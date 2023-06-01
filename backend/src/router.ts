@@ -33,9 +33,9 @@ export default class Router {
         if (path === null || path === undefined || path === "") {
             throw new Error("No path defined: " + path)
         }
-
+        
         if (this.auth === undefined) this.auth = new AsymetricJwtAuth(await this.keyPair)
-        const parsedAuth = this.auth.ParseAuth(extractHeader(headers, 'Authorization'))
+        const parsedAuth = this.auth.ParseAuth(extractHeader(headers, 'Authorization'), extractHeader(headers, 'Cookie'))
         if (parsedAuth.result === AuthResult.invalid) return forbiddenResponse
 
         let params = match('/post/', path)
@@ -139,9 +139,8 @@ export default class Router {
             const filename = params!.params!.filename
             if (type === 'post') return bufferResponse(await this.storage.PostStorage().GetMedia(id, filename), filename)
             if (type === 'draft') {
-                // TODO: work out how to secure draft media
-                // if (parsedAuth.result === AuthResult.unauthorized) return unauthorizedResponse
-                // if (!parsedAuth.claims?.admin) return forbiddenResponse
+                if (parsedAuth.result === AuthResult.unauthorized) return unauthorizedResponse
+                if (!parsedAuth.claims?.admin) return forbiddenResponse
                 return bufferResponse(await this.storage.DraftStorage().GetMedia(id, filename), filename)
             }
         }
@@ -154,7 +153,8 @@ export default class Router {
         if (params.matches && method === 'POST') {
             const providerName = params!.params!.providerName
             return this.auth.LoginCallback(providerName, parse(requestBody!.toString()) as Record<string, string>)
-            .then(jwt => { return {
+            .then(jwt => {
+                return {
                     statusCode: 200,
                     headers: {
                         'Content-Type': 'application/jwt',

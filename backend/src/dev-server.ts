@@ -41,8 +41,7 @@ const server = http.createServer((req, res) => {
         const originHeader = req.headers.origin || "*"
         // console.log("origin header", originHeader)
         res.setHeader("Access-Control-Allow-Origin", originHeader) // * for dev
-        // res.setHeader("Access-Control-Allow-Methods", ["OPTIONS", "GET", "POST", "DELETE"])
-        res.setHeader("Access-Control-Allow-Methods", ["*"])
+        res.setHeader("Access-Control-Allow-Methods", ["OPTIONS", "GET", "POST", "DELETE"])
         res.setHeader("Access-Control-Allow-Headers", ["*"])
     }
 
