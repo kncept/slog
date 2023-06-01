@@ -6,6 +6,7 @@ import SimpleButton from '../components/SimpleButton'
 import { useNavigate } from 'react-router-dom'
 import './DraftList.css'
 import AuthContext from '../AuthContext'
+import Loading from '../components/Loading'
 
 const formReducer = (state: any, event: React.ChangeEvent<any>) => {
   return {
@@ -37,9 +38,7 @@ const DraftList: React.FC = () => {
   }
   
   if (drafts === undefined) {
-    return <div key='loading'>
-      Draft Posts Loading
-    </div>
+    return <Loading />
   }
 
   return <div>

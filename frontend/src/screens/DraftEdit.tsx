@@ -7,6 +7,7 @@ import './DraftList.css'
 import Markdown, { MarkdownMode } from '../components/Markdown'
 import FileUpload from '../components/FileUpload'
 import AuthContext from '../AuthContext'
+import Loading from '../components/Loading'
 
 
 
@@ -29,9 +30,7 @@ const DraftEdit: React.FC = () => {
   }
 
   if (draft === undefined) {
-    return <div key='loading'>
-      Draft Posts Loading
-    </div>
+    return <Loading />
   }
 
   const setMarkdown = (markdown: string) => {

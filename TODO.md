@@ -1,12 +1,14 @@
-* Fix empty landing page
+* Landing page to use a bounded initial search
 
-* Update RHS post listing to pull... last 10
-* including date (!)
-
+* Update RHS post listing to pull... last 10, including date (!)
 * RHS post listing 'pagination' or 'cursor scroll' or something.
 
 * draft media to have a tick/cross for 'usage' (and able to be deleted)
 * save draft to have a clear -> loading -> tick -> clear cycled (edit based)
+
+* Update 'EDITING' to only allow TITLE and CONTENT updates, and media UPLOAD and DELETEs.
+* Authors will be auto appended, and media will be auto tracked.
+* N.B. This isn't actually synchronzied, but will still be handled by the backend
 
 * work out login/sso/oauth/oidc details.
 ==> provider setup links

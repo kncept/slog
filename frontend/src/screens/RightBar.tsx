@@ -1,12 +1,22 @@
-import React, { useContext } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import ButtonLink from '../components/ButtonLink'
 import AuthContext from '../AuthContext'
+import { PostMetadata } from '../../../interface/Model'
+import Loading from '../components/Loading'
+import { ListPosts } from '../loaders'
 
 
 const RightBar: React.FC = () => {
     const auth = useContext(AuthContext)
     let admin = auth.currentUser?.admin() || false
+
+    const [posts, setPosts] = useState<Array<PostMetadata>>()
+    useEffect(() => {
+        if (posts === undefined) {
+            ListPosts().then(setPosts)
+        }
+    }, [posts])
 
   // if logged in show 'drafts'  
   return (
@@ -16,12 +26,23 @@ const RightBar: React.FC = () => {
                 <li><ButtonLink text='Drafts and New Posts' to='/drafts'/></li>
             </ul>
         </span>}
-        <span>
+        {posts !== undefined && posts.length === 0 && <span>
             <ul>
-                <li><Link to={'/posts/000'}>000 post</Link></li>
-                <li><Link to={'/posts/123'}>123 post</Link></li>
+                <li>
+                    No Posts
+                </li>
             </ul>
-        </span>
+        </span>}
+        {posts !== undefined && posts.length > 0 && <span>
+            <ul>
+                {posts.map(post => {return <li key={post.id}>
+                    <Link to={`/posts/${post.id}`}>{post.title}</Link>
+                </li>})}
+            </ul>
+        </span>}
+        {posts === undefined && <span>
+            <Loading />
+        </span>}
     </div>
   )
 }

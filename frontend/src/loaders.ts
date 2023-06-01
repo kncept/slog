@@ -61,14 +61,6 @@ class Cache {
 
 const cache = new Cache()
 
-export const GetPost: (id: string) => Promise<Post> = (id) => {
-    return cache.lookup(null, `${apiBase}/post/${id}`, {
-      method: 'GET',
-      headers: {'Accept': ContentTypes.json}
-    })
-    .then(res => res.json())
-}
-
 export const ListDrafts: (user: AuthenticatedUser) => Promise<Array<PostMetadata>> = (user) => {
   if (user === undefined || user === null) throw new Error('Authentication required')
   return cache.lookup(user, `${apiBase}/draft/`, {
@@ -77,7 +69,6 @@ export const ListDrafts: (user: AuthenticatedUser) => Promise<Array<PostMetadata
   })
   .then(res => res.json())
 }
-
 
 export const GetDraft: (user: AuthenticatedUser, id: string) => Promise<Post> = (user, id) => {
   if (user === undefined || user === null) throw new Error('Authentication required')
@@ -120,6 +111,23 @@ export const PublishDraft: (user: AuthenticatedUser, id: string) => Promise<Iden
   if (user === undefined || user === null) throw new Error('Authentication required')
   return cache.lookup(user, `${apiBase}/publish-draft/${id}`, {
     method: 'POST',
+  })
+  .then(res => res.json())
+}
+
+export const GetPost: (id: string) => Promise<Post> = (id) => {
+  return cache.lookup(null, `${apiBase}/post/${id}`, {
+    method: 'GET',
+    headers: {'Accept': ContentTypes.json}
+  })
+  .then(res => res.json())
+}
+
+
+export const ListPosts: () => Promise<Array<PostMetadata>> = () => {
+  return cache.lookup(null, `${apiBase}/post/`, {
+    method: 'GET',
+    headers: {'Accept': ContentTypes.json}
   })
   .then(res => res.json())
 }
