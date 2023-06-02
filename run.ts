@@ -63,13 +63,16 @@ function showHelp() {
 
 async function startDev() {
     const envName = EnvironmentName.dev
+    const generateSslCerts = keygen()
     await Promise.all([
         exec(envName, 'backend', 'npm', ['i'])
         .then(async () => {
+            await generateSslCerts
             await exec(envName, 'backend', 'npm', ['run', 'dev'])
         }),
         exec(envName, 'frontend', 'npm', ['i'])
         .then(async () => {
+            await generateSslCerts
             await exec(envName, 'frontend', 'npm',['start'])
         })
     ])
@@ -89,11 +92,29 @@ async function test() {
 }
 
 async function keygen() {
-    const keypair = generateKeyPair()
-    fs.writeFileSync('privateKey.pem', (await keypair).privateKey)
-    fs.writeFileSync('publicKey.pem', (await keypair).publicKey)
-    console.log('output to privateKey and publicKey pem files')
-    // openssl req -nodes -new -x509 -keyout server.key -out server.cert
+    // const keypair = generateKeyPair()
+    // fs.writeFileSync('privateKey.pem', (await keypair).privateKey)
+    // fs.writeFileSync('publicKey.pem', (await keypair).publicKey)
+    // console.log('output to privateKey and publicKey pem files')
+
+    // ensure .data dir exists
+    if (!fs.existsSync('.data')) fs.mkdirSync('.data')
+
+    // create new key _if required_
+    if (!fs.existsSync('../.data/server.key') || !fs.existsSync('../.data/server.cert')) {
+        // openssl req -nodes -new -x509 -keyout server.key -out server.cert
+        // -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com"
+        // exec(EnvironmentName.dev, '.', 'openssl', "req -nodes -new -x509 -keyout .data/server.key -out .data/server.cert".split(" "))
+        exec(EnvironmentName.dev, '.', 'openssl', [
+            "req",
+            "-nodes",
+            "-new",
+            "-x509",
+            "-keyout", ".data/server.key",
+            "-subj", "/C=AU/ST=Victoria/L=Melbourne/O=Kncept/CN=127.0.0.1",
+            "-out", ".data/server.cert",
+        ])
+    }
 }
 
 async function build() {
