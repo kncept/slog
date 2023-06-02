@@ -12,7 +12,7 @@ import * as route53 from 'aws-cdk-lib/aws-route53'
 import * as ec2 from 'aws-cdk-lib/aws-ec2'
 import * as iam from 'aws-cdk-lib/aws-iam'
 import * as s3 from 'aws-cdk-lib/aws-s3'
-import { KeyPair } from '../src/crypto-utils'
+import { KeyPair } from '../src/crypto/crypto-utils'
 
 export interface BackendStackProps {
   projectRootDir: string
