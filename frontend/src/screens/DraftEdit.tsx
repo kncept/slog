@@ -39,7 +39,7 @@ const DraftEdit: React.FC = () => {
 
   const saveDraft = () => {
     const updated = {...draft}
-    SaveDraft(user!, updated)
+    SaveDraft(user!, updated.id, updated)
     .then(() => setDraft(updated as Post))
   }
   const deleteDraft = () => {

@@ -1,5 +1,5 @@
 // I must say, the Lambda V3 API and typescript offering from amazon is horrible
-import { Identified, Post, PostMetadata } from '../../interface/Model'
+import { Identified, Post, PostMetadata, PostUpdatableFields } from '../../interface/Model'
 import * as luxon from 'luxon'
 import Storage from './storage/storage'
 import { parse, stringify} from '@supercharge/json'
@@ -59,11 +59,19 @@ export default class Router {
             const res = await this.storage.DraftStorage().ListPosts().then(sortPosts)
             return quickResponse(stringify(res))
         }
+
+        params = match('/draft/:postId', path)
         if (params.matches && method === 'POST') {
             if (parsedAuth.result === AuthResult.unauthorized) return unauthorizedResponse
             if (!parsedAuth.claims?.admin) return forbiddenResponse
-            const post = parse(requestBody!.toString()) as Post
-            await this.storage.DraftStorage().Save(post)
+            const id = params!.params!.postId
+            const post = parse(requestBody!.toString()) as PostUpdatableFields
+            await this.storage.DraftStorage().GetPost(id)
+            .then(async existing => {
+                if (post.markdown) existing.markdown = post.markdown
+                if (post.title) existing.title= post.title
+                await this.storage.DraftStorage().Save(existing)    
+            })
             return emptyResponse
         }
 

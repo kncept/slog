@@ -1,5 +1,5 @@
 import fetchPonyfill from 'fetch-ponyfill'
-import { Identified, LoginOptions, Post, PostMetadata } from '../../interface/Model'
+import { Identified, LoginOptions, Post, PostMetadata, PostUpdatableFields } from '../../interface/Model'
 import { stringify} from '@supercharge/json'
 import { AuthenticatedUser } from './AuthContext'
 
@@ -89,7 +89,7 @@ export const CreateDraft: (user: AuthenticatedUser, title: string) => Promise<Po
   .then(res => res.json())
 }
 
-export const SaveDraft: (user: AuthenticatedUser, post: Post) => Promise<void> = (user, post) => {
+export const SaveDraft: (user: AuthenticatedUser, post: PostUpdatableFields) => Promise<void> = (user, post) => {
   if (user === undefined || user === null) throw new Error('Authentication required')
     return cache.lookup(user, `${apiBase}/draft`, {
       method: 'POST',

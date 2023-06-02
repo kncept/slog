@@ -22,6 +22,8 @@ export interface PostMetadata extends Identified {
     contributors: Array<Contributor>
 }
 
+export type PostUpdatableFields = Pick<Post, 'markdown' | 'title'> & Identified
+
 export interface LoginOptions {
     providers: Array<LoginProvider>
     verificationKeys: Array<string>
