@@ -147,15 +147,3 @@ export const LoginCallback: (providerId: string, params: Record<string, string>)
     })
     .then(res => res.text())
 }
-
-
-
-function extractHeader(headers: Record<string, string | undefined>, headerName: string) : string | undefined{
-  let value: string | undefined
-  Object.keys(headers).forEach (key => {
-      if (key.toLowerCase() === headerName.toLowerCase()) {
-          value = headers[key]
-      }
-  })
-  return value
-}

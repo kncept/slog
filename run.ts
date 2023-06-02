@@ -1,5 +1,5 @@
 #!/home/ubuntu/.local_node/bin/ts-node
-import { generateKeyPair } from './backend/src/crypto-utils'
+import { generateKeyPair } from './backend/src/crypto/crypto-utils'
 import { stackNameForBackend, stackNameForFrontend, stackNameForFrontendCertificate, stackNameForHostedZone } from './backend/tools/name-tools'
 import exec from './orchestration/exec'
 import { EnvironmentName } from './orchestration/property-loaders'

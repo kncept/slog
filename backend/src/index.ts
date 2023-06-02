@@ -1,6 +1,6 @@
 // I must say, the Lambda V3 API and typescript offering from amazon is horrible
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda'
-import { currentKeyPair } from './crypto-utils'
+import { currentKeyPair } from './crypto/crypto-utils'
 import Router from './router'
 import { S3FsOperations } from './storage/filesystem-storage'
 import { FilesystemStorage } from './storage/storage'

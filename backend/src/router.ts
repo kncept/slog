@@ -7,7 +7,7 @@ import KSUID from 'ksuid'
 import * as mime from 'mime-types'
 import { match } from 'node-match-path'
 
-import { KeyPair } from './crypto-utils'
+import { KeyPair } from './crypto/crypto-utils'
 import { AsymetricJwtAuth, AuthResult, JwtAuthenticator } from './auth/jwt-auth'
 
 export interface RouterResponse {

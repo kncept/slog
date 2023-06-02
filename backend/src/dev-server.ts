@@ -3,37 +3,18 @@ import Router from './router'
 import * as path from 'path'
 import { FilesystemStorage } from './storage/storage'
 import { LocalFsOperations, S3FsOperations } from './storage/filesystem-storage'
-import * as fs from 'fs'
-import { KeyPair, generateKeyPair } from './crypto-utils'
-
-// moved to the 'data dir' in order for stability
-// otherwise the keypair was regenerated every time there was a data load
-const keyPair: Promise<KeyPair> = new Promise(async (resolve, reject) => {
-    const dataDir = path.join(__dirname, '..', '..', '.data')
-    fs.mkdirSync(dataDir, {recursive: true})
-    const direntries = fs.readdirSync(dataDir)
-    if (!direntries.includes('privateKey.pem') || !direntries.includes('publicKey.pem')) {
-        console.log('GENERATING new keypair into ' + dataDir)
-        const pair = generateKeyPair()
-        fs.writeFileSync(path.join(dataDir, 'privateKey.pem'), (await pair).privateKey)
-        fs.writeFileSync(path.join(dataDir, 'publicKey.pem'), (await pair).publicKey)
-    }
-    resolve({
-        privateKey: fs.readFileSync(path.join(dataDir, 'privateKey.pem')).toString(),
-        publicKey: fs.readFileSync(path.join(dataDir, 'publicKey.pem')).toString(),
-    })
-})
+import { devKeyPair } from './crypto/dev-crypto-utils'
 
 // define `bucketName` (and aws keys) in devProperties.ts to use an s3 bucket
 const bucketName = process.env.BUCKET_NAME || ''
 const router: Router = bucketName !== '' ?
     new Router(
         new FilesystemStorage('.', new S3FsOperations(bucketName)),
-        keyPair,
+        devKeyPair(),
     ):
     new Router(
         new FilesystemStorage(path.join(__dirname, '..', '..', '.data'), new LocalFsOperations()),
-        keyPair,
+        devKeyPair(),
     )
 
 const server = http.createServer((req, res) => {

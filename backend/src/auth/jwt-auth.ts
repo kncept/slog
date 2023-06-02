@@ -1,5 +1,5 @@
 import { JwtAuthClaims, LoginProvider } from '../../../interface/Model'
-import { KeyPair } from '../crypto-utils'
+import { KeyPair } from '../crypto/crypto-utils'
 import jwt from 'jsonwebtoken'
 import { parse } from '@supercharge/json'
 import { LoginProvider as BackendLoginProvider } from '../../../orchestration/env-properties'
