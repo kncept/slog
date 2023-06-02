@@ -5,6 +5,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { stringify} from '@supercharge/json'
 import * as jose from 'jose'
 import Cookies from 'js-cookie'
+import Loading from './components/Loading'
 
 const AuthContext = createContext<AuthContextType>(undefined as any as AuthContextType)
 export default AuthContext
@@ -24,9 +25,11 @@ export interface AuthenticatedUser {
 
 class JwtUser implements AuthenticatedUser {
     jwt: string
+    claims: JwtAuthClaims
     logoutFn: () => void
-    constructor(jwt: string, logoutFn: () => void) {
+    constructor(jwt: string, claims: JwtAuthClaims, logoutFn: () => void) {
         this.jwt = jwt
+        this.claims = claims
         this.logoutFn = logoutFn
     }
     token(): string {
@@ -36,39 +39,32 @@ class JwtUser implements AuthenticatedUser {
         return this.logoutFn()
     }
 
-    parse(): JwtAuthClaims {
-        try {
-            return jose.decodeJwt(this.jwt) as any as JwtAuthClaims
-        } catch (err) {
-            this.logout()
-            return {} as JwtAuthClaims
-        }
-    }
     name(): string {
-        return this.parse().name
+        return this.claims.name
     }
     admin(): boolean {
-        return this.parse().admin
+        return this.claims.admin
     }
 }
 
 export interface AuthContextType {
     isLoading: boolean // INITIAL load
-
-    providers: Array<LoginProvider> // will error if called whilst loading
+    verificationKeys: Array<string> | undefined
+    providers: Array<LoginProvider> | undefined
     login(provider: LoginProvider): void // will probably trigger path reloads
     logout(): void
     callback(provider: LoginProvider, params: Record<string, string>): Promise<void> // needed for Oauth2 callbacks
     currentUser: AuthenticatedUser | null
 }
+type AuthContextTypeWithoutUser = Omit<AuthContextType, 'currentUser'>
 
-const loadingContext: AuthContextType = {
+const loadingContext: AuthContextTypeWithoutUser = {
     isLoading: true,
-    providers: [],
+    verificationKeys: undefined,
+    providers: undefined,
     login: () => {throw new Error('Loading')},
     logout: () => {throw new Error('Loading')},
     callback: () => {throw new Error('Loading')},
-    currentUser: null
 }
 
 export const AuthProviderCallback: React.FC = () => {
@@ -93,7 +89,7 @@ export const AuthProviderCallback: React.FC = () => {
     useEffect(() => {
         if (callback && !isErr && !authContext.isLoading) {
             setCallback(false)
-            const provider = authContext.providers.filter(p => p.name === providerId)[0]
+            const provider = authContext.providers!.filter(p => p.name === providerId)[0]
             authContext.callback(provider, callbackContext)
             .then(() => navigate('/'))
         }
@@ -102,9 +98,7 @@ export const AuthProviderCallback: React.FC = () => {
     ])
 
     if (!isErr) {
-        return <>
-        Loading...
-        </>
+        return <Loading />
     }
 
     // just bump back to home.
@@ -119,61 +113,101 @@ export const AuthProviderCallback: React.FC = () => {
 }
 
 export const AuthProvider: React.FC<{children?: React.ReactNode}> = ({children}) => {
-    const [auth, setAuth] = useState<AuthContextType>(loadingContext)
+    const [auth, setAuth] = useState<AuthContextTypeWithoutUser>(loadingContext)
+    const [currentUser, setCurrentUser] = useState<AuthenticatedUser | null>(null)
+
+    
     useEffect(() => {
         if (auth.isLoading) {
-            const logout = () => {
-                localStorage.removeItem(localStorageKeys.user)
-                Cookies.remove(jwtCookieName)
-                setAuth(existing => {return {
-                ...existing,
-                currentUser: null,
-            }})}
-            const login = (provider: LoginProvider) => {
-                //  not replace - don't want to lose our url history
-                window.location.href = provider.authorizeUrl
-            }
-            const callback = (provider: LoginProvider, params: Record<string, string>) => {
-                // load 'last url' and 'state hash' from Localstorage?
-                return LoginCallback(provider.name, params).then(jwt => {
-                    localStorage.setItem(localStorageKeys.user, jwt)
-                    Cookies.set(jwtCookieName, jwt)
-                    setAuth(existing => {
-                        return {
-                            ...existing,
-                            currentUser: new JwtUser(jwt, logout),
-                        }
-                    })
-                })
-            }
-            
-            const jwtString = localStorage.getItem(localStorageKeys.user)
-            let currentUser: AuthenticatedUser | null = null
-            if (jwtString !== null && jwtString !== '') {
-                currentUser = new JwtUser(jwtString, logout)
-                Cookies.set(jwtCookieName, jwtString)
-                // TOOD: verify & force a non logout if not valid
-            }
-            if (currentUser === null) {
-                Cookies.remove(jwtCookieName)
-            }
+            LoginProviders().then(loginOptions => {
 
-            LoginProviders().then(providers => {
+                const logout = () => {
+                    localStorage.removeItem(localStorageKeys.user)
+                    Cookies.remove(jwtCookieName)
+                    setAuth(existing => {return {
+                    ...existing,
+                    currentUser: null,
+                }})}
+                const login = (provider: LoginProvider) => {
+                    //  not replace - don't want to lose our url history
+                    window.location.href = provider.authorizeUrl
+                }
+                const callback = (provider: LoginProvider, params: Record<string, string>) => {
+                    // load 'last url' and 'state hash' from Localstorage?
+                    return LoginCallback(provider.name, params).then(jwt => {
+                        localStorage.setItem(localStorageKeys.user, jwt)
+                        Cookies.set(jwtCookieName, jwt)
+                        ValidJwtUser(jwt, loginOptions.verificationKeys!, logout).then(setCurrentUser)
+                    })
+                }
+
+                // dynamic load (and verify) of locally stored user
+                const jwtString = localStorage.getItem(localStorageKeys.user) || ''
+                if (jwtString !== '') ValidJwtUser(jwtString, loginOptions.verificationKeys, logout).then(currentUser =>{
+                    if (currentUser !== null) {
+                        Cookies.set(jwtCookieName, currentUser.token())
+                    } else {
+                        localStorage.removeItem(localStorageKeys.user)
+                        Cookies.remove(jwtCookieName)
+                    }
+                    setCurrentUser(currentUser)
+                })
                 setAuth({
                     isLoading: false,
-                    providers,
+                    verificationKeys: loginOptions.verificationKeys,
+                    providers: loginOptions.providers,
                     login,
                     logout,
                     callback,
-                    currentUser,
                 })
             })
         }
     }, [auth])
 
+
+
     return <>
-        <AuthContext.Provider value={auth}>
+        <AuthContext.Provider value={{ ...auth, currentUser, }}>
             {children}
         </AuthContext.Provider>
     </>
+}
+
+async function ValidJwtUser(jwtString: string, verificationKeys: Array<string>, logoutFn: () => void): Promise<AuthenticatedUser | null> {
+    // if (verificationKeys === undefined) return new JwtUser(jwtString, jose.decodeJwt(jwtString) as any as JwtAuthClaims, logoutFn)
+
+    console.log('verifyING JWT claims: ', {
+        jwtString,
+        claims: jose.decodeJwt(jwtString)
+    })
+
+    for(let i = 0; i < verificationKeys.length; i++) {
+        try {
+            // jose.createRemoteJWKSet()
+            
+            // TODO: get some crypto working in the browser
+
+            // const key = new TextEncoder().encode(verificationKeys[i])
+            // const key = verificationKeys[i] as any as jose.KeyLike
+            const key = await crypto.subtle.importKey('spki', new TextEncoder().encode(verificationKeys[i]), 'rsa', true, [])
+
+            const claims = await jose.jwtVerify(jwtString, key) as any as JwtAuthClaims
+            console.log('verified JWT claims: ', {
+                jwtString,
+                claims
+            })
+            // const claims = jose.jwtDecrypt(jwtString, key) as any as JwtAuthClaims
+
+// eg: https://github.com/auth0/jwt-decode/issues/53
+            // var current_time = Date.now().valueOf() / 1000;
+            // if ( jwt.exp < current_time) {
+            //  /* expired */ 
+            // }
+
+            return new JwtUser(jwtString, claims, logoutFn)
+        } catch (err) {
+            console.log(err)
+        }
+    }
+    return null
 }

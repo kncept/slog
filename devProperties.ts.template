@@ -3,7 +3,7 @@ import { FrontendProperties } from "./orchestration/env-properties"
 // add as many property types from orchestration/properties as required
 const properties : FrontendProperties = {
     publicUrl: 'http://127.0.0.1:3000/',
-    reactAppApiEndpoint: 'http://127.0.0.1:8080/',
+    reactAppApiEndpoint: 'https://127.0.0.1:8080/',
 
 }
 

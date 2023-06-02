@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 // import logo from './logo.svg'
 import './App.css'
 import ViewPost from './screens/ViewPost'
@@ -9,8 +9,6 @@ import PostScroller from './screens/PostScroller'
 import Privacy from './screens/Privacy'
 import DraftList from './screens/DraftList'
 import DraftEdit from './screens/DraftEdit'
-import { LoginProvider } from '../../interface/Model'
-import { LoginProviders } from './loaders'
 import { AuthProvider, AuthProviderCallback } from './AuthContext'
 import Authenticated from './components/Authenticated'
 
@@ -64,15 +62,6 @@ const router = createBrowserRouter([
 
 
 const App: React.FC = () => {
-  // TODO - cache & refresh pattern on this
-  const [loginProviders, setLoginProviders] = useState<Array<LoginProvider>>()
-  
-  useEffect(() => {
-    if (loginProviders === undefined) {
-      LoginProviders().then(setLoginProviders)
-    }
-  }, [loginProviders])
-
   return (
     <div className="App">
       <AuthProvider>

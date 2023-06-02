@@ -22,6 +22,10 @@ export interface PostMetadata extends Identified {
     contributors: Array<Contributor>
 }
 
+export interface LoginOptions {
+    providers: Array<LoginProvider>
+    verificationKeys: Array<string>
+}
 
 export interface LoginProvider {
     name: string

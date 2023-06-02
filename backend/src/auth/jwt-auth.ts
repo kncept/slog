@@ -1,4 +1,4 @@
-import { JwtAuthClaims, LoginProvider } from '../../../interface/Model'
+import { JwtAuthClaims, LoginOptions, LoginProvider } from '../../../interface/Model'
 import { KeyPair } from '../crypto-utils'
 import jwt from 'jsonwebtoken'
 import { parse } from '@supercharge/json'
@@ -33,8 +33,9 @@ const invalid: ParsedAuth = {
 
 export interface JwtAuthenticator {
     ParseAuth: (authorizationHeader: string | undefined, cookieHeader: string | undefined) => ParsedAuth
-    LoginProviders: () => Array<LoginProvider>
+    LoginOptions: () => LoginOptions
     LoginCallback: (providerName: string, requestBody: Record<string, string>) => Promise<string> //JWT ... or null for failure?
+    ValidKeys: () => Array<string>
 }
 
 export class AsymetricJwtAuth implements JwtAuthenticator {
@@ -58,8 +59,8 @@ export class AsymetricJwtAuth implements JwtAuthenticator {
         return unauthenticated
     }
 
-    LoginProviders: () => Array<LoginProvider> = () => {
-        const availableProviders: Array<LoginProvider> = []
+    LoginOptions: () => LoginOptions = () => {
+        const providers: Array<LoginProvider> = []
 
         logonProviders.forEach(p => {
             if (p.type === 'oauth2') {
@@ -73,7 +74,7 @@ export class AsymetricJwtAuth implements JwtAuthenticator {
                 const authorizeUrl = `${p.authorizeUrl}?${urlParams.toString()}`
 
                 if (p.type === 'oauth2') {
-                    availableProviders.push({
+                    providers.push({
                         name: p.name,
                         authorizeUrl,
                     } as LoginProvider)
@@ -83,7 +84,10 @@ export class AsymetricJwtAuth implements JwtAuthenticator {
             }
         })
 
-        return availableProviders
+        return {
+            providers,
+            verificationKeys: [this.keyPair.publicKey]
+        }
     }
 
     LoginCallback: (providerName: string, requestBody: Record<string, string>) => Promise<string> = async (providerName, requestBody) => {
@@ -161,6 +165,8 @@ export class AsymetricJwtAuth implements JwtAuthenticator {
         }
         throw new Error('Unknown Auth Provider: ' + providerName)
     }
+
+    ValidKeys: () => Array<string> = () => [this.keyPair.publicKey]
 
 }
 

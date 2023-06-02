@@ -22,7 +22,7 @@ export function generateKeyPair(): Promise<KeyPair> {
         crypto.generateKeyPair('rsa', {
             modulusLength: 2048, // RS512 has a minimum key size of 2k
             publicKeyEncoding: {
-                type: 'pkcs1',
+                type: 'spki',
                 format: 'pem',
             },
             privateKeyEncoding: {

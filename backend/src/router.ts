@@ -1,5 +1,5 @@
 // I must say, the Lambda V3 API and typescript offering from amazon is horrible
-import { Identified, JwtAuthClaims, Post, PostMetadata } from '../../interface/Model'
+import { Identified, Post, PostMetadata } from '../../interface/Model'
 import * as luxon from 'luxon'
 import Storage from './storage/storage'
 import { parse, stringify} from '@supercharge/json'
@@ -34,6 +34,7 @@ export default class Router {
             throw new Error("No path defined: " + path)
         }
         
+        // TODO: fix multi headers for 'Cookie'
         if (this.auth === undefined) this.auth = new AsymetricJwtAuth(await this.keyPair)
         const parsedAuth = this.auth.ParseAuth(extractHeader(headers, 'Authorization'), extractHeader(headers, 'Cookie'))
         if (parsedAuth.result === AuthResult.invalid) return forbiddenResponse
@@ -147,7 +148,7 @@ export default class Router {
 
         params = match('/login/providers', path)
         if (params.matches && method === 'GET') {
-            return quickResponse(stringify(this.auth.LoginProviders()))
+            return quickResponse(stringify(this.auth.LoginOptions()))
         }
         params = match('/login/callback/:providerName', path)
         if (params.matches && method === 'POST') {
