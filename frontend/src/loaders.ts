@@ -1,5 +1,5 @@
 import fetchPonyfill from 'fetch-ponyfill'
-import { Identified, LoginProvider, Post, PostMetadata } from '../../interface/Model'
+import { Identified, LoginOptions, Post, PostMetadata } from '../../interface/Model'
 import { stringify} from '@supercharge/json'
 import { AuthenticatedUser } from './AuthContext'
 
@@ -132,7 +132,7 @@ export const ListPosts: () => Promise<Array<PostMetadata>> = () => {
   .then(res => res.json())
 }
 
-export const LoginProviders: () => Promise<Array<LoginProvider>> = async () => {
+export const LoginProviders: () => Promise<LoginOptions> = async () => {
     return cache.lookup(null, `${apiBase}/login/providers`, {
       method: 'GET',
       headers: {'Accept': ContentTypes.json},

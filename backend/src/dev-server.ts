@@ -89,7 +89,7 @@ function respond(method: string, path: string, headers: Record<string, string>, 
 const useHttps = true
 // since we can't top level 'await' the ready flag
 router.readyFlag.then(async () => {
-    if (useHttps) {
+    if (useHttps && fs.existsSync('../.data/server.key') && fs.existsSync('../.data/server.cert')) {
         const server = https.createServer({
             key: fs.readFileSync('../.data/server.key'),
             cert: fs.readFileSync('../.data/server.cert'),
@@ -104,4 +104,3 @@ router.readyFlag.then(async () => {
         })
     }
 })
-
