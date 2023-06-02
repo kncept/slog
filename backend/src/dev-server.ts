@@ -1,9 +1,11 @@
 import * as http from 'http'
+import * as https from 'https'
 import Router from './router'
 import * as path from 'path'
 import { FilesystemStorage } from './storage/storage'
 import { LocalFsOperations, S3FsOperations } from './storage/filesystem-storage'
 import { devKeyPair } from './crypto/dev-crypto-utils'
+import * as fs from 'fs'
 
 // define `bucketName` (and aws keys) in devProperties.ts to use an s3 bucket
 const bucketName = process.env.BUCKET_NAME || ''
@@ -17,7 +19,7 @@ const router: Router = bucketName !== '' ?
         devKeyPair(),
     )
 
-const server = http.createServer((req, res) => {
+const requestListener: http.RequestListener = (req, res) => {
     const addCorsHeaders = () => {
         const originHeader = req.headers.origin || "*"
         // console.log("origin header", originHeader)
@@ -48,7 +50,7 @@ const server = http.createServer((req, res) => {
     } else if (method === 'GET' || method === 'DELETE') {
         respond(method, req.url || '', flattenHeaders(req.headers), undefined, res, addCorsHeaders)
     }
-})
+}
 
 function flattenHeaders(headers: NodeJS.Dict<string | string[]>): Record<string, string> {
     const flat: Record<string, string> = {}
@@ -84,11 +86,22 @@ function respond(method: string, path: string, headers: Record<string, string>, 
     })
 }
 
-
+const useHttps = true
 // since we can't top level 'await' the ready flag
-router.readyFlag.then(() => {
-    server.listen(8080, "localhost", () => {
-        console.log("dev backend is running")
-    })
+router.readyFlag.then(async () => {
+    if (useHttps) {
+        const server = https.createServer({
+            key: fs.readFileSync('../.data/server.key'),
+            cert: fs.readFileSync('../.data/server.cert'),
+        }, requestListener)
+        server.listen(8080, "localhost", () => {
+            console.log("https dev backend is running")
+        })
+    } else {
+        const server = http.createServer(requestListener)
+        server.listen(8080, "localhost", () => {
+            console.log("http dev backend is running")
+        })
+    }
 })
 

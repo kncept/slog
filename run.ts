@@ -93,6 +93,7 @@ async function keygen() {
     fs.writeFileSync('privateKey.pem', (await keypair).privateKey)
     fs.writeFileSync('publicKey.pem', (await keypair).publicKey)
     console.log('output to privateKey and publicKey pem files')
+    // openssl req -nodes -new -x509 -keyout server.key -out server.cert
 }
 
 async function build() {
