@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { Post } from '../../../interface/Model'
-import { DeleteDraft, GetDraft, PublishDraft, SaveDraft, } from '../loaders'
+import Loader from '../loaders/loaders'
 import SimpleButton from '../components/SimpleButton'
 import { useNavigate, useParams } from 'react-router-dom'
 import './DraftList.css'
@@ -20,7 +20,7 @@ const DraftEdit: React.FC = () => {
 
   useEffect(() => {
     if (draft === undefined && user !== null) {
-      GetDraft(user, id!).then(setDraft)
+      Loader.GetDraft(user, id!).then(setDraft)
     }
   },
   [id, draft, user])
@@ -39,15 +39,15 @@ const DraftEdit: React.FC = () => {
 
   const saveDraft = () => {
     const updated = {...draft}
-    SaveDraft(user!, updated.id, updated)
+    Loader.SaveDraft(user!, updated.id, updated)
     .then(() => setDraft(updated as Post))
   }
   const deleteDraft = () => {
-    DeleteDraft(user!, id!)
+    Loader.DeleteDraft(user!, id!)
     .then(() => navigate('/drafts'))
   }
   const publishDraft = () => {
-    PublishDraft(user!, id!)
+    Loader.PublishDraft(user!, id!)
     .then((post) => navigate(`/posts/${post.id}`))
   }
 

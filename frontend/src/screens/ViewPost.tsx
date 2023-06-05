@@ -1,6 +1,6 @@
 import React from 'react'
-import {Post as BlogPost} from '../../../interface/Model'
-import {GetPost} from '../loaders'
+import { Post as BlogPost } from '../../../interface/Model'
+import Loader from '../loaders/loaders'
 import { useParams } from 'react-router-dom'
 import Markdown, { MarkdownMode } from '../components/Markdown'
 import Loading from '../components/Loading'
@@ -12,7 +12,7 @@ const ViewPost: React.FC = () => {
   
   React.useEffect(() => {
     if (blog== null || blog.id !== id) {
-      GetPost(id!).then(setBlog)
+      Loader.GetPost(id!).then(setBlog)
     }
   }, [id, blog])
   

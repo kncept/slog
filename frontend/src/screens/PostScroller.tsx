@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { PostMetadata } from '../../../interface/Model'
-import { ListPosts } from '../loaders'
+import Loader from '../loaders/loaders'
 import Loading from '../components/Loading'
 import * as luxon from 'luxon'
 import './PostScroller.css'
@@ -12,7 +12,7 @@ const PostScroller: React.FC = () => {
   const [posts, setPosts] = useState<Array<PostMetadata>>()
   useEffect(() => {
       if (posts === undefined) {
-          ListPosts().then(rv => rv.splice(0, Math.min(rv.length, 3))).then(setPosts)
+        Loader.ListPosts().then(rv => rv.splice(0, Math.min(rv.length, 3))).then(setPosts)
       }
   }, [posts])
 

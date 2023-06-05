@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { JwtAuthClaims, LoginProvider } from '../../interface/Model'
-import { LoginCallback, LoginProviders } from './loaders'
+import Loader from './loaders/loaders'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { stringify} from '@supercharge/json'
 import * as jose from 'jose'
@@ -121,7 +121,7 @@ export const AuthProvider: React.FC<{children?: React.ReactNode}> = ({children})
     
     useEffect(() => {
         if (auth.isLoading) {
-            LoginProviders().then(loginOptions => {
+            Loader.LoginProviders().then(loginOptions => {
 
                 const logout = () => {
                     localStorage.removeItem(localStorageKeys.user)
@@ -136,7 +136,7 @@ export const AuthProvider: React.FC<{children?: React.ReactNode}> = ({children})
                 }
                 const callback = (provider: LoginProvider, params: Record<string, string>) => {
                     // load 'last url' and 'state hash' from Localstorage?
-                    return LoginCallback(provider.name, params).then(jwt => {
+                    return Loader.LoginCallback(provider.name, params).then(jwt => {
                         localStorage.setItem(localStorageKeys.user, jwt)
                         Cookies.set(jwtCookieName, jwt)
                         ValidJwtUser(jwt, loginOptions.verificationKeys!, logout).then(setCurrentUser)

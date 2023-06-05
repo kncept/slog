@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useReducer, useState } from 'react'
 import { PostMetadata } from '../../../interface/Model'
-import { CreateDraft, ListDrafts } from '../loaders'
+import Loader from '../loaders/loaders'
 import ButtonLink from '../components/ButtonLink'
 import SimpleButton from '../components/SimpleButton'
 import { useNavigate } from 'react-router-dom'
@@ -24,7 +24,7 @@ const DraftList: React.FC = () => {
 
   useEffect(() => {
     if (drafts === undefined) {
-      ListDrafts(user).then(setDrafts)
+      Loader.ListDrafts(user).then(setDrafts)
     }
   },
   [drafts, user])
@@ -33,7 +33,7 @@ const DraftList: React.FC = () => {
     if (title === undefined || title.trim() === '') {
       // TODO: input validation feedback
     } else {
-      CreateDraft(user, title.trim()).then(draft => navigate(`/drafts/${draft.id}`))
+      Loader.CreateDraft(user, title.trim()).then(draft => navigate(`/drafts/${draft.id}`))
     }
   }
   
