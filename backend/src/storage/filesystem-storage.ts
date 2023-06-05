@@ -1,5 +1,5 @@
 import * as fs from 'fs'
-import { S3Client, ListObjectsV2Request, ListObjectsV2Command, PutObjectCommand, PutObjectCommandInput, ListObjectsV2CommandInput, GetObjectCommand, GetObjectCommandInput, DeleteObjectCommand, DeleteObjectCommandInput } from '@aws-sdk/client-s3'
+import { S3Client, ListObjectsV2Command, PutObjectCommand, PutObjectCommandInput, ListObjectsV2CommandInput, GetObjectCommand, GetObjectCommandInput, DeleteObjectCommand, DeleteObjectCommandInput } from '@aws-sdk/client-s3'
 import { resolve } from 'path'
 
 

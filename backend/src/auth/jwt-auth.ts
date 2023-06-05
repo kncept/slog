@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken'
 import { parse } from '@supercharge/json'
 import { LoginProvider as BackendLoginProvider } from '../../../orchestration/env-properties'
 import fetch from 'isomorphic-fetch'
+import { KeyPairManager, KeyPairName } from '../storage/storage'
 
 const logonProviders = parse(process.env.LOGIN_PROVIDERS!) as Array<BackendLoginProvider>
 const frontendUrl = process.env.PUBLIC_URL!
@@ -32,28 +33,42 @@ const invalid: ParsedAuth = {
 }
 
 export interface JwtAuthenticator {
-    ParseAuth: (authorizationHeader: string | undefined, cookieHeader: string | undefined) => ParsedAuth
+    ParseAuth: (authorizationHeader: string | undefined, cookieHeader: string | undefined) => Promise<ParsedAuth>
     LoginOptions: () => LoginOptions
     LoginCallback: (providerName: string, requestBody: Record<string, string>) => Promise<string> //JWT ... or null for failure?
     ValidKeys: () => Array<string>
+
+    // // using the 'user' key::
+    // EncodeUserId: (userId: string) => Promise<string>
+    // DecodeUserId: (userId: string) => Promise<string>
+    
 }
 
 export class AsymetricJwtAuth implements JwtAuthenticator {
-    keyPair: KeyPair
+    keyPairManager: KeyPairManager
+
+    cache: any = {}
     constructor(
-        keyPair: KeyPair
+        keyPairManager: KeyPairManager
     ){
-        this.keyPair = keyPair
+        this.keyPairManager = keyPairManager
     }
 
-    ParseAuth: (header: string | undefined, cookieHeader: string | undefined) => ParsedAuth = (authorizationHeader, cookieHeader) => {
+    loginKeypair: () =>  Promise<KeyPair> = async () => {
+        if (!this.cache[KeyPairName.login]) {
+            this.cache[KeyPairName.login] = await this.keyPairManager.ReadKeyPair(KeyPairName.login)
+        }
+        return this.cache[KeyPairName.login]
+    }
+
+    ParseAuth: (header: string | undefined, cookieHeader: string | undefined) => Promise<ParsedAuth> = async (authorizationHeader, cookieHeader) => {
         if (authorizationHeader !== undefined && authorizationHeader.startsWith('Bearer ')) {
             const jwtString = authorizationHeader.substring(7)
-            return parseJwtString(jwtString, this.keyPair)
+            return parseJwtString(jwtString, await this.loginKeypair())
         }
         if (cookieHeader) {
             const jwtString = getCookie('jwt', cookieHeader)
-            if(jwtString) return parseJwtString(jwtString, this.keyPair)
+            if(jwtString) return parseJwtString(jwtString, await this.loginKeypair())
         }
 
         return unauthenticated

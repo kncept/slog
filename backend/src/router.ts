@@ -1,7 +1,7 @@
 // I must say, the Lambda V3 API and typescript offering from amazon is horrible
 import { Identified, Post, PostMetadata, PostUpdatableFields } from '../../interface/Model'
 import * as luxon from 'luxon'
-import Storage from './storage/storage'
+import Storage, { KeyPairName } from './storage/storage'
 import { parse, stringify} from '@supercharge/json'
 import KSUID from 'ksuid'
 import * as mime from 'mime-types'
@@ -19,23 +19,21 @@ export interface RouterResponse {
 export default class Router {
     storage: Storage
     readyFlag: Promise<any>
-    keyPair: Promise<KeyPair>
-
     auth: JwtAuthenticator
 
-    constructor(storage: Storage, keyPair: Promise<KeyPair>){
+    constructor(storage: Storage, ){
         this.storage = storage
         this.readyFlag = storage.readyFlag
-        this.keyPair = keyPair
     }
 
     async route(method: string, path: string, headers: Record<string, string | undefined>, requestBody: Buffer | undefined): Promise<RouterResponse> {
         if (path === null || path === undefined || path === "") {
             throw new Error("No path defined: " + path)
         }
-        
+
+        if (this.auth === undefined) this.auth = new AsymetricJwtAuth(this.storage.KeyPairManager())
+
         // TODO: fix multi headers for 'Cookie'
-        if (this.auth === undefined) this.auth = new AsymetricJwtAuth(await this.keyPair)
         const parsedAuth = this.auth.ParseAuth(extractHeader(headers, 'Authorization'), extractHeader(headers, 'Cookie'))
         if (parsedAuth.result === AuthResult.invalid) return forbiddenResponse
 
