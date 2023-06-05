@@ -9,6 +9,19 @@ export default interface Storage {
     PostStorage(): PostReader
     DraftStorage(): PostCreator
 
+    // StateEngine(): StateEngine
+
+}
+
+export enum StateEngineFile {
+    contributors = 'contributors',
+}
+
+// perhaps a per-type get/set?
+// WHAT ABOUT a per-contributor bio? That's a good way to add state info?
+export interface StateEngine {
+    ReadStateFile(file: StateEngineFile): Promise<string>
+    UpdateStateFile(file: StateEngineFile, value: string): Promise<void>
 }
 
 export interface PostReader {

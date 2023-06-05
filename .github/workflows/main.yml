@@ -38,6 +38,9 @@ jobs:
       - name: npm init
         run: npm ci
         
+      - name: Run tests
+        run: npm run run.ts test
+
       - name: Deploy stack
         run: npm run run.ts deploy
 

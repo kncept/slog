@@ -102,7 +102,9 @@ export default class Router {
                         const now = luxon.DateTime.now().toMillis()
                         const postMeta: PostMetadata = {
                             attachments: [],
-                            contributors: [], // TODO: extract current logged in user
+                            contributors: [
+                                // parsedAuth.claims?.sub
+                            ], // TODO: extract current logged in user
                             id: KSUID.randomSync().string,
                             title: data.title,
                             updatedTs: now,

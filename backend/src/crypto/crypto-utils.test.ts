@@ -9,11 +9,10 @@ test('can generate keypairs', async () => {
 
 test('generates PEM format', async () => {
     const keypair = await generateKeyPair()
-    // console.log('keypair', keypair)
-    expect(keypair.publicKey.startsWith('-----BEGIN RSA PUBLIC KEY-----\n')).toBe(true)
-    expect(keypair.publicKey.endsWith('-----END RSA PUBLIC KEY-----\n')).toBe(true)
+
+    expect(keypair.publicKey.startsWith('-----BEGIN PUBLIC KEY-----\n')).toBe(true)
+    expect(keypair.publicKey.endsWith('-----END PUBLIC KEY-----\n')).toBe(true)
 
     expect(keypair.privateKey.startsWith('-----BEGIN PRIVATE KEY-----\n')).toBe(true)
     expect(keypair.privateKey.endsWith('-----END PRIVATE KEY-----\n')).toBe(true)
 })
-

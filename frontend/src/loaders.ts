@@ -89,9 +89,9 @@ export const CreateDraft: (user: AuthenticatedUser, title: string) => Promise<Po
   .then(res => res.json())
 }
 
-export const SaveDraft: (user: AuthenticatedUser, post: PostUpdatableFields) => Promise<void> = (user, post) => {
+export const SaveDraft: (user: AuthenticatedUser, postId: string, post: PostUpdatableFields) => Promise<void> = (user, postId, post) => {
   if (user === undefined || user === null) throw new Error('Authentication required')
-    return cache.lookup(user, `${apiBase}/draft`, {
+    return cache.lookup(user, `${apiBase}/draft/${postId}`, {
       method: 'POST',
       headers: {'Accept': ContentTypes.json, 'Content-Type': ContentTypes.json},
       body: stringify(post),

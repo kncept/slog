@@ -63,8 +63,6 @@ export class BackendStack extends cdk.Stack {
 
     bucket.grantReadWrite(role)
 
-    // const keyPair = currentKeyPair
-
     const backendLambda = new lambdaNodeJs.NodejsFunction(this, `${prefix}-lambda-fn`, {
       functionName: `${props.blogBaseName}-lambda`,
       handler: 'handler',
