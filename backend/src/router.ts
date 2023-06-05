@@ -64,12 +64,14 @@ export default class Router {
         if (params.matches && method === 'POST') {
             if (parsedAuth.result === AuthResult.unauthorized) return unauthorizedResponse
             if (!parsedAuth.claims?.admin) return forbiddenResponse
+            const now = luxon.DateTime.now().toMillis()
             const id = params!.params!.postId
             const post = parse(requestBody!.toString()) as PostUpdatableFields
             await this.storage.DraftStorage().GetPost(id)
             .then(async existing => {
                 if (post.markdown) existing.markdown = post.markdown
                 if (post.title) existing.title= post.title
+                existing.updatedTs = now
                 await this.storage.DraftStorage().Save(existing)    
             })
             return emptyResponse
