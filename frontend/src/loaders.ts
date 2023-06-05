@@ -45,7 +45,7 @@ class Cache {
       delete this.activeRequests[key]
       return res
     })
-    .then(res => {
+    .then(async res => {
       if (res.status === 403 && user !== null) {
         console.log('logging user out on 403')
         user.logout()
@@ -53,6 +53,7 @@ class Cache {
       if (res.status === 401 || (res.status === 403 && user === null)) {
         console.log(`SHOULD redirect to a 'login required' screen`)
       }
+      if (!res.ok) throw new Error('Response not okay: ' + url)
       return res
     })
     return value
