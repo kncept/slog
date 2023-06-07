@@ -16,7 +16,7 @@
  - google - https://developers.google.com/identity/openid-connect/openid-connect
  - github - https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app
 
-* versioning, so that initial dev and further 
+* fix 'storage' and split into clearer domain modules
 
 * post privacy - per post
   only show first content fragment

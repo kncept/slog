@@ -34,7 +34,7 @@ export default class Router {
         if (this.auth === undefined) this.auth = new AsymetricJwtAuth(this.storage.KeyPairManager())
 
         // TODO: fix multi headers for 'Cookie'
-        const parsedAuth = this.auth.ParseAuth(extractHeader(headers, 'Authorization'), extractHeader(headers, 'Cookie'))
+        const parsedAuth = await this.auth.ParseAuth(extractHeader(headers, 'Authorization'), extractHeader(headers, 'Cookie'))
         if (parsedAuth.result === AuthResult.invalid) return forbiddenResponse
 
         let params = match('/post/', path)
@@ -158,7 +158,7 @@ export default class Router {
 
         params = match('/login/providers', path)
         if (params.matches && method === 'GET') {
-            return quickResponse(stringify(this.auth.LoginOptions()))
+            return quickResponse(stringify(await this.auth.LoginOptions()))
         }
         params = match('/login/callback/:providerName', path)
         if (params.matches && method === 'POST') {
