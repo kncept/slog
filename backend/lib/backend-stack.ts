@@ -12,14 +12,12 @@ import * as route53 from 'aws-cdk-lib/aws-route53'
 import * as ec2 from 'aws-cdk-lib/aws-ec2'
 import * as iam from 'aws-cdk-lib/aws-iam'
 import * as s3 from 'aws-cdk-lib/aws-s3'
-import { KeyPair } from '../src/crypto/crypto-utils'
 
 export interface BackendStackProps {
   projectRootDir: string
   blogBaseName: string
   hostedZone: HostedZoneInfo
   domainName: string
-  keyPair: KeyPair
 }
 
 export class BackendStack extends cdk.Stack {
@@ -75,10 +73,6 @@ export class BackendStack extends cdk.Stack {
         ADMIN_USER: process.env.ADMIN_USER || '',
         S3_BUCKET_NAME: bucket.bucketName,
         LOGIN_PROVIDERS: process.env.LOGIN_PROVIDERS || '[]',
-
-        PRIVATE_KEY: props.keyPair.privateKey,
-        PUBLIC_KEY: props.keyPair.publicKey,
-
       },
       logRetention: logs.RetentionDays.ONE_MONTH,
       bundling: {

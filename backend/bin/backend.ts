@@ -8,7 +8,6 @@ import { matchHostedZoneToDomainUrl, extractDomainNameFromUrl, fullyQualifiedApi
 import { HostedZoneStack } from '../lib/hosted-zone-stack'
 import { FrontendStack } from '../lib/frontend-stack'
 import { FrontendCertificateStack } from '../lib/frontend-certificate-stack'
-import { currentKeyPair } from '../src/crypto/crypto-utils'
 
 const projectRootDir = path.join(__dirname, '..', '..')
 
@@ -27,7 +26,6 @@ async function defineStacks() {
     blogBaseName: superSimpleBaseBlogName(),
     hostedZone: hostedZone!,
     domainName: fullyQualifiedApiDomainName(),
-    keyPair: await currentKeyPair(),
   })
 
   // Cloudfront certificates have to be us-east-1, because aws

@@ -1,6 +1,5 @@
 // I must say, the Lambda V3 API and typescript offering from amazon is horrible
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda'
-import { currentKeyPair } from './crypto/crypto-utils'
 import Router from './router'
 import { S3FsOperations } from './storage/filesystem-storage'
 import { FilesystemStorage } from './storage/storage'
@@ -15,9 +14,7 @@ function bucketName(): string {
 }
 
 const router: Router = new Router(
-  new FilesystemStorage('.', new S3FsOperations(bucketName())),
-  currentKeyPair(),
-)
+  new FilesystemStorage('.', new S3FsOperations(bucketName())))
 
 export const handler = async (event: APIGatewayProxyEvent, context: Context): Promise<APIGatewayProxyResult> => {
   // console.log('event', event)

@@ -1,7 +1,7 @@
 // I must say, the Lambda V3 API and typescript offering from amazon is horrible
 import { Identified, Post, PostMetadata, PostUpdatableFields } from '../../interface/Model'
 import * as luxon from 'luxon'
-import Storage, { KeyPairName } from './storage/storage'
+import Storage from './storage/storage'
 import { parse, stringify} from '@supercharge/json'
 import KSUID from 'ksuid'
 import * as mime from 'mime-types'

@@ -1,4 +1,4 @@
-import { randomUUID } from 'crypto'
+import { randomInt, randomUUID } from 'crypto'
 import { generateKeyPair } from '../crypto/crypto-utils'
 import { AsymetricJwtAuth, AuthResult } from './jwt-auth'
 import jwt from 'jsonwebtoken'
@@ -18,6 +18,7 @@ function tmpDir(id?: string | undefined) {
 
 const fileSystemStorage = new FilesystemStorage(tmpDir(), new LocalFsOperations())
 const keypairManager = fileSystemStorage.KeyPairManager()
+const auth = new AsymetricJwtAuth(keypairManager)
 
 // const keyPairPromise = generateKeyPair()
 const subject = randomUUID().toString()
@@ -26,7 +27,6 @@ const algorithm = 'RS512'
 
 
 test("can verify tokens", async () => {
-    const auth = new AsymetricJwtAuth(keypairManager)
     const jwtString = jwt.sign({}, (await keypairManager.ReadKeyPair(KeyPairName.login)).privateKey, {
         algorithm,
         subject,
@@ -38,7 +38,6 @@ test("can verify tokens", async () => {
 })
 
 test("requires a known issuer", async () => {
-    const auth = new AsymetricJwtAuth(keypairManager)
     const jwtString = jwt.sign({}, (await keypairManager.ReadKeyPair(KeyPairName.login)).privateKey, {
         algorithm,
         subject,
@@ -49,7 +48,6 @@ test("requires a known issuer", async () => {
 })
 
 test("requires the same keypair", async () => {
-    const auth = new AsymetricJwtAuth(keypairManager)
     const jwtString = jwt.sign({}, (await generateKeyPair()).privateKey, {
         algorithm,
         subject,
@@ -57,4 +55,17 @@ test("requires the same keypair", async () => {
     })
     const authResult = await auth.ParseAuth(`Bearer ${jwtString}`, undefined)
     expect(authResult.result).toBe(AuthResult.invalid)
+})
+
+describe("jwt userid encryption", () => {
+
+    const userIdToEncode = "TestUsers:" + randomInt(32767)
+    let encrypted = ''
+    it('consistently encrypts', async () => {
+        encrypted = await auth.EncodeUserId(userIdToEncode)
+        expect(await auth.EncodeUserId(userIdToEncode)).toEqual(encrypted)
+    })
+    it('decrypts', async () => {
+        expect(await auth.DecodeUserId(encrypted)).toEqual(userIdToEncode)
+    })
 })

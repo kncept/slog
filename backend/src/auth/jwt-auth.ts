@@ -1,10 +1,10 @@
 import { JwtAuthClaims, LoginOptions, LoginProvider } from '../../../interface/Model'
-import { KeyPair } from '../crypto/crypto-utils'
+import { KeyPair, KeySpec, simpleDecode, simpleEncode } from '../crypto/crypto-utils'
 import jwt from 'jsonwebtoken'
 import { parse } from '@supercharge/json'
 import { LoginProvider as BackendLoginProvider } from '../../../orchestration/env-properties'
 import fetch from 'isomorphic-fetch'
-import { KeyPairManager, KeyPairName } from '../crypto/keypair-manager'
+import { KeyName, KeyPairManager, KeyPairName } from '../crypto/keypair-manager'
 
 const logonProviders = parse(process.env.LOGIN_PROVIDERS!) as Array<BackendLoginProvider>
 const frontendUrl = process.env.PUBLIC_URL!
@@ -39,8 +39,8 @@ export interface JwtAuthenticator {
     ValidKeys: () => Promise<Array<string>>
 
     // // using the 'user' key::
-    // EncodeUserId: (userId: string) => Promise<string>
-    // DecodeUserId: (userId: string) => Promise<string>
+    EncodeUserId: (userId: string) => Promise<string>
+    DecodeUserId: (userId: string) => Promise<string>
     
 }
 
@@ -59,6 +59,12 @@ export class AsymetricJwtAuth implements JwtAuthenticator {
             this.cache[KeyPairName.login] = await this.keyPairManager.ReadKeyPair(KeyPairName.login)
         }
         return this.cache[KeyPairName.login]
+    }
+    userKeypair: () => Promise<KeySpec> = async () => {
+        if (!this.cache[KeyName.user]) {
+            this.cache[KeyName.user] = await this.keyPairManager.ReadKey(KeyName.user)
+        }
+        return this.cache[KeyName.user] 
     }
 
     ParseAuth: (header: string | undefined, cookieHeader: string | undefined) => Promise<ParsedAuth> = async (authorizationHeader, cookieHeader) => {
@@ -182,6 +188,10 @@ export class AsymetricJwtAuth implements JwtAuthenticator {
     }
 
     ValidKeys: () => Promise<Array<string>> = async () => [(await this.loginKeypair()).publicKey]
+
+    EncodeUserId: (userId: string) => Promise<string> = async (userId) => this.userKeypair().then(key => simpleEncode(key, userId))
+
+    DecodeUserId: (encodedId: string) => Promise<string> = (encodedId) => this.userKeypair().then(key => simpleDecode(key, encodedId))
 
 }
 
