@@ -1,5 +1,5 @@
 // I must say, the Lambda V3 API and typescript offering from amazon is horrible
-import { Identified, Post, PostMetadata, PostUpdatableFields } from '../../interface/Model'
+import { Contributor, Identified, JwtAuthClaims, Post, PostMetadata, PostUpdatableFields } from '../../interface/Model'
 import * as luxon from 'luxon'
 import Storage from './storage/storage'
 import { parse, stringify} from '@supercharge/json'
@@ -69,6 +69,7 @@ export default class Router {
             .then(async existing => {
                 if (post.markdown) existing.markdown = post.markdown
                 if (post.title) existing.title= post.title
+                existing.contributors = addContributor(existing.contributors, parsedAuth.claims!)
                 existing.updatedTs = now
                 await this.storage.DraftStorage().Save(existing)    
             })
@@ -102,9 +103,7 @@ export default class Router {
                         const now = luxon.DateTime.now().toMillis()
                         const postMeta: PostMetadata = {
                             attachments: [],
-                            contributors: [
-                                // parsedAuth.claims?.sub
-                            ], // TODO: extract current logged in user
+                            contributors: addContributor([], parsedAuth.claims!),
                             id: KSUID.randomSync().string,
                             title: data.title,
                             updatedTs: now,
@@ -183,6 +182,22 @@ export default class Router {
             body: `NOT FOUND: ${method} ${path}`
         }
     }
+}
+
+const addContributor = (existing: Array<Contributor>, auth: JwtAuthClaims): Array<Contributor> => {
+    for(let i = 0; i < existing.length; i++) {
+        if (existing[i].id === auth.sub) {
+            existing[i].name = auth.name,
+            existing[i].email = auth.email
+            return existing
+        }
+    }
+    existing.push({
+        id: auth.sub,
+        name: auth.name,
+        email: auth.email, 
+    })
+    return existing
 }
 
 // forbidden, go and authorize

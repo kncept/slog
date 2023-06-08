@@ -76,7 +76,6 @@ export class AsymetricJwtAuth implements JwtAuthenticator {
             const jwtString = getCookie('jwt', cookieHeader)
             if(jwtString) return parseJwtString(jwtString, await this.loginKeypair())
         }
-
         return unauthenticated
     }
 
@@ -167,7 +166,8 @@ export class AsymetricJwtAuth implements JwtAuthenticator {
                             admin,
                             tok: oauthToken.access_token
                         }
-
+                        
+                        const subject = await this.EncodeUserId(`${providerName}:${userDetails.id}`)
                         const authToken = jwt.sign(
                             authenticatedUser,
                             (await this.loginKeypair()).privateKey,
@@ -175,7 +175,7 @@ export class AsymetricJwtAuth implements JwtAuthenticator {
                                 algorithm: 'RS512',
                                 issuer: 'super-simple-blog',
                                 expiresIn: '1d',
-                                subject:`${providerName}:${userDetails.id}`,
+                                subject,
                             })
                             return authToken
                     }
