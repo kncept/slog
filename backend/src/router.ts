@@ -7,7 +7,6 @@ import KSUID from 'ksuid'
 import * as mime from 'mime-types'
 import { match } from 'node-match-path'
 
-import { KeyPair } from './crypto/crypto-utils'
 import { AsymetricJwtAuth, AuthResult, JwtAuthenticator } from './auth/jwt-auth'
 
 export interface RouterResponse {
@@ -27,6 +26,7 @@ export default class Router {
     }
 
     async route(method: string, path: string, headers: Record<string, string | undefined>, requestBody: Buffer | undefined): Promise<RouterResponse> {
+        try {
         if (path === null || path === undefined || path === "") {
             throw new Error("No path defined: " + path)
         }
@@ -85,6 +85,7 @@ export default class Router {
             return quickResponse(stringify(res))
         }
         if (params.matches && method === 'DELETE') {
+            throw new Error('DELETE called ?!?!')
             if (parsedAuth.result === AuthResult.unauthorized) return unauthorizedResponse
             if (!parsedAuth.claims?.admin) return forbiddenResponse
             const id = params!.params!.postId
@@ -180,6 +181,15 @@ export default class Router {
                 'Content-Type': 'text/plain'
             },
             body: `NOT FOUND: ${method} ${path}`
+        }
+        } catch (err) {
+            return {
+                statusCode: 500,
+                headers: {
+                    'Content-Type': 'text/plain'
+                },
+                body: stringify(err)
+            }
         }
     }
 }

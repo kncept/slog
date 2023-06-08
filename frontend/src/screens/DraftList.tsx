@@ -51,7 +51,12 @@ const DraftList: React.FC = () => {
         No Drafts yet
       </div>}
       {drafts.length < 5 && <div>
-        <form className='NewDraft' onChange={setFormData}>
+        <form className='NewDraft' onChange={setFormData} onSubmit={(e) => {
+          e.preventDefault();
+          const form = e.target as any
+          createNew(form.title.value)
+          return false
+          }}>
         <SimpleButton text="Draft New" onClick={() => createNew(formData.title)}/>
           <input name='title'/>
         </form>

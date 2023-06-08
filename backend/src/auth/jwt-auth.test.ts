@@ -2,7 +2,7 @@ import { randomInt, randomUUID } from 'crypto'
 import { generateKeyPair } from '../crypto/crypto-utils'
 import { AsymetricJwtAuth, AuthResult } from './jwt-auth'
 import jwt from 'jsonwebtoken'
-import { FilesystemKeyPairManager, KeyPairManager, KeyPairName } from '../crypto/keypair-manager'
+import { KeyPairName } from '../crypto/keypair-manager'
 import * as path from 'path'
 import { FilesystemStorage } from '../storage/storage'
 import * as os from 'os'
@@ -58,7 +58,6 @@ test("requires the same keypair", async () => {
 })
 
 describe("jwt userid encryption", () => {
-
     const userIdToEncode = "TestUsers:" + randomInt(32767)
     let encrypted = ''
     it('consistently encrypts', async () => {

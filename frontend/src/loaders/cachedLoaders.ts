@@ -88,9 +88,9 @@ export class CacheLoader implements LoaderApi{
     .then(res => res.json())
   }
 
-  SaveDraft: (user: AuthenticatedUser, postId: string, post: PostUpdatableFields) => Promise<void> = (user, postId, post) => {
+  SaveDraft: (user: AuthenticatedUser, id: string, post: PostUpdatableFields) => Promise<void> = (user, id, post) => {
     if (user === undefined || user === null) throw new Error('Authentication required')
-      return this.lookup(user, `${apiBase}/draft/${postId}`, {
+      return this.lookup(user, `${apiBase}/draft/${id}`, {
         method: 'POST',
         headers: {'Accept': ContentTypes.json, 'Content-Type': ContentTypes.json},
         body: stringify(post),
