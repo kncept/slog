@@ -4,20 +4,13 @@ import Router from './router'
 import * as path from 'path'
 import { FilesystemStorage } from './storage/storage'
 import { LocalFsOperations, S3FsOperations } from './storage/filesystem-storage'
-import { devKeyPair } from './crypto/dev-crypto-utils'
 import * as fs from 'fs'
 
 // define `bucketName` (and aws keys) in devProperties.ts to use an s3 bucket
 const bucketName = process.env.BUCKET_NAME || ''
 const router: Router = bucketName !== '' ?
-    new Router(
-        new FilesystemStorage('.', new S3FsOperations(bucketName)),
-        devKeyPair(),
-    ):
-    new Router(
-        new FilesystemStorage(path.join(__dirname, '..', '..', '.data'), new LocalFsOperations()),
-        devKeyPair(),
-    )
+    new Router(new FilesystemStorage('.', new S3FsOperations(bucketName))) :
+    new Router(new FilesystemStorage(path.join(__dirname, '..', '..', '.data'), new LocalFsOperations()))
 
 const requestListener: http.RequestListener = (req, res) => {
     const addCorsHeaders = () => {
