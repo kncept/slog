@@ -1,0 +1,32 @@
+name: Deploy 
+
+on:
+  push:
+    tags: 
+      - "v*.*.*" 
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Create prodProperties.ts file
+        run: echo "${PROD_PROPERTIES}" > prodProperties.ts
+        env:
+          PROD_PROPERTIES: ${{ secrets.PROD_PROPERTIES }}
+
+      - name: npm init
+        run: npm ci
+
+      - name: Deploy stack
+        run: npm run run.ts deploy
+
+      - name: Cleanup prodProperties.ts
+        run: rm -fr prodProperties.ts
