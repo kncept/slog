@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React from 'react'
 import 'easymde/dist/easymde.min.css'
 import CatchErr from './CatchErr'
 import MDEditor from '@uiw/react-md-editor'

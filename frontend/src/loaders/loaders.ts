@@ -38,5 +38,5 @@ class WrappedLoader implements LoaderApi {
   
 }
 
-const Loader = new WrappedLoader
+const Loader = new WrappedLoader()
 export default Loader

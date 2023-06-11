@@ -69,6 +69,7 @@ export default class Router {
             .then(async existing => {
                 if (post.markdown) existing.markdown = post.markdown
                 if (post.title) existing.title= post.title
+                existing.version = '1.0.0' // add a version format stepper if required in the future
                 existing.contributors = addContributor(existing.contributors, parsedAuth.claims!)
                 existing.updatedTs = now
                 await this.storage.DraftStorage().Save(existing)    
@@ -85,7 +86,6 @@ export default class Router {
             return quickResponse(stringify(res))
         }
         if (params.matches && method === 'DELETE') {
-            throw new Error('DELETE called ?!?!')
             if (parsedAuth.result === AuthResult.unauthorized) return unauthorizedResponse
             if (!parsedAuth.claims?.admin) return forbiddenResponse
             const id = params!.params!.postId
@@ -103,6 +103,7 @@ export default class Router {
                         const data = parse(requestBody!.toString()) // TODO: content-type this
                         const now = luxon.DateTime.now().toMillis()
                         const postMeta: PostMetadata = {
+                            version: '1.0.0', // add a version format stepper if required in the future
                             attachments: [],
                             contributors: addContributor([], parsedAuth.claims!),
                             id: KSUID.randomSync().string,

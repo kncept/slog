@@ -35,9 +35,9 @@ const DraftEdit: React.FC = () => {
   },
   [id, draft, user])
 
-  // const onUpload = (fileName: string) => {
-  //   draft!.attachments.push(fileName)
-  // }
+  const onUpload = (fileName: string) => {
+    draft!.attachments.push(fileName)
+  }
 
   if (draft === undefined) {
     return <Loading />
@@ -74,7 +74,8 @@ const DraftEdit: React.FC = () => {
     <Contributors contributors={draft.contributors} />
 
     Need a section to handle upload media references, and list uploaded files that are part of a post.
-    
+    <FileUpload draftId={draft.id} onUpload={onUpload} />
+
     <div className='DraftControlButtons'>
     <SimpleButton text='Save' onClick={saveDraft} disabled={!saveable} style={{color: !saveable? 'red' : 'green'}}/>
     <SimpleButton text='Delete' onClick={deleteDraft} />

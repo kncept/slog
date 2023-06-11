@@ -16,6 +16,7 @@ export interface Post extends PostMetadata {
 }
 
 export interface PostMetadata extends Identified {
+    version: string //semver version
     updatedTs: number // milliseconds UTC
     title: string
     attachments: Array<string>

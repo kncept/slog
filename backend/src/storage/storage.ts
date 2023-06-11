@@ -128,6 +128,7 @@ class FileSystemPostCreator extends FileSystemPostReader implements PostCreator 
 
             const post = await this.GetPost(draftId)
             post.id = postId
+            post.version = '1.0.0' // add a version format stepper if required in the future
             await postCreator.Save(post) // move to drafts
             await Promise.all(post.attachments.map(attachment => this.fsBackend.copy(
                 path.join(draftPath, attachment),
@@ -160,6 +161,7 @@ class FileSystemPostCreator extends FileSystemPostReader implements PostCreator 
 
 function extractMetadata(post: Post): PostMetadata {
     return {
+        version: post.version,
         attachments: post.attachments,
         contributors: post.contributors,
         id: post.id,
