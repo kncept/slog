@@ -1,5 +1,5 @@
 import * as fs from 'fs'
-import { S3Client, ListObjectsV2Command, PutObjectCommand, PutObjectCommandInput, ListObjectsV2CommandInput, GetObjectCommand, GetObjectCommandInput, DeleteObjectCommand, DeleteObjectCommandInput } from '@aws-sdk/client-s3'
+import { S3Client, ListObjectsV2Command, PutObjectCommand, PutObjectCommandInput, ListObjectsV2CommandInput, GetObjectCommand, GetObjectCommandInput, DeleteObjectCommand, DeleteObjectCommandInput, CopyObjectCommand, CopyObjectCommandInput } from '@aws-sdk/client-s3'
 
 
 export interface FileOperations {
@@ -180,6 +180,12 @@ export class S3FsOperations implements FileOperations {
         })
     }
     copy(src: string, dst: string): Promise<void> {
-        return Promise.reject('NOT YET IMPLEMENTED')
+        const input: CopyObjectCommandInput = {
+            Bucket: this.bucketName,
+            CopySource: src,
+            Key: dst,
+        }
+        return this.client.send(new CopyObjectCommand(input))
+        .then(() => {})
     }
 }
