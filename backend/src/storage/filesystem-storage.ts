@@ -1,6 +1,5 @@
 import * as fs from 'fs'
 import { S3Client, ListObjectsV2Command, PutObjectCommand, PutObjectCommandInput, ListObjectsV2CommandInput, GetObjectCommand, GetObjectCommandInput, DeleteObjectCommand, DeleteObjectCommandInput } from '@aws-sdk/client-s3'
-import { resolve } from 'path'
 
 
 export interface FileOperations {
@@ -106,8 +105,9 @@ export class S3FsOperations implements FileOperations {
         const input: PutObjectCommandInput = {
             "Bucket": this.bucketName,
             "Key": dir,
-          }
-          return this.client.send(new PutObjectCommand(input)).then(() => {})
+        }
+        return this.client.send(new PutObjectCommand(input))
+        .then(() => {})
     }
 
     // TODO: listing continuations
@@ -149,19 +149,17 @@ export class S3FsOperations implements FileOperations {
           .then(() => {})
     }
     read(file: string): Promise<Buffer> {
-        console.log('S3fs reading ' + file)
-        return new Promise(async (resolve, reject) => {
-            const input: GetObjectCommandInput = {
-                Bucket: this.bucketName,
-                Key: file
-            }
-            const response = await this.client.send(new GetObjectCommand(input))
-            const buf = await response.Body!.transformToByteArray()
-            resolve(Buffer.from(buf))
-        })
+        // console.log('S3fs reading ' + file)
+        const input: GetObjectCommandInput = {
+            Bucket: this.bucketName,
+            Key: file
+        }
+        return this.client.send(new GetObjectCommand(input))
+        .then(response => response.Body!.transformToByteArray())
+        .then(Buffer.from)
     }
     delete(file: string): Promise<void> {
-        console.log('S3fs deleting ' + file)
+        // console.log('S3fs deleting ' + file)
         return new Promise(async (resolve, reject) => {
             if (file.endsWith('/')) {
                 console.log('manual s3 delete recurse')

@@ -69,28 +69,23 @@ class FileSystemPostReader implements PostReader {
         this.fsBackend = fsBackend
     }
     ListPosts(): Promise<PostMetadata[]> {
-        return new Promise(async (resolve, reject) => {
-            const posts: Array<PostMetadata> = []
-            const postPromises = await this.fsBackend.list(this.storageLocation)
-            .then(ids => {
-                // PostMetadata
-                return ids.map((postId, index) => {
-                    const postPath = this.calculatePostPath(postId)
-                    return this.fsBackend.read(path.join(postPath, 'post.json'))
-                        .then(postData => posts[index] = parse(postData.toString()) as PostMetadata)
-                })
-            })
-            Promise.all(postPromises).then(() => resolve(posts))
-        })
+        return this.fsBackend.list(this.storageLocation)
+        .then(ids => Promise.all(ids.map(
+            postId => this.fsBackend.read(path.join(this.calculatePostPath(postId), 'post.json'))
+            .then(postData => parse(postData.toString()) as PostMetadata)
+            )
+        ))
     }
 
     GetPost(postId: string): Promise<Post> {
         const postPath = this.calculatePostPath(postId)
-        return new Promise(async (resolve, reject) => {
-            const markdown = await this.fsBackend.read(path.join(postPath, 'post.md'))
-            const postMetaBuffer = await this.fsBackend.read(path.join(postPath, 'post.json'))
-            const postMeta = parse(postMetaBuffer.toString()) as PostMetadata
-            resolve({...postMeta, markdown: markdown.toString()})
+        return Promise.all([
+            this.fsBackend.read(path.join(postPath, 'post.json')),
+            this.fsBackend.read(path.join(postPath, 'post.md')),
+        ])
+        .then(values => {
+            const postMeta = parse(values[0].toString()) as PostMetadata
+            return {...postMeta, markdown: values[1].toString()}
         })
     }
     GetMediaRef(postId: string, filename: string): Promise<string> {
@@ -99,7 +94,6 @@ class FileSystemPostReader implements PostReader {
     GetMedia(postId: string, filename: string): Promise<Buffer> {
         const postPath = this.calculatePostPath(postId)
         return this.fsBackend.read(path.join(postPath, filename))
-        // const postPath = this.calculatePostPath(post.id)
     }
 
     calculatePostPath(postId: string): string {
