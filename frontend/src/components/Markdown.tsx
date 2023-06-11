@@ -24,6 +24,13 @@ type Props = {
 const Markdown: React.FC<Props> = ({postId, value, setValue, mode}) => {
     if (mode === MarkdownMode.EDIT && setValue === undefined) throw new Error('Must defined setValue when editing')
 
+    const onChange = (v: string | undefined) => {
+        // reset image list
+
+
+        if (setValue) setValue(v || '')
+    }
+
       const imageBase = mode === MarkdownMode.EDIT ? `${apiBase}/image/draft/${postId}/` : `${apiBase}/image/post/${postId}/`
       const transformImageUri = (src: string) => src.startsWith("http") ? src : `${imageBase}${src}`
 
@@ -31,7 +38,7 @@ const Markdown: React.FC<Props> = ({postId, value, setValue, mode}) => {
         <div data-color-mode='light'>
             <MDEditor
             value={value}
-            onChange={(v) => setValue!(v || '')}
+            onChange={onChange}
             previewOptions={{
                 transformImageUri,
                 rehypePlugins: [[rehypeSanitize]],

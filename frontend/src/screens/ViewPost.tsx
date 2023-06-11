@@ -4,6 +4,7 @@ import Loader from '../loaders/loaders'
 import { useParams } from 'react-router-dom'
 import Markdown, { MarkdownMode } from '../components/Markdown'
 import Loading from '../components/Loading'
+import Contributors from '../components/Contributors'
 
 
 const ViewPost: React.FC = () => {
@@ -27,15 +28,10 @@ const ViewPost: React.FC = () => {
         <h2>{blog.title}</h2>
       </header>
       <div className="PostContent">
- 
-      <Markdown postId={id!} mode={MarkdownMode.VIEW} value={blog.markdown} />
-
+        <Markdown postId={id!} mode={MarkdownMode.VIEW} value={blog.markdown} />
+        <br/>
       </div>
-      {blog.contributors.map((contributor, index) => <div className="Author" key={index}>
-          {contributor.name}
-      </div>
-      )}
-      
+      <Contributors contributors={blog.contributors} />
     </div>
   )
 }
