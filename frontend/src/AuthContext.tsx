@@ -124,6 +124,7 @@ export const AuthProvider: React.FC<{children?: React.ReactNode}> = ({children})
             Loader.LoginProviders().then(loginOptions => {
 
                 const logout = () => {
+                    console.log('logout called')
                     localStorage.removeItem(localStorageKeys.user)
                     Cookies.remove(jwtCookieName)
                     setAuth(existing => {return {

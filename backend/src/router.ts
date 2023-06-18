@@ -1,7 +1,7 @@
 // I must say, the Lambda V3 API and typescript offering from amazon is horrible
 import { Contributor, Identified, JwtAuthClaims, Post, PostMetadata, PostUpdatableFields } from '../../interface/Model'
 import * as luxon from 'luxon'
-import Storage from './storage/storage'
+import Storage, { updatePostIfRequired } from './storage/storage'
 import { parse, stringify} from '@supercharge/json'
 import KSUID from 'ksuid'
 import * as mime from 'mime-types'
@@ -102,14 +102,15 @@ export default class Router {
                         const data = parse(requestBody!.toString()) // TODO: content-type this
                         const now = luxon.DateTime.now().toMillis()
                         const postMeta: PostMetadata = {
-                            version: '1.0.0', // add a version format stepper if required in the future
+                            version: '', // add a version format stepper if required in the future
                             attachments: [],
                             contributors: addContributor([], parsedAuth.claims!),
                             id: KSUID.randomSync().string,
                             title: data.title,
                             updatedTs: now,
                         }
-                        await this.storage.DraftStorage().Save({...postMeta, markdown: ''})
+                        const post = updatePostIfRequired({...postMeta, markdown: ''})
+                        await this.storage.DraftStorage().Save(post)
                         return postMeta
                     } else {
                         throw new Error('Maximum number of drafts reached')
@@ -197,7 +198,6 @@ export default class Router {
 const addContributor = (existing: Array<Contributor>, auth: JwtAuthClaims): Array<Contributor> => {
     for(let i = 0; i < existing.length; i++) {
         if (existing[i].id === auth.sub) {
-            existing[i].version = '1.0.0'
             existing[i].name = auth.name,
             existing[i].email = auth.email
             return existing
@@ -207,7 +207,6 @@ const addContributor = (existing: Array<Contributor>, auth: JwtAuthClaims): Arra
         id: auth.sub,
         name: auth.name,
         email: auth.email,
-        version: '1.0.0',
     })
     return existing
 }

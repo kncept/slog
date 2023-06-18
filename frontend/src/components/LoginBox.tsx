@@ -16,7 +16,7 @@ const LoginBox: React.FC<Props> = ({style}) => {
     }
 
     const doLogout = () => {
-        authContext.logout()
+        authContext.currentUser!.logout()
     }
 
     if (authContext.isLoading) {

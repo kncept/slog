@@ -39,8 +39,8 @@ export interface JwtAuthenticator {
     ValidKeys: () => Promise<Array<string>>
 
     // // using the 'user' key::
-    EncodeUserId: (userId: string) => Promise<string>
-    DecodeUserId: (userId: string) => Promise<string>
+    EncodeUserId: (userId: string, version?: string | undefined) => Promise<string>
+    DecodeUserId: (userId: string, version?: string | undefined) => Promise<string>
     
 }
 
@@ -189,9 +189,9 @@ export class AsymetricJwtAuth implements JwtAuthenticator {
 
     ValidKeys: () => Promise<Array<string>> = async () => [(await this.loginKeypair()).publicKey]
 
-    EncodeUserId: (userId: string) => Promise<string> = async (userId) => this.userKeypair().then(key => simpleEncode(key, userId))
+    EncodeUserId: (userId: string, version?: string | undefined) => Promise<string> = async (userId) => this.userKeypair().then(key => simpleEncode(key, userId, '1.0.0'))
 
-    DecodeUserId: (encodedId: string) => Promise<string> = (encodedId) => this.userKeypair().then(key => simpleDecode(key, encodedId))
+    DecodeUserId: (encodedId: string, version?: string | undefined) => Promise<string> = (encodedId) => this.userKeypair().then(key => simpleDecode(key, encodedId, '1.0.0'))
 
 }
 

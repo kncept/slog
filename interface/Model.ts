@@ -10,7 +10,7 @@ export interface Versioned extends Identified {
     version: string //semver version
 }
 
-export interface Contributor extends Versioned {
+export interface Contributor extends Identified {
     name: string
     email: string | undefined
 }

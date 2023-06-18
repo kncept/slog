@@ -27,7 +27,7 @@ const PostScroller: React.FC = () => {
       {posts.map(post => {return <div key={post.id} className="PostSynopsis">
         <Link to={`/posts/${post.id}`}>{post.title}</Link><br/>
         &nbsp;&nbsp;{luxon.DateTime.fromMillis(post.updatedTs).toISODate()}
-        &nbsp;&nbsp;{post.contributors.map(c => <div key={c.id}>by: ${c.name}</div>)}
+        &nbsp;&nbsp;{post.contributors.map(c => <div key={c.id}>by: {c.name}</div>)}
       </div>})}
     </div>
   )

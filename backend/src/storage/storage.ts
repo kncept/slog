@@ -160,13 +160,10 @@ class FileSystemPostCreator extends FileSystemPostReader implements PostCreator 
 }
 
 export function updatePostIfRequired(post: Post) : Post {
-    if (!post.version) post.version == '1.0.0'
-    if (post.version == '1.0.0') {
-        // nothing yet.
-    }
+    if (!post.version || post.version === '') post.version == '1.0.0'
     post.contributors = sortContributors(post.contributors)
     for(let i = 0; i < post.contributors.length; i++) {
-        post.contributors[i] = updateContributorIfRequired(post.contributors[i])
+        post.contributors[i] = updateContributorIfRequired(post.version, post.contributors[i])
     }
     return post
 }
@@ -175,8 +172,8 @@ export function sortContributors (data: Array<Contributor>): Array<Contributor> 
     return data.sort((a: Contributor, b: Contributor) => b.id.localeCompare(a.id))
 }
 
-export function updateContributorIfRequired(c: Contributor): Contributor {
-    if (!c.version) c.version = '1.0.0'
+export function updateContributorIfRequired(version: string, c: Contributor): Contributor {
+    // possible reencode of contributor id on version bump
     return c
 }
 
