@@ -1,4 +1,4 @@
-import { Post, PostMetadata } from "../../../interface/Model"
+import { Contributor, Post, PostMetadata } from "../../../interface/Model"
 import { FilesystemKeyPairManager, KeyPairManager } from "../crypto/keypair-manager"
 import { FileOperations } from "./filesystem-storage"
 import { parse, stringify} from '@supercharge/json'
@@ -83,9 +83,16 @@ class FileSystemPostReader implements PostReader {
             this.fsBackend.read(path.join(postPath, 'post.json')),
             this.fsBackend.read(path.join(postPath, 'post.md')),
         ])
-        .then(values => {
+        .then(async values => {
             const postMeta = parse(values[0].toString()) as PostMetadata
-            return {...postMeta, markdown: values[1].toString()}
+            let post = {...postMeta, markdown: values[1].toString()}
+            const existingVersion = post.version
+            post =  updatePostIfRequired(post)
+
+            // write back incremental updates
+            if (post.version !== existingVersion) await this.Save(post)
+
+            return post
         })
     }
     GetMediaRef(postId: string, filename: string): Promise<string> {
@@ -105,6 +112,13 @@ class FileSystemPostReader implements PostReader {
         const postPath = this.calculatePostPath(postId) + '/'
         return this.fsBackend.delete(postPath)
     }
+    Save(post: Post): Promise<void> {
+        const postPath = this.calculatePostPath(post.id)
+        return this.fsBackend.mkdir(postPath).then(async () => {
+            await this.fsBackend.write(path.join(postPath, 'post.json'), stringify(extractMetadata(post)))
+            await this.fsBackend.write(path.join(postPath, 'post.md'), post.markdown)
+        })
+    }
 }
 
 class FileSystemPostCreator extends FileSystemPostReader implements PostCreator {
@@ -122,7 +136,6 @@ class FileSystemPostCreator extends FileSystemPostReader implements PostCreator 
 
             const post = await this.GetPost(draftId)
             post.id = postId
-            post.version = '1.0.0' // add a version format stepper if required in the future
             await postCreator.Save(post) // move to drafts
             await Promise.all(post.attachments.map(attachment => this.fsBackend.copy(
                 path.join(draftPath, attachment),
@@ -144,14 +157,30 @@ class FileSystemPostCreator extends FileSystemPostReader implements PostCreator 
             await this.fsBackend.write(path.join(postPath, 'post.json'), stringify(post))
         })
     }
-    Save(post: Post): Promise<void> {
-        const postPath = this.calculatePostPath(post.id)
-        return this.fsBackend.mkdir(postPath).then(async () => {
-            await this.fsBackend.write(path.join(postPath, 'post.json'), stringify(extractMetadata(post)))
-            await this.fsBackend.write(path.join(postPath, 'post.md'), post.markdown)
-        })
-    }
 }
+
+export function updatePostIfRequired(post: Post) : Post {
+    if (!post.version) post.version == '1.0.0'
+    if (post.version == '1.0.0') {
+        // nothing yet.
+    }
+    post.contributors = sortContributors(post.contributors)
+    for(let i = 0; i < post.contributors.length; i++) {
+        post.contributors[i] = updateContributorIfRequired(post.contributors[i])
+    }
+    return post
+}
+
+export function sortContributors (data: Array<Contributor>): Array<Contributor> {
+    return data.sort((a: Contributor, b: Contributor) => b.id.localeCompare(a.id))
+}
+
+export function updateContributorIfRequired(c: Contributor): Contributor {
+    if (!c.version) c.version = '1.0.0'
+    return c
+}
+
+
 
 function extractMetadata(post: Post): PostMetadata {
     return {

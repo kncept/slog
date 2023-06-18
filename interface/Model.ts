@@ -6,7 +6,11 @@ export interface Identified {
     id: string
 }
 
-export interface Contributor extends Identified {
+export interface Versioned extends Identified {
+    version: string //semver version
+}
+
+export interface Contributor extends Versioned {
     name: string
     email: string | undefined
 }
@@ -15,8 +19,7 @@ export interface Post extends PostMetadata {
     markdown: string
 }
 
-export interface PostMetadata extends Identified {
-    version: string //semver version
+export interface PostMetadata extends Versioned {
     updatedTs: number // milliseconds UTC
     title: string
     attachments: Array<string>

@@ -7,7 +7,8 @@ type Props = {
 
 const DraftMediaDisplay: React.FC<Props> = ({attachments}) => {
     return <div className='attachments'>
-        {attachments.map(attachment => <span key={attachment}>Media: {attachment}</span>)}
+        You can reference images in your post directy by name.
+        {attachments.map(attachment => <span key={attachment}>{attachment}</span>)}
     </div>
 }
 

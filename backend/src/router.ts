@@ -69,7 +69,6 @@ export default class Router {
             .then(async existing => {
                 if (post.markdown) existing.markdown = post.markdown
                 if (post.title) existing.title= post.title
-                existing.version = '1.0.0' // add a version format stepper if required in the future
                 existing.contributors = addContributor(existing.contributors, parsedAuth.claims!)
                 existing.updatedTs = now
                 await this.storage.DraftStorage().Save(existing)    
@@ -198,6 +197,7 @@ export default class Router {
 const addContributor = (existing: Array<Contributor>, auth: JwtAuthClaims): Array<Contributor> => {
     for(let i = 0; i < existing.length; i++) {
         if (existing[i].id === auth.sub) {
+            existing[i].version = '1.0.0'
             existing[i].name = auth.name,
             existing[i].email = auth.email
             return existing
@@ -206,7 +206,8 @@ const addContributor = (existing: Array<Contributor>, auth: JwtAuthClaims): Arra
     existing.push({
         id: auth.sub,
         name: auth.name,
-        email: auth.email, 
+        email: auth.email,
+        version: '1.0.0',
     })
     return existing
 }
