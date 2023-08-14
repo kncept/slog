@@ -3,7 +3,6 @@ import { KeyPair, KeySpec, generateKey, generateKeyPair } from "./crypto-utils"
 import { parse, stringify} from '@supercharge/json'
 import * as path from 'path'
 
-
 export enum KeyPairName {
     login = 'login', // login keypair
 }
@@ -13,7 +12,7 @@ export enum KeyName {
 
 // perhaps a per-type get/set?
 // WHAT ABOUT a per-contributor bio? That's a good way to add state info?
-export interface KeyPairManager {
+export interface KeyManager {
     ReadKeyPair(keyPairName: KeyPairName): Promise<KeyPair>
     WriteKeyPair(keyPairName: KeyPairName, value: KeyPair): Promise<void>
 
@@ -21,7 +20,7 @@ export interface KeyPairManager {
     WriteKey(keyName: KeyName, value: KeySpec): Promise<void>
 }
 
-export class FilesystemKeyPairManager implements KeyPairManager {
+export class FilesystemKeyPairManager implements KeyManager {
     storageLocation: string
     fsBackend: FileOperations
     constructor(storageLocation: string, fsBackend: FileOperations) {

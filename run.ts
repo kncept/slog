@@ -1,8 +1,9 @@
-#!/home/ubuntu/.local_node/bin/ts-node
+#!/usr/bin/env ts-node
 import { generateKeyPair } from './backend/src/crypto/crypto-utils'
+import { matchHostedZoneToDomainUrl } from './backend/tools/domain-tools'
 import { stackNameForBackend, stackNameForFrontend, stackNameForFrontendCertificate, stackNameForHostedZone } from './backend/tools/name-tools'
 import exec from './orchestration/exec'
-import { EnvironmentName } from './orchestration/property-loaders'
+import EnvProperties, { EnvironmentName } from './orchestration/property-loaders'
 import * as fs from 'fs'
 
 // ensure that we don't have any background promises fail without a real error
@@ -129,6 +130,19 @@ async function build() {
 // promise chaining is used for concurrency
 async function deploy(args: Array<string>) {
     const envName = EnvironmentName.prod
+
+    // SET env properties into the current process... IF undefined (only)
+    const env = EnvProperties(envName)
+    Object.keys(env).forEach(key => {
+        if (process.env[key] === undefined) process.env[key] = env[key]
+    })
+
+    // build frontend and prepare backend
+    await Promise.all([
+        build(),
+        exec(envName, 'backend', 'npm', ['i'])
+    ])
+
     const cdkDeploy = (stackname: string): Promise<any> => {
         return exec(envName, 'backend', 'npm',['run', 'cdk', '--', 'deploy', '--output', `cdk.out.${stackname}`, stackname])
     }
@@ -140,24 +154,11 @@ async function deploy(args: Array<string>) {
         return
     }
 
-    const frontendBuild = build()
-    await exec(envName, 'backend', 'npm', ['i'])
-    .then(async() => {
-        // if there _is_ no top level hosted zone
-        // create one in a seperate stack and process
-        // this _should_ only run once (if needed)
-        let hostedZoneNames = await exec(envName, 'orchestration', 'ts-node',['matchHostedZoneToDomainUrl.ts'])
-        hostedZoneNames = hostedZoneNames.filter(row => row !== '')
-        console.log('Found these hosted zone names:', hostedZoneNames)
-        
-        if (hostedZoneNames === undefined || hostedZoneNames.length == 0) {
-            await cdkDeploy(stackNameForHostedZone())
-        }
-    })
+    await cdkDeploy(stackNameForHostedZone())
     .then(async () => {
         const jobs: Array<Promise<any>> = []
         jobs.push(
-            frontendBuild
+            Promise.resolve()
             .then(async () => {
                 await cdkDeploy(stackNameForFrontendCertificate())
             })
@@ -166,7 +167,6 @@ async function deploy(args: Array<string>) {
             })
         )
         
-        // this _requires_ an existing hosted zone, but will look one up.
         jobs.push(
             Promise.resolve()
             .then(async () => {

@@ -1,13 +1,13 @@
-# Super Simple Blog
+# S'log
 
-What's super simple about the super simple blog?
+Slog... the Simple Web Log.
 
-* Super Simple to get started
+* Simple to get started
    * Just follow the Quickstart to first post
    * Only two external dependencies - AWS, and an OIDC provider
-* Super Simple to host
+* Simple to host
     * Default self hosting cloud infrastructure is essentially maintainence free
-* Super Simple to keep
+* Simple to keep
     * As an open source project, you can use it, fork it and even change it
     * All data is hosted on your own managed infrastructure
 
@@ -18,7 +18,7 @@ N.B. for any `run.ts` commands, if you are *NOT* running in a devcontainer, you 
 
 1) Clone the Repository.
     Feel free to fork it first, and make any changes you need. 
-    Otherwise, `git clone git@github.com:kncept/super-simple-blog.git` will work.
+    Otherwise, `git clone git@github.com:kncept/slog.git` will work.
 
 2) Open the project
     It is strongly suggested that you use VSCode with DevContainers, as that will give you a full

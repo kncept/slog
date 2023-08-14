@@ -38,6 +38,7 @@ export function fullyQualifiedFrontendDomainName(): string {
 }
 
 function toFqdn(fqdnUrl: string): string {
+    if (fqdnUrl === '') return ''
     let fqdn = `${fqdnUrl}`
     if (fqdn.startsWith('http://')) {
         fqdn = fqdn.substring(7)
@@ -69,10 +70,11 @@ export function extractDomainNameFromUrl() : string {
     throw new Error('Unable to determine hosted zone name')
 }
 
+// TODO: support heirarchical zones
 export async function matchHostedZoneToDomainUrl() : Promise<HostedZoneInfo | undefined> {
     const existingDomainNames = await listDomainNames()
     const tld = extractDomainNameFromUrl()
-    for(let i = 0; i < domainNameEndingsToScan.length; i++) {
+    for(let i = 0; i < existingDomainNames.length; i++) {
         let existingDomainName = existingDomainNames[i].name
         if (existingDomainName.endsWith('.')) existingDomainName = existingDomainName.substring(0, existingDomainName.length - 1)
         if (existingDomainName === tld) return existingDomainNames[i]

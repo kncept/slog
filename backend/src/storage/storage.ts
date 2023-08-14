@@ -1,5 +1,5 @@
 import { Contributor, Post, PostMetadata } from "../../../interface/Model"
-import { FilesystemKeyPairManager, KeyPairManager } from "../crypto/keypair-manager"
+import { FilesystemKeyPairManager, KeyManager } from "../crypto/keypair-manager"
 import { FileOperations } from "./filesystem-storage"
 import { parse, stringify} from '@supercharge/json'
 import * as path from 'path'
@@ -10,7 +10,7 @@ export default interface Storage {
     PostStorage(): PostReader
     DraftStorage(): PostCreator
 
-    KeyPairManager(): KeyPairManager
+    KeyManager(): KeyManager
 }
 
 export interface PostReader {
@@ -55,7 +55,7 @@ export class FilesystemStorage implements Storage {
         return new FileSystemPostCreator(draftStorageLocation, postStorageLocation, this.fsBackend)
     }
 
-    KeyPairManager(): KeyPairManager {
+    KeyManager(): KeyManager {
         const keysStorageLocation = path.join(this.storageLocation, 'keys')
         return new FilesystemKeyPairManager(keysStorageLocation, this.fsBackend)
     }
@@ -159,8 +159,14 @@ class FileSystemPostCreator extends FileSystemPostReader implements PostCreator 
     }
 }
 
+// Todo: possibly link in a VersionManager here to update the post?
 export function updatePostIfRequired(post: Post) : Post {
-    if (!post.version || post.version === '') post.version == '1.0.0'
+    if (!post.version || post.version === '') post.version == '1.0.1'
+
+    // TODO: VersionUpdater for post
+
+
+
     post.contributors = sortContributors(post.contributors)
     for(let i = 0; i < post.contributors.length; i++) {
         post.contributors[i] = updateContributorIfRequired(post.version, post.contributors[i])
@@ -174,6 +180,11 @@ export function sortContributors (data: Array<Contributor>): Array<Contributor> 
 
 export function updateContributorIfRequired(version: string, c: Contributor): Contributor {
     // possible reencode of contributor id on version bump
+
+    if (version === '1.0.0') {
+        const decryptedId = c.id
+    }
+
     return c
 }
 

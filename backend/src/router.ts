@@ -31,7 +31,7 @@ export default class Router {
             throw new Error("No path defined: " + path)
         }
 
-        if (this.auth === undefined) this.auth = new AsymetricJwtAuth(this.storage.KeyPairManager())
+        if (this.auth === undefined) this.auth = new AsymetricJwtAuth(this.storage.KeyManager())
 
         // TODO: fix multi headers for 'Cookie'
         const parsedAuth = await this.auth.ParseAuth(extractHeader(headers, 'Authorization'), extractHeader(headers, 'Cookie'))

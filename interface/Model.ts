@@ -44,7 +44,7 @@ export interface JwtAuthClaims {
     sub: string // JWT 'sub' claim (subject)
     tok?: string | undefined // upstream token
     iat: number // issued at
-    iss: string // super-simple-blog
+    iss: string // slog
 
     name: string // display name
     admin: boolean // use is authenticated as an admin

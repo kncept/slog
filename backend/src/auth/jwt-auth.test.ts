@@ -17,17 +17,18 @@ function tmpDir(id?: string | undefined) {
 }
 
 const fileSystemStorage = new FilesystemStorage(tmpDir(), new LocalFsOperations())
-const keypairManager = fileSystemStorage.KeyPairManager()
-const auth = new AsymetricJwtAuth(keypairManager)
+const keyManager = fileSystemStorage.KeyManager()
+const auth = new AsymetricJwtAuth(keyManager)
 
 // const keyPairPromise = generateKeyPair()
 const subject = randomUUID().toString()
-const issuer = 'super-simple-blog'
+const issuer = 'slog'
 const algorithm = 'RS512'
 
 
 test("can verify tokens", async () => {
-    const jwtString = jwt.sign({}, (await keypairManager.ReadKeyPair(KeyPairName.login)).privateKey, {
+    const privateKey = (await keyManager.ReadKeyPair(KeyPairName.login)).privateKey
+    const jwtString = jwt.sign({}, privateKey, {
         algorithm,
         subject,
         issuer,
@@ -38,7 +39,8 @@ test("can verify tokens", async () => {
 })
 
 test("requires a known issuer", async () => {
-    const jwtString = jwt.sign({}, (await keypairManager.ReadKeyPair(KeyPairName.login)).privateKey, {
+    const privateKey = (await keyManager.ReadKeyPair(KeyPairName.login)).privateKey
+    const jwtString = jwt.sign({}, privateKey, {
         algorithm,
         subject,
         issuer: 'anything else',
@@ -61,10 +63,10 @@ describe("jwt userid encryption", () => {
     const userIdToEncode = "TestUsers:" + randomInt(32767)
     let encrypted = ''
     it('consistently encrypts', async () => {
-        encrypted = await auth.EncodeUserId(userIdToEncode)
-        expect(await auth.EncodeUserId(userIdToEncode)).toEqual(encrypted)
+        encrypted = await auth.EncodeUserId(userIdToEncode, undefined)
+        expect(await auth.EncodeUserId(userIdToEncode, undefined)).toEqual(encrypted)
     })
     it('decrypts', async () => {
-        expect(await auth.DecodeUserId(encrypted)).toEqual(userIdToEncode)
+        expect(await auth.DecodeUserId(encrypted, undefined)).toEqual(userIdToEncode)
     })
 })

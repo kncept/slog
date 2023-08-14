@@ -1,5 +1,5 @@
 {
-  "name": "super-simple-blog",
+  "name": "slog",
   "version": "1.0.0",
   "description": "Orchestration management",
   "main": "index.js",
@@ -9,14 +9,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kncept/super-simple-blog.git"
+    "url": "git+https://github.com/kncept/slog.git"
   },
   "author": "",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/kncept/super-simple-blog/issues"
+    "url": "https://github.com/kncept/slog/issues"
   },
-  "homepage": "https://github.com/kncept/super-simple-blog#readme",
+  "homepage": "https://github.com/kncept/slog#readme",
   "devDependencies": {
     "@types/jest": "^29.5.1",
     "@types/lodash": "^4.14.194",

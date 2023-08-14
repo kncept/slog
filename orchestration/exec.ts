@@ -1,4 +1,4 @@
-#!/home/ubuntu/.local_node/bin/ts-node
+#!/usr/bin/env ts-node
 import * as path from 'path'
 import { spawn } from 'child_process'
 import EnvProperties, { EnvironmentName } from './property-loaders'

@@ -20,7 +20,7 @@ import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment'
 export interface FrontendStackProps {
   projectRootDir: string
   blogBaseName: string
-  hostedZone: HostedZoneInfo
+  hostedZone: route53.IHostedZone
   domainName: string
   cert: cdk.aws_certificatemanager.Certificate
 }
@@ -38,11 +38,6 @@ export class FrontendStack extends cdk.Stack {
       }
     })
     const prefix = 'SSB-FE'
-
-    const hostedZone = route53.HostedZone.fromHostedZoneAttributes(this, `${prefix}-hostedzone`, {
-      hostedZoneId: props.hostedZone.id,
-      zoneName: props.hostedZone.name,
-    })
 
     const bucket = new s3.Bucket(this, `${prefix}-s3`, {
       websiteIndexDocument: 'index.html',
@@ -89,7 +84,7 @@ export class FrontendStack extends cdk.Stack {
     })
 
     new route53.CnameRecord(this, `${prefix}-cname`, {
-      zone: hostedZone,
+      zone: props.hostedZone,
       recordName: props.domainName,
       domainName: distribution.distributionDomainName,
     })

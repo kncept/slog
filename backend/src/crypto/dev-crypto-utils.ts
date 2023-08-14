@@ -106,7 +106,7 @@ const csr = ca.then(async ca => {
                   },
                   {
                     type: 2,
-                    value: "super-simple-blog.kncept.com",
+                    value: "slog.kncept.com",
                   },
                 ],
               },
@@ -211,7 +211,7 @@ function generateCertificate (privateKey: string, publicKey: string) {
         },
         {
             shortName: "OU",
-            value: "Super-Simple-Blog",
+            value: "slog",
         },
         ]
 

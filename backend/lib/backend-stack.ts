@@ -16,7 +16,7 @@ import * as s3 from 'aws-cdk-lib/aws-s3'
 export interface BackendStackProps {
   projectRootDir: string
   blogBaseName: string
-  hostedZone: HostedZoneInfo
+  hostedZone: route53.IHostedZone
   domainName: string
 }
 
@@ -26,22 +26,17 @@ export class BackendStack extends cdk.Stack {
     id: string,
     props: BackendStackProps
   ) {
-    super(scope, id, {})
-    const prefix = 'SSB-BE'
-
-    const hostedZone = route53.HostedZone.fromHostedZoneAttributes(this, `${prefix}-hostedzone`, {
-      hostedZoneId: props.hostedZone.id,
-      zoneName: props.hostedZone.name,
+    super(scope, id, {
+      crossRegionReferences: true,
+      env: {
+        region: process.env.AWS_REGION
+      }
     })
-    
+    const prefix = 'SSB-BE'
 
     const apiCertificate = new cdk.aws_certificatemanager.Certificate(this, `${prefix}-api-cert`, {
       domainName: props.domainName,
-      validation: cdk.aws_certificatemanager.CertificateValidation.fromDns(hostedZone)
-    })
-
-    const vpc = new ec2.Vpc(this, `${prefix}-vpc`, {
-      vpcName: `${props.blogBaseName}-vpc`,
+      validation: cdk.aws_certificatemanager.CertificateValidation.fromDns(props.hostedZone)
     })
 
     const bucket = new s3.Bucket(this, `${prefix}-bucket`, {
@@ -54,8 +49,7 @@ export class BackendStack extends cdk.Stack {
     const role = new iam.Role(this, `${prefix}-role`, {
       assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
       managedPolicies: [
-        iam.ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaVPCAccessExecutionRole"),
-        iam.ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaBasicExecutionRole")
+        iam.ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaBasicExecutionRole"),
       ],
     })
 
@@ -80,7 +74,6 @@ export class BackendStack extends cdk.Stack {
         externalModules: ['aws-sdk'],
       },
       role,
-      vpc
     })
     new cdk.CfnOutput(this, `${prefix}-lambda-arn`, {
       value: backendLambda.functionArn,
@@ -110,8 +103,8 @@ export class BackendStack extends cdk.Stack {
     })
 
     new route53.CnameRecord(this, `${prefix}-dns-entry`, {
-      zone: hostedZone,
-      recordName: props.domainName.substring(0, props.domainName.length - (props.hostedZone.name.length + 1)),
+      zone: props.hostedZone,
+      recordName: props.domainName.substring(0, props.domainName.length - (props.hostedZone.zoneName.length + 1)),
       domainName: apiDomainNameMountPoint!.domainNameAliasDomainName,
     })
   }

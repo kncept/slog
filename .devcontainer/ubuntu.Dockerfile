@@ -1,5 +1,5 @@
 FROM docker.io/ubuntu:23.04
-# https://github.com/kncept/super-simple-blog
+# https://github.com/kncept/slog
 # DEBUGGING: docker build -f .devcontainer/ubuntu.Dockerfile -t ubuntu-dev . && docker run -it ubuntu-dev bash
 
 # consider lscr.io/linuxserver/code-server:latest
@@ -26,5 +26,4 @@ ARG NODE_VERSION=18
 RUN \
     curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
 RUN bash -c 'source .nvm/nvm.sh && npm install -g ts-node'
-# known location for the current node version bin tools
-RUN ln -s /home/ubuntu/.nvm/versions/node/v${NODE_VERSION}* /home/ubuntu/.local_node
+
