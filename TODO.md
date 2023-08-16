@@ -1,5 +1,7 @@
 * Landing page to use a bounded initial search
 
+* SPLIT S3 BUCKETS - into a private and public bucket
+
 * Update RHS post listing to pull... last 10, including date (!)
 * RHS post listing 'pagination' or 'cursor scroll' or something.
 

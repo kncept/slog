@@ -42,6 +42,7 @@ Slog... the Simple Web Log.
 
 6) Start Posting
 
+
 ## Developing
 All orchestration is done by the run.ts command. This uses ts-node
 
@@ -51,12 +52,16 @@ In the dev container,
 `./run.ts test` will run all unit tests
 
 
+## Current Constraints
+  * Backend and Frontend need to be on the same top level hosted domain
+  * CORS isn't locked down properly
+
+
 ## Fork Customisation
 
 `cp devProperties.ts.template devProperties.ts` ==> Support for checked in dev properties
 
 If you want to commit secrets, I would suggest using the `https://github.com/commenthol/ansible-vault` library.
-
 
 
 ## Auth Provider Configuration
@@ -71,7 +76,7 @@ Currently only OIDC is supported.
   * Not a real solution yet
   * https://github.com/kncept-oauth/simple-oidc
 
-### Oauth (not OIDC) providers:
+### Oauth (not OIDC) providers
 
 * Github
   * https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app

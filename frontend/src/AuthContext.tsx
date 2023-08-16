@@ -22,7 +22,7 @@ export interface AuthenticatedUser {
     logout(): Promise<void>
 
     name(): string
-    admin(): boolean
+    admin(): boolean 
 }
 
 class JwtUser implements AuthenticatedUser {

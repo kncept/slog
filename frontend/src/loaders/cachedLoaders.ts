@@ -16,6 +16,19 @@ const ContentTypes = {
   jwt: 'application/jwt',
 }
 
+function authErrorHandler(user: AuthenticatedUser | null): (res: Response) => Response {
+  return (res: Response) => {
+    if (res.status === 403 && user !== null) {
+      console.log('logging user out on 403')
+      user.logout()
+    }
+    if (res.status === 401 || (res.status === 403 && user === null)) {
+      console.log(`SHOULD redirect to a 'login required' screen`)
+      if (user !== null) user.logout() // I don't _think_ this can happen
+    }
+    return res
+  }
+}
 // super basic parallel request cache
 export class CacheLoader implements LoaderApi{
   activeRequests: Record<string, any> = {}
@@ -46,14 +59,8 @@ export class CacheLoader implements LoaderApi{
       delete this.activeRequests[key]
       return res
     })
+    .then(authErrorHandler(user))
     .then(async res => {
-      if (res.status === 403 && user !== null) {
-        console.log('logging user out on 403')
-        user.logout()
-      }
-      if (res.status === 401 || (res.status === 403 && user === null)) {
-        console.log(`SHOULD redirect to a 'login required' screen`)
-      }
       if (!res.ok) throw new Error('Response not okay: ' + url)
       return res
     })
@@ -66,6 +73,7 @@ export class CacheLoader implements LoaderApi{
       method: 'GET',
       headers: {'Accept': ContentTypes.json}
     })
+    .then(authErrorHandler(user))
     .then(res => res.json())
   }
 
@@ -75,6 +83,7 @@ export class CacheLoader implements LoaderApi{
         method: 'GET',
         headers: {'Accept': ContentTypes.json}
       })
+      .then(authErrorHandler(user))
       .then(res => res.json())
   }
 
@@ -85,6 +94,7 @@ export class CacheLoader implements LoaderApi{
       headers: {'Accept': ContentTypes.json, 'Content-Type': ContentTypes.json},
       body: stringify({title}),
     })
+    .then(authErrorHandler(user))
     .then(res => res.json())
   }
 
@@ -95,6 +105,7 @@ export class CacheLoader implements LoaderApi{
         headers: {'Accept': ContentTypes.json, 'Content-Type': ContentTypes.json},
         body: stringify(post),
       })
+      .then(authErrorHandler(user))
       .then(res => {})
   }
 
@@ -103,6 +114,7 @@ export class CacheLoader implements LoaderApi{
     return this.lookup(user, `${apiBase}/draft/${id}`, {
       method: 'DELETE',
     })
+    .then(authErrorHandler(user))
     .then(res => {})
   }
 
@@ -111,6 +123,7 @@ export class CacheLoader implements LoaderApi{
     return this.lookup(user, `${apiBase}/publish-draft/${id}`, {
       method: 'POST',
     })
+    .then(authErrorHandler(user))
     .then(res => res.json())
   }
 

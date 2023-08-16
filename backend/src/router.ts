@@ -35,7 +35,11 @@ export default class Router {
 
         // TODO: fix multi headers for 'Cookie'
         const parsedAuth = await this.auth.ParseAuth(extractHeader(headers, 'Authorization'), extractHeader(headers, 'Cookie'))
-        if (parsedAuth.result === AuthResult.invalid) return forbiddenResponse
+        // TODO:
+        // if (parsedAuth.result === AuthResult.invalid) {
+            // delete auth tokens
+        // }
+        // if (parsedAuth.result === AuthResult.invalid) return forbiddenResponse
 
         let params = match('/post/', path)
         if (params.matches && method === 'GET') {
@@ -149,6 +153,7 @@ export default class Router {
             const id = params!.params!.postId
             const type = params!.params!.type
             const filename = params!.params!.filename
+            console.log(`in image/type=${type}/id=${id}/filename=${filename} and auth is ${parsedAuth.result}`)
             if (type === 'post') return bufferResponse(await this.storage.PostStorage().GetMedia(id, filename), filename)
             if (type === 'draft') {
                 if (parsedAuth.result === AuthResult.unauthorized) return unauthorizedResponse

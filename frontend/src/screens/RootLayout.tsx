@@ -15,7 +15,7 @@ const RootLayout: React.FC = () => {
             <div style={{width: `${marginWidth}%`}}></div>
             <VBox style={{width: `${mainContentWidth}%`}}>
                 <div style={{display: "flex", justifyContent: 'space-around'}}>
-                    <h1>SLog</h1>
+                    <h1>S'Log</h1>
                 </div>
                 <div style={{display: "flex", justifyContent: 'flex-end'}}>
                     <LoginBox />
@@ -35,7 +35,7 @@ const RootLayout: React.FC = () => {
                     <Link to='/'>Home</Link>
                 </div>
                 <div style={{display: 'flex', justifyContent: 'flex-end'}}>
-                    <sub style={{marginLeft: 'auto', marginRight: '0'}}>SLog provided by https://github.com/kncept/slog</sub>
+                    <sub style={{marginLeft: 'auto', marginRight: '0'}}>SLog provided by <Link to='https://github.com/kncept/slog'>https://github.com/kncept/slog</Link></sub>
                 </div>
                 </div>
             </VBox>
