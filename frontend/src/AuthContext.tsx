@@ -50,24 +50,15 @@ class JwtUser implements AuthenticatedUser {
 }
 
 export interface AuthContextType {
-    isLoading: boolean // INITIAL load
-    verificationKeys: Array<string> | undefined
-    providers: Array<LoginProvider> | undefined
+    isLoading(): boolean // INITIAL load
+    verificationKeys(): Array<string>
+    providers(): Array<LoginProvider>
     login(provider: LoginProvider): void // will probably trigger path reloads
     logout(): void
     callback(provider: LoginProvider, params: Record<string, string>): Promise<void> // needed for Oauth2 callbacks
-    currentUser: AuthenticatedUser | null
+    currentUser(): AuthenticatedUser | null
 }
-type AuthContextTypeWithoutUser = Omit<AuthContextType, 'currentUser'>
 
-const loadingContext: AuthContextTypeWithoutUser = {
-    isLoading: true,
-    verificationKeys: undefined,
-    providers: undefined,
-    login: () => {throw new Error('Loading')},
-    logout: () => {throw new Error('Loading')},
-    callback: () => {throw new Error('Loading')},
-}
 
 export const AuthProviderCallback: React.FC = () => {
     const [searchParams] = useSearchParams()
@@ -89,9 +80,9 @@ export const AuthProviderCallback: React.FC = () => {
     }
 
     useEffect(() => {
-        if (callback && !isErr && !authContext.isLoading) {
+        if (callback && !isErr && !authContext.isLoading()) {
             setCallback(false)
-            const provider = authContext.providers!.filter(p => p.name === providerId)[0]
+            const provider = authContext.providers().filter(p => p.name === providerId)[0]
             authContext.callback(provider, callbackContext)
             .then(() => navigate('/'))
         }
@@ -109,61 +100,70 @@ export const AuthProviderCallback: React.FC = () => {
     //     navigate('/')
     // }
 
-    return <>
-        {stringify(callbackContext)}
-    </>
+    return <></>
 }
 
 export const AuthProvider: React.FC<{children?: React.ReactNode}> = ({children}) => {
-    const [auth, setAuth] = useState<AuthContextTypeWithoutUser>(loadingContext)
-    const [currentUser, setCurrentUser] = useState<AuthenticatedUser | null>(null)
-
+    const [auth, setAuth] = useState<AuthContextType>({
+        isLoading: () => true,
+        verificationKeys: () => [],
+        providers: () => [],
+        login: (provider: LoginProvider) => window.location.href = provider.authorizeUrl, // not replace - don't want to lose our url history
+        logout: () => {},
+        callback: () => {throw new Error('Loading')},
+        currentUser: () => null
+    })
     
     useEffect(() => {
-        if (auth.isLoading) {
-            Loader(null).LoginProviders().then(loginOptions => {
+        if (auth.isLoading()) {
+            Loader(auth.currentUser()).LoginProviders().then(async loginOptions => {
 
                 const logout = () => {
                     console.log('logout called')
                     localStorage.removeItem(localStorageKeys.user)
                     Cookies.remove(jwtCookieName)
                     setAuth(existing => {return {
-                    ...existing,
-                    currentUser: null,
+                        ...existing,
+                        currentUser: () => null,
                     }})
                 }
-                const login = (provider: LoginProvider) => {
-                    //  not replace - don't want to lose our url history
-                    window.location.href = provider.authorizeUrl
-                }
+                
                 const callback = (provider: LoginProvider, params: Record<string, string>) => {
                     // load 'last url' and 'state hash' from Localstorage?
-                    return Loader(null).LoginCallback(provider.name, params).then(jwt => {
+                    return Loader(auth.currentUser()).LoginCallback(provider.name, params).then(jwt => {
                         localStorage.setItem(localStorageKeys.user, jwt)
                         Cookies.set(jwtCookieName, jwt)
-                        ValidJwtUser(jwt, loginOptions.verificationKeys!, logout).then(setCurrentUser)
+                        ValidJwtUser(jwt, loginOptions.verificationKeys!, logout).then(user => {
+                            setAuth(existing => {return {
+                                ...existing,
+                                currentUser: () => user,
+                            }})
+                        })
                     })
                 }
-
+                
+                
+                let initialUser: AuthenticatedUser | null = null
                 // dynamic load (and verify) of locally stored user
                 const jwtString = localStorage.getItem(localStorageKeys.user) || ''
-                if (jwtString !== '') ValidJwtUser(jwtString, loginOptions.verificationKeys, logout).then(currentUser =>{
+                if (jwtString !== '') initialUser = await ValidJwtUser(jwtString, loginOptions.verificationKeys, logout).then(currentUser =>{
                     if (currentUser !== null) {
                         Cookies.set(jwtCookieName, currentUser.token())
                     } else {
                         localStorage.removeItem(localStorageKeys.user)
                         Cookies.remove(jwtCookieName)
                     }
-                    setCurrentUser(currentUser)
+                    return currentUser
                 })
-                setAuth({
-                    isLoading: false,
-                    verificationKeys: loginOptions.verificationKeys,
-                    providers: loginOptions.providers,
-                    login,
+                setAuth(existing => {return {
+                    ...existing,
+                    isLoading: () => false,
+                    verificationKeys: () => loginOptions.verificationKeys,
+                    providers: () =>loginOptions.providers,
                     logout,
                     callback,
-                })
+                    currentUser: () => initialUser
+                }})
             })
         }
     }, [auth])
@@ -171,12 +171,13 @@ export const AuthProvider: React.FC<{children?: React.ReactNode}> = ({children})
 
 
     return <>
-        <AuthContext.Provider value={{ ...auth, currentUser, }}>
+        <AuthContext.Provider value={auth}>
             {children}
         </AuthContext.Provider>
     </>
 }
 
+// ASYNC 
 async function ValidJwtUser(jwtString: string, verificationKeys: Array<string>, logoutFn: () => void): Promise<AuthenticatedUser | null> {
     if (!useBrowserCrypto) return new JwtUser(jwtString, jose.decodeJwt(jwtString) as any as JwtAuthClaims, logoutFn)
     for(let i = 0; i < verificationKeys.length; i++) {

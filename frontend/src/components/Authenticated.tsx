@@ -15,14 +15,13 @@ const Authenticated: FC<{
 }> = ({children, requireAdmin, redirect}) => {
     const navigate = useNavigate()
     const auth = useContext(AuthContext)
-    const isLoading = auth.isLoading
     const [status, setStatus] = useState(AuthBarrierStatus.loading)
 
-    const userExists = auth.currentUser !== null
-    const userIsAdmin = userExists && auth.currentUser!.admin()
+    const userExists = auth.currentUser() !== null
+    const userIsAdmin = userExists && auth.currentUser()!.admin()
 
     useEffect(() => {
-        if (!isLoading) {
+        if (!auth.isLoading()) {
             if (requireAdmin && userExists && userIsAdmin) setStatus(AuthBarrierStatus.allowed)
             else if (userExists) setStatus(AuthBarrierStatus.allowed)
             else setStatus(AuthBarrierStatus.denied)
@@ -32,7 +31,7 @@ const Authenticated: FC<{
                 else navigate('/')
             }
         }
-    }, [status, isLoading, redirect, navigate, requireAdmin, userExists, userIsAdmin])
+    }, [status, auth, redirect, navigate, requireAdmin, userExists, userIsAdmin])
    
     if (status === AuthBarrierStatus.allowed) return <>{children}</>
     return <></>

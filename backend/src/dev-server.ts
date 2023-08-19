@@ -1,6 +1,6 @@
 import * as http from 'http'
 import * as https from 'https'
-import Router from './router'
+import Router, { corsHeaders } from './router'
 import * as path from 'path'
 import { FilesystemStorage } from './storage/storage'
 import { LocalFsOperations, S3FsOperations } from './storage/filesystem-storage'
@@ -14,12 +14,8 @@ const router: Router = bucketName !== '' ?
 
 const requestListener: http.RequestListener = (req, res) => {
     const addCorsHeaders = () => {
-        const originHeader = req.headers.origin || "*"
-        // console.log("origin header", originHeader)
-        res.setHeader("Access-Control-Allow-Origin", originHeader) // * for dev
-        res.setHeader("Access-Control-Allow-Methods", ["OPTIONS", "GET", "POST", "DELETE"])
-        res.setHeader("Access-Control-Allow-Headers", ["*"])
-        res.setHeader('Access-Control-Allow-Credentials', 'true')
+        const headersToAdd = corsHeaders(req.headers.origin, ["https://localhost:3000"])
+        Object.keys(headersToAdd).forEach(key => res.appendHeader(key, headersToAdd[key]))
     }
 
     let method = req.method || ""

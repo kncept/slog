@@ -2,7 +2,7 @@ import { Identified, LoginOptions, Post, PostMetadata, PostUpdatableFields } fro
 import { AuthenticatedUser } from '../AuthContext'
 import { stringify} from '@supercharge/json'
 import { Fetcher } from './fetcher/fetcher'
-import { fetcherStack } from './fetcher/fetcher-stack'
+import { FetcherStackType, fetcherStack } from './fetcher/fetcher-stack'
 
 
 export interface LoaderApi {
@@ -50,7 +50,7 @@ class SimpleLoader implements LoaderApi {
   user: AuthenticatedUser | null
   constructor(user: AuthenticatedUser | null) {
     this.user = user
-    this.fetcher = fetcherStack(user)
+    this.fetcher = fetcherStack(user)  
   }
 
   requireAuth() {
@@ -148,14 +148,15 @@ class SimpleLoader implements LoaderApi {
 
   AddAttachment: (id: String, file: File) => Promise<void> = async (id, file) => {
     this.requireAuth()
-    this.fetcher.fetch(`${apiBase}/image/draft/${id}`, {
+    // broken with ponyfill ??
+    const fetcher = fetcherStack(this.user, FetcherStackType.native)
+    fetcher.fetch(`${apiBase}/image/draft/${id}`, {
           method: 'POST',
           body: file,
           headers: {
             'Content-Type': file.type,
             'Content-Length': `${file.size}`, // Headers need to be a string
             'Content-Disposition': `file; filename=${file.name}`,
-            'Content-Name': file.name,
           },
     })
   }

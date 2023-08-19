@@ -28,7 +28,7 @@ const FileUpload: React.FC<Props> = ({draftId, onUpload}) => {
         if (!file) {
             return
         }
-        Loader(auth.currentUser).AddAttachment(draftId, file)
+        Loader(auth.currentUser()).AddAttachment(draftId, file)
         .then(() => setFile(undefined))
         .then(() => onUpload(file.name))
     }

@@ -24,8 +24,8 @@ const DraftEdit: React.FC = () => {
   const publishable = markdown !== '' && title !== '' && !saveable
 
   useEffect(() => {
-    if (draft === undefined && !auth.isLoading) {
-      Loader(auth.currentUser).GetDraft(id!).then(d => {
+    if (draft === undefined && !auth.isLoading()) {
+      Loader(auth.currentUser()).GetDraft(id!).then(d => {
         setDraft(d)
         setTitle(d.title)
         setMarkdown(d.markdown)
@@ -35,7 +35,7 @@ const DraftEdit: React.FC = () => {
       })
     }
   },
-  [id, draft, auth.currentUser, auth.isLoading])
+  [id, draft, auth])
 
   const onUpload = (fileName: string) => {
     draft!.attachments.push(fileName)
@@ -51,17 +51,17 @@ const DraftEdit: React.FC = () => {
       title,
       markdown,
     }
-    Loader(auth.currentUser).SaveDraft(updated.id, updated)
+    Loader(auth.currentUser()).SaveDraft(updated.id, updated)
     .then(() => setDraft(updated))
   }
 
   const deleteDraft = () => {
-    Loader(auth.currentUser).DeleteDraft(id!)
+    Loader(auth.currentUser()).DeleteDraft(id!)
     .then(() => navigate('/drafts'))
   }
 
   const publishDraft = () => {
-    Loader(auth.currentUser).PublishDraft(id!)
+    Loader(auth.currentUser()).PublishDraft(id!)
     .then((post) => navigate(`/posts/${post.id}`))
   }
 
@@ -70,7 +70,7 @@ const DraftEdit: React.FC = () => {
     setMarkdown(markdown + `\n![${attachment}](_/${attachment})`)
   }
   const deleteAttachment = (filename: string) => {
-    Loader(auth.currentUser).RemoveAttachment(id!, filename)
+    Loader(auth.currentUser()).RemoveAttachment(id!, filename)
     draft.attachments = draft.attachments.filter(attachment => attachment !== filename)
     setDraft({...draft})
   }

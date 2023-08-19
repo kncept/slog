@@ -15,9 +15,9 @@ const ViewPost: React.FC = () => {
   
   React.useEffect(() => {
     if (blog== null || blog.id !== id) {
-      Loader(auth.currentUser).GetPost(id!).then(setBlog)
+      Loader(auth.currentUser()).GetPost(id!).then(setBlog)
     }
-  }, [id, blog, auth.currentUser])
+  }, [id, blog, auth])
   
 
   if (blog == null) {

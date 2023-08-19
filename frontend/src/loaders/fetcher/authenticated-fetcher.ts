@@ -16,7 +16,7 @@ export class AuthenticatedFetcher implements Fetcher {
         url: string,
         params: FetcherInitParams,
     ): Promise<Response> {
-        console.log(`fetcher user=${this.user !== null} for ${url}`)
+        // console.log(`fetcher user=${this.user !== null} for ${url}`)
         if (this.user !== null) {
             params.headers['Authorization'] = 'Bearer ' + this.user.token()
         }

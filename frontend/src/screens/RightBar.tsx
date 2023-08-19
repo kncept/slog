@@ -9,14 +9,14 @@ import { Loader } from '../loaders/loaders'
 
 const RightBar: React.FC = () => {
     const auth = useContext(AuthContext)
-    let admin = auth.currentUser?.admin() || false
+    let admin = auth.currentUser()?.admin() || false
 
     const [posts, setPosts] = useState<Array<PostMetadata>>()
     useEffect(() => {
         if (posts === undefined) {
-            Loader(auth.currentUser).ListPosts().then(setPosts)
+            Loader(auth.currentUser()).ListPosts().then(setPosts)
         }
-    }, [posts, auth.currentUser])
+    }, [posts, auth])
 
   // if logged in show 'drafts'  
   return (

@@ -22,17 +22,17 @@ const DraftList: React.FC = () => {
   const auth = useContext(AuthContext)
 
   useEffect(() => {
-    if (drafts === undefined && auth.currentUser !== null) {
-      Loader(auth.currentUser).ListDrafts().then(setDrafts)
+    if (drafts === undefined && auth.currentUser() !== null) {
+      Loader(auth.currentUser()).ListDrafts().then(setDrafts)
     }
   },
-  [drafts, auth.currentUser])
+  [drafts, auth])
 
   const createNew = (title: string) => {
     if (title === undefined || title.trim() === '') {
       // TODO: input validation feedback
     } else {
-      Loader(auth.currentUser).CreateDraft(title.trim()).then(draft => navigate(`/drafts/${draft.id}`))
+      Loader(auth.currentUser()).CreateDraft(title.trim()).then(draft => navigate(`/drafts/${draft.id}`))
     }
   }
   

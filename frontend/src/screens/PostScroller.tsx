@@ -14,9 +14,9 @@ const PostScroller: React.FC = () => {
 
   useEffect(() => {
       if (posts === undefined) {
-        Loader(auth.currentUser).ListPosts().then(rv => rv.splice(0, Math.min(rv.length, 3))).then(setPosts)
+        Loader(auth.currentUser()).ListPosts().then(rv => rv.splice(0, Math.min(rv.length, 3))).then(setPosts)
       }
-  }, [posts, auth.currentUser])
+  }, [posts, auth])
 
   if (posts === undefined) return <div className="PostScroller"><Loading/></div>
   if (posts.length === 0) return <div className="PostScroller">

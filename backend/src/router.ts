@@ -9,6 +9,33 @@ import { match } from 'node-match-path'
 
 import { AsymetricJwtAuth, AuthResult, JwtAuthenticator } from './auth/jwt-auth'
 
+export function frontendUrl(): string {
+    let url = process.env.PUBLIC_URL || ''
+    if (!url.endsWith('/')) url = url + '/'
+    return url
+  }
+
+export function frontendUrlNoSlash() {
+    return frontendUrl().substring(0, frontendUrl().length - 1)
+}
+export function corsHeaders(originHeader: string | undefined, allowedOrigins: string[]): Record<string, string[]> {
+    const matchingOrigins = allowedOrigins.filter(origin => origin === originHeader)
+
+    const multiValueHeaders: Record<string, string[]> = {}
+    multiValueHeaders['Access-Control-Allow-Headers'] = [
+        'Content-Type',
+        'Content-Length',
+        'Content-Disposition',
+        'Authorization',
+        'Accept'
+    ]
+    multiValueHeaders['Access-Control-Allow-Origin'] = matchingOrigins.length == 1 ? matchingOrigins : [frontendUrlNoSlash()] // browser will deny access
+    multiValueHeaders['Vary'] = ['Origin']
+    multiValueHeaders['Access-Control-Allow-Methods'] = ['OPTIONS','GET','POST','DELETE']
+    multiValueHeaders['Access-Control-Allow-Credentials'] = ['true']
+    return multiValueHeaders
+}
+
 export interface RouterResponse {
     statusCode: number
     headers?: Record<string, string>
@@ -138,10 +165,12 @@ export default class Router {
 
         params = match('/image/:type/:postId', path)
         if (params.matches && method === 'POST' && params!.params!.type === 'draft') {
+            console.log('about to upload image:: parsedAuth', parsedAuth)
             if (parsedAuth.result === AuthResult.unauthorized) return unauthorizedResponse
             if (!parsedAuth.claims?.admin) return forbiddenResponse
             const id = params!.params!.postId
             const cdHeader = extractHeader(headers, 'content-disposition') || ''
+            console.log('content disposition header', cdHeader)
             if (cdHeader.startsWith('file; filename=')) {
                 const filename = cdHeader.substring(15)
                 await this.storage.DraftStorage().AddMedia(id, filename, requestBody!)
@@ -158,7 +187,19 @@ export default class Router {
             if (type === 'draft') {
                 if (parsedAuth.result === AuthResult.unauthorized) return unauthorizedResponse
                 if (!parsedAuth.claims?.admin) return forbiddenResponse
-                return bufferResponse(await this.storage.DraftStorage().GetMedia(id, filename), filename)
+
+                // budget 404 - need to have better return types
+                try {
+                    return bufferResponse(await this.storage.DraftStorage().GetMedia(id, filename), filename)
+                } catch (err) {
+                    return {
+                        statusCode: 404,
+                        headers: {
+                            'Content-Type': 'text/plain'
+                        },
+                        body: `NOT FOUND: ${method} ${path}`
+                    }
+                }
             }
         }
 

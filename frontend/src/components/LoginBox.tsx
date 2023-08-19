@@ -8,18 +8,18 @@ type Props = {
 }
 
 const LoginBox: React.FC<Props> = ({style}) => {
-    const authContext = useContext(AuthContext)
+    const auth = useContext(AuthContext)
 
     const onSelectProvider = (providerName: string): void => {
-        const provider = authContext.providers!.filter(p => p.name === providerName)[0]
-        authContext.login(provider)
+        const provider = auth.providers().filter(p => p.name === providerName)[0]
+        auth.login(provider)
     }
 
     const doLogout = () => {
-        authContext.currentUser!.logout()
+        auth.currentUser()?.logout()
     }
 
-    if (authContext.isLoading) {
+    if (auth.isLoading()) {
         return <div style={style} key='loading'>
         <DropDownPicker
             disabled={true}
@@ -30,14 +30,14 @@ const LoginBox: React.FC<Props> = ({style}) => {
     </div>
     }
 
-    if (authContext.currentUser !== null) {
+    if (auth.currentUser() !== null) {
         return <div style={style} key='logout'>
-            {authContext.currentUser.name()}
+            {auth.currentUser()!.name()}
             <SimpleButton text='Logout' onClick={doLogout}/>
         </div>
     }
 
-    if (authContext.providers!.length === 0) {
+    if (auth.providers().length === 0) {
         return <div style={style} key='disabled'>
             <DropDownPicker
                 disabled={true}
@@ -48,16 +48,16 @@ const LoginBox: React.FC<Props> = ({style}) => {
         </div>
     }
 
-    if (authContext.providers!.length === 1) {
+    if (auth.providers().length === 1) {
         return <div style={style} key='single'>
-            <SimpleButton text='Login' onClick={() => onSelectProvider(authContext.providers![0].name)}/>
+            <SimpleButton text='Login' onClick={() => onSelectProvider(auth.providers()![0].name)}/>
         </div>
     }
 
     return <div style={style} key='select'>
         <DropDownPicker
             text='Login'
-            values={authContext.providers!.map(p => p.name)}
+            values={auth.providers()!.map(p => p.name)}
             onSelect={onSelectProvider}
         />
     </div>
