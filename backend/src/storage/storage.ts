@@ -154,8 +154,12 @@ class FileSystemPostCreator extends FileSystemPostReader implements PostCreator 
         return this.fsBackend.read(path.join(postPath, 'post.json')).then(async postJson => {
             await this.fsBackend.write(path.join(postPath, filename), data)
             const post = parse(postJson.toString()) as PostMetadata
-            post.attachments.push(filename)
-            await this.fsBackend.write(path.join(postPath, 'post.json'), stringify(post))
+            if (post.attachments.indexOf(filename) == -1) {
+                // is overwriting okay?
+                post.attachments.push(filename)
+                await this.fsBackend.write(path.join(postPath, 'post.json'), stringify(post))
+            }
+            
         })
     }
     RemoveMedia(postId: string, filename: string): Promise<void> {
