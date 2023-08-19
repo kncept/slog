@@ -38,7 +38,7 @@ const DraftEdit: React.FC = () => {
   [id, draft, auth])
 
   const onUpload = (filename: string) => {
-    if (draft!.attachments.indexOf(filename) == -1) {
+    if (draft!.attachments.indexOf(filename) === -1) {
       draft!.attachments.push(filename)
       setDraft({...draft!})
     }
