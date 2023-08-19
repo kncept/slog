@@ -68,7 +68,7 @@ export class AsymetricJwtAuth implements JwtAuthenticator {
         return this.cache[KeyName.user] 
     }
 
-    ParseAuth: (header: string | undefined, cookieHeader: string | undefined) => Promise<ParsedAuth> = async (authorizationHeader, cookieHeader) => {
+    ParseAuth: (authorizationHeader: string | undefined, cookieHeader: string | undefined) => Promise<ParsedAuth> = async (authorizationHeader, cookieHeader) => {
         if (authorizationHeader !== undefined && authorizationHeader.startsWith('Bearer ')) {
             const jwtString = authorizationHeader.substring(7)
             return parseJwtString(jwtString, await this.loginKeypair())

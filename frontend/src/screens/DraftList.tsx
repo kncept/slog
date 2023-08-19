@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useReducer, useState } from 'react'
 import { PostMetadata } from '../../../interface/Model'
-import Loader from '../loaders/loaders'
+import { Loader } from '../loaders/loaders'
 import ButtonLink from '../components/ButtonLink'
 import SimpleButton from '../components/SimpleButton'
 import { useNavigate } from 'react-router-dom'
@@ -20,20 +20,19 @@ const DraftList: React.FC = () => {
   const [formData, setFormData] = useReducer(formReducer, {})
   const navigate = useNavigate()
   const auth = useContext(AuthContext)
-  const user = auth.currentUser!
 
   useEffect(() => {
-    if (drafts === undefined) {
-      Loader.ListDrafts(user).then(setDrafts)
+    if (drafts === undefined && auth.currentUser !== null) {
+      Loader(auth.currentUser).ListDrafts().then(setDrafts)
     }
   },
-  [drafts, user])
+  [drafts, auth.currentUser])
 
   const createNew = (title: string) => {
     if (title === undefined || title.trim() === '') {
       // TODO: input validation feedback
     } else {
-      Loader.CreateDraft(user, title.trim()).then(draft => navigate(`/drafts/${draft.id}`))
+      Loader(auth.currentUser).CreateDraft(title.trim()).then(draft => navigate(`/drafts/${draft.id}`))
     }
   }
   

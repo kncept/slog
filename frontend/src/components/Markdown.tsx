@@ -26,13 +26,25 @@ const Markdown: React.FC<Props> = ({postId, value, setValue, mode}) => {
 
     const onChange = (v: string | undefined) => {
         // reset image list
-
-
         if (setValue) setValue(v || '')
     }
 
-      const imageBase = mode === MarkdownMode.EDIT ? `${apiBase}/image/draft/${postId}/` : `${apiBase}/image/post/${postId}/`
-      const transformImageUri = (src: string) => src.startsWith("http") ? src : `${imageBase}${src}`
+      
+      const transformImageUri = (src: string) => {
+        // console.log(`transformImageUri ${src}`)
+        if (
+            src.startsWith('http:') ||
+            src.startsWith('https:')
+        ) return src
+
+        if (src.startsWith('_/')) {
+        src = postId + src.substring(1)
+        const imageBase = mode === MarkdownMode.EDIT ? `${apiBase}/image/draft/` : `${apiBase}/image/post/`
+        return `${imageBase}${src}`
+        } else {
+        return `${apiBase}/image/post/${src}`
+        }
+      }
 
       if (mode === MarkdownMode.EDIT) return <CatchErr>
         <div data-color-mode='light'>

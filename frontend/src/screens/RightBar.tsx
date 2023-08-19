@@ -4,7 +4,7 @@ import ButtonLink from '../components/ButtonLink'
 import AuthContext from '../AuthContext'
 import { PostMetadata } from '../../../interface/Model'
 import Loading from '../components/Loading'
-import Loader from '../loaders/loaders'
+import { Loader } from '../loaders/loaders'
 
 
 const RightBar: React.FC = () => {
@@ -14,9 +14,9 @@ const RightBar: React.FC = () => {
     const [posts, setPosts] = useState<Array<PostMetadata>>()
     useEffect(() => {
         if (posts === undefined) {
-            Loader.ListPosts().then(setPosts)
+            Loader(auth.currentUser).ListPosts().then(setPosts)
         }
-    }, [posts])
+    }, [posts, auth.currentUser])
 
   // if logged in show 'drafts'  
   return (

@@ -1,13 +1,13 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 import App from './App'
-import Loader from './loaders/loaders'
+import { Loader, WrapLoader } from './loaders/loaders'
 import { StubLoader } from './loaders/stubLoaders'
 import { act } from 'react-dom/test-utils'
 
 
 test('app renders through to the root layout', async () => {
-  Loader.Wrap(new StubLoader())
+  WrapLoader(new StubLoader())
   
   await act(async () => {
     render(<App />)

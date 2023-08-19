@@ -1,6 +1,7 @@
-* Landing page to use a bounded initial search
 
-* SPLIT S3 BUCKETS - into a private and public bucket
+
+
+* Landing page to use a bounded initial search
 
 * Update RHS post listing to pull... last 10, including date (!)
 * RHS post listing 'pagination' or 'cursor scroll' or something.
@@ -8,7 +9,7 @@
 * draft media to have a tick/cross for 'usage' (and able to be deleted)
 * save draft to have a clear -> loading -> tick -> clear cycled (edit based)
 
-* Update 'EDITING' to only allow TITLE and CONTENT updates, and media UPLOAD and DELETEs.
+* Update 'EDITING' to only allow TITLE and CONTENT updates
 * Authors will be auto appended, and media will be auto tracked.
 * N.B. This isn't actually synchronzied, but will still be handled by the backend
 
@@ -31,4 +32,3 @@
 
 * Allow Frontend and Backend to be in different domain names (top level domain name stuff)
 
-* Indicator Display for 'uploaded images' and 'used uploaded media'

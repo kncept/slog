@@ -2,35 +2,39 @@ import React, { FC, useContext, useEffect, useState } from 'react'
 import AuthContext from '../AuthContext'
 import { useNavigate } from 'react-router-dom'
 
+enum AuthBarrierStatus {
+    loading = 'loading',
+    allowed = 'allowed',
+    denied = 'denied',
+}
+
 const Authenticated: FC<{
     children?: React.ReactNode
-    requireAdmin?: boolean | undefined
+    requireAdmin?: boolean
     redirect?: string | undefined
 }> = ({children, requireAdmin, redirect}) => {
     const navigate = useNavigate()
     const auth = useContext(AuthContext)
     const isLoading = auth.isLoading
-    const userIsAdmin = auth.currentUser?.admin() || false
-    const [allowed, setAllowed] = useState(false)
-    const allow: () => void = () => {if (!isLoading && !allowed) setAllowed(true)}
-    const disallow: () => void = () => {if (!isLoading && allowed) setAllowed(false)}
-    
-    if (requireAdmin) {
-        if (userIsAdmin) allow()
-        else disallow()
-    } else {
-        if (auth.currentUser !== null) allow()
-        else disallow()
-    }
+    const [status, setStatus] = useState(AuthBarrierStatus.loading)
+
+    const userExists = auth.currentUser !== null
+    const userIsAdmin = userExists && auth.currentUser!.admin()
 
     useEffect(() => {
-        if (!isLoading && !allowed) {
-            if (redirect) navigate(redirect)
-            else navigate('/')
+        if (!isLoading) {
+            if (requireAdmin && userExists && userIsAdmin) setStatus(AuthBarrierStatus.allowed)
+            else if (userExists) setStatus(AuthBarrierStatus.allowed)
+            else setStatus(AuthBarrierStatus.denied)
+
+            if (status === AuthBarrierStatus.denied) {
+                if (redirect) navigate(redirect)
+                else navigate('/')
+            }
         }
-    }, [allowed, isLoading, redirect, navigate])
+    }, [status, isLoading, redirect, navigate, requireAdmin, userExists, userIsAdmin])
    
-    if (allowed) return <>{children}</>
+    if (status === AuthBarrierStatus.allowed) return <>{children}</>
     return <></>
 }
 

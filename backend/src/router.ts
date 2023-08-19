@@ -153,7 +153,6 @@ export default class Router {
             const id = params!.params!.postId
             const type = params!.params!.type
             const filename = params!.params!.filename
-            console.log(`in image/type=${type}/id=${id}/filename=${filename} and auth is ${parsedAuth.result}`)
             if (type === 'post') return bufferResponse(await this.storage.PostStorage().GetMedia(id, filename), filename)
             if (type === 'draft') {
                 if (parsedAuth.result === AuthResult.unauthorized) return unauthorizedResponse
@@ -161,6 +160,19 @@ export default class Router {
                 return bufferResponse(await this.storage.DraftStorage().GetMedia(id, filename), filename)
             }
         }
+
+        params = match('/image/:type/:postId/:filename', path)
+        if (params.matches && method === 'DELETE' && params!.params!.type === 'draft') {
+            const id = params!.params!.postId
+            const type = params!.params!.type
+            const filename = params!.params!.filename
+            
+            console.log(`in DELETE image/type=${type}/id=${id}/filename=${filename} and auth is ${parsedAuth.result}`)
+
+            await this.storage.DraftStorage().RemoveMedia(id, filename)
+            return emptyResponse
+        }
+
 
         params = match('/login/providers', path)
         if (params.matches && method === 'GET') {
@@ -254,6 +266,7 @@ function extractHeader(headers: Record<string, string | undefined>, headerName: 
     let value: string | undefined
     Object.keys(headers).forEach (key => {
         if (key.toLowerCase() === headerName.toLowerCase()) {
+            console.log(`extracted ${headerName} from ${key}: ${headers[key]}`)
             value = headers[key]
         }
     })

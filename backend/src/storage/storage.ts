@@ -23,6 +23,7 @@ export interface PostReader {
 
 export interface PostCreator extends PostReader{
     AddMedia(postId: string, filename: string, data: Buffer): Promise<void>
+    RemoveMedia(postId: string, filename: string): Promise<void>
     Save(post: Post): Promise<void> // update only
     PublishDraft(draftId: string, postId: string): Promise<void>
 }
@@ -156,6 +157,21 @@ class FileSystemPostCreator extends FileSystemPostReader implements PostCreator 
             post.attachments.push(filename)
             await this.fsBackend.write(path.join(postPath, 'post.json'), stringify(post))
         })
+    }
+    RemoveMedia(postId: string, filename: string): Promise<void> {
+        if (filename.toLowerCase() === 'post.json' || filename.toLowerCase() === 'post.md') {
+            return Promise.reject()
+        }
+        const postPath = this.calculatePostPath(postId)
+        return this.fsBackend.read(path.join(postPath, 'post.json')).then(async postJson => {
+
+            await this.fsBackend.delete(path.join(postPath, filename))
+            const post = parse(postJson.toString()) as PostMetadata
+            post.attachments = post.attachments.filter(attachment => attachment !== filename)
+
+            await this.fsBackend.write(path.join(postPath, 'post.json'), stringify(post))
+        })
+
     }
 }
 

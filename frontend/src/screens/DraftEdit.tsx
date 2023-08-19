@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { Post } from '../../../interface/Model'
-import Loader from '../loaders/loaders'
+import { Loader } from '../loaders/loaders'
 import SimpleButton from '../components/SimpleButton'
 import { useNavigate, useParams } from 'react-router-dom'
 import './DraftEdit.css'
@@ -18,22 +18,24 @@ const DraftEdit: React.FC = () => {
   const [title, setTitle] = useState(draft?.title || '')
 
   const auth = useContext(AuthContext)
-  const user = auth.currentUser
   const navigate = useNavigate()
 
   const saveable = markdown !== (draft?.markdown || '') || title !== (draft?.title || '')
   const publishable = markdown !== '' && title !== '' && !saveable
 
   useEffect(() => {
-    if (draft === undefined && user !== null) {
-      Loader.GetDraft(user, id!).then(d => {
+    if (draft === undefined && !auth.isLoading) {
+      Loader(auth.currentUser).GetDraft(id!).then(d => {
         setDraft(d)
         setTitle(d.title)
         setMarkdown(d.markdown)
       })
+      .catch (e => {
+        console.log("Error Loading draft", e)
+      })
     }
   },
-  [id, draft, user])
+  [id, draft, auth.currentUser, auth.isLoading])
 
   const onUpload = (fileName: string) => {
     draft!.attachments.push(fileName)
@@ -49,18 +51,28 @@ const DraftEdit: React.FC = () => {
       title,
       markdown,
     }
-    Loader.SaveDraft(user!, updated.id, updated)
+    Loader(auth.currentUser).SaveDraft(updated.id, updated)
     .then(() => setDraft(updated))
   }
 
   const deleteDraft = () => {
-    Loader.DeleteDraft(user!, id!)
+    Loader(auth.currentUser).DeleteDraft(id!)
     .then(() => navigate('/drafts'))
   }
 
   const publishDraft = () => {
-    Loader.PublishDraft(user!, id!)
+    Loader(auth.currentUser).PublishDraft(id!)
     .then((post) => navigate(`/posts/${post.id}`))
+  }
+
+  const insertAttachment = (attachment: string) => {
+    // Hmm... cant use unknown url schemes... sigh
+    setMarkdown(markdown + `\n![${attachment}](_/${attachment})`)
+  }
+  const deleteAttachment = (filename: string) => {
+    Loader(auth.currentUser).RemoveAttachment(id!, filename)
+    draft.attachments = draft.attachments.filter(attachment => attachment !== filename)
+    setDraft({...draft})
   }
 
   return <div>
@@ -73,7 +85,12 @@ const DraftEdit: React.FC = () => {
     <Markdown postId={draft.id} mode={MarkdownMode.EDIT} value={markdown} setValue={setMarkdown} />
     <Contributors contributors={draft.contributors} />
 
-    Need a section to handle upload media references, and list uploaded files that are part of a post.
+    <div className='Attachments'>
+      {draft.attachments.map((value: string, index: number) => <div className='AttachmentRow' key={index}>{value}
+      <SimpleButton text='Insert' style={{color: 'green'}} onClick={() => insertAttachment(value)} />
+      <SimpleButton text='Delete' style={{color: 'red'}} onClick={() => deleteAttachment(value)} />
+      </div>)}
+    </div>
     <FileUpload draftId={draft.id} onUpload={onUpload} />
 
     <div className='DraftControlButtons'>

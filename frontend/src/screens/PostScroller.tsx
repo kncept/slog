@@ -1,20 +1,22 @@
-import React, { useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { PostMetadata } from '../../../interface/Model'
-import Loader from '../loaders/loaders'
+import { Loader } from '../loaders/loaders'
 import Loading from '../components/Loading'
 import * as luxon from 'luxon'
 import './PostScroller.css'
 import { Link } from 'react-router-dom'
+import AuthContext from '../AuthContext'
 
 
 const PostScroller: React.FC = () => {
-
+  const auth = useContext(AuthContext)
   const [posts, setPosts] = useState<Array<PostMetadata>>()
+
   useEffect(() => {
       if (posts === undefined) {
-        Loader.ListPosts().then(rv => rv.splice(0, Math.min(rv.length, 3))).then(setPosts)
+        Loader(auth.currentUser).ListPosts().then(rv => rv.splice(0, Math.min(rv.length, 3))).then(setPosts)
       }
-  }, [posts])
+  }, [posts, auth.currentUser])
 
   if (posts === undefined) return <div className="PostScroller"><Loading/></div>
   if (posts.length === 0) return <div className="PostScroller">

@@ -1,5 +1,6 @@
 import React, { ChangeEvent, useContext, useState } from 'react'
 import AuthContext from '../AuthContext'
+import { Loader } from '../loaders/loaders'
 // import SimpleButton from './SimpleButton'
 // import Uploady from '@rpldy/uploady'
 // import UploadButton from "@rpldy/upload-button"
@@ -27,23 +28,7 @@ const FileUpload: React.FC<Props> = ({draftId, onUpload}) => {
         if (!file) {
             return
         }
-        
-        const headers: Record<string, string> = {
-            'Content-Type': file.type,
-            'Content-Length': `${file.size}`, // 👈 Headers need to be a string
-            'Content-Disposition': `file; filename=${file.name}`,
-            'Content-Name': file.name,
-        }
-        if (auth.currentUser)
-            headers['Authorization'] = 'Bearer ' + auth.currentUser.token()
-
-        // 👇 Uploading the file using the fetch API to the server
-        fetch(`${apiBase}/image/draft/${draftId}`, {
-                method: 'POST',
-                body: file,
-                // 👇 Set headers manually for single file upload
-                headers,
-        })
+        Loader(auth.currentUser).AddAttachment(draftId, file)
         .then(() => setFile(undefined))
         .then(() => onUpload(file.name))
     }

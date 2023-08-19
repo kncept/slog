@@ -19,6 +19,7 @@ const requestListener: http.RequestListener = (req, res) => {
         res.setHeader("Access-Control-Allow-Origin", originHeader) // * for dev
         res.setHeader("Access-Control-Allow-Methods", ["OPTIONS", "GET", "POST", "DELETE"])
         res.setHeader("Access-Control-Allow-Headers", ["*"])
+        res.setHeader('Access-Control-Allow-Credentials', 'true')
     }
 
     let method = req.method || ""

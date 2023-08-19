@@ -2,46 +2,34 @@ import { Identified, LoginOptions, Post, PostMetadata, PostUpdatableFields } fro
 import { AuthenticatedUser } from '../AuthContext'
 import { LoaderApi } from './loaders'
 
-export class StubLoader implements LoaderApi{
+export class StubLoader implements LoaderApi {
  
-  ListDrafts: (user: AuthenticatedUser) => Promise<Array<PostMetadata>> = (user) => {
-    if (user === undefined || user === null) throw new Error('Authentication required')
+  ListDrafts: () => Promise<Array<PostMetadata>> = () => {
     return Promise.resolve([])
   }
-
-  GetDraft: (user: AuthenticatedUser, id: string) => Promise<Post> = (user, id) => {
-    if (user === undefined || user === null) throw new Error('Authentication required')
+  GetDraft: (id: string) => Promise<Post> = () => {
       return Promise.resolve({} as Post)
   }
-
-  CreateDraft: (user: AuthenticatedUser, title: string) => Promise<Post> = (user, title) => {
-    if (user === undefined || user === null) throw new Error('Authentication required')
+  CreateDraft: (title: string) => Promise<Post> = () => {
     return Promise.resolve({} as Post)
   }
-
-  SaveDraft: (user: AuthenticatedUser, postId: string, post: PostUpdatableFields) => Promise<void> = (user, postId, post) => {
-    if (user === undefined || user === null) throw new Error('Authentication required')
+  SaveDraft: (postId: string, post: PostUpdatableFields) => Promise<void> = () => {
     return Promise.resolve()
   }
-
-  DeleteDraft: (user: AuthenticatedUser, id: string) => Promise<void> = (user, id) => {
-    if (user === undefined || user === null) throw new Error('Authentication required')
+  DeleteDraft: (id: string) => Promise<void> = () => {
     return Promise.resolve()
   }
-
-  PublishDraft: (user: AuthenticatedUser, id: string) => Promise<Identified> = (user, id) => {
-    if (user === undefined || user === null) throw new Error('Authentication required')
+  PublishDraft: (id: string) => Promise<Identified> = () => {
     return Promise.resolve({} as Identified)
   }
-
-  GetPost: (id: string) => Promise<Post> = (id) => {
+  GetPost: (id: string) => Promise<Post> = () => {
     return Promise.resolve({} as Post)
   }
-
-
   ListPosts: () => Promise<Array<PostMetadata>> = () => {
     return Promise.resolve([])
   }
+  AddAttachment: (id: String, file: File) => Promise<void> = () => Promise.resolve()
+  RemoveAttachment: (id: String, filename: string) => Promise<void> = () => Promise.resolve()
 
   LoginProviders: () => Promise<LoginOptions> = async () => {
     return Promise.resolve({
@@ -49,7 +37,7 @@ export class StubLoader implements LoaderApi{
       verificationKeys: []
     } as LoginOptions)
   }
-  LoginCallback: (providerId: string, params: Record<string, string>) => Promise<string> = async (providerId, params) => {
+  LoginCallback: (providerId: string, params: Record<string, string>) => Promise<string> = () => {
       return Promise.resolve('')
   }
 }
