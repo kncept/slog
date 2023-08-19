@@ -35,6 +35,7 @@ export default class Router {
 
         // TODO: fix multi headers for 'Cookie'
         const parsedAuth = await this.auth.ParseAuth(extractHeader(headers, 'Authorization'), extractHeader(headers, 'Cookie'))
+        // console.log(`parsedAuth for ${method} ${path}`, parsedAuth)
         // TODO:
         // if (parsedAuth.result === AuthResult.invalid) {
             // delete auth tokens
@@ -164,11 +165,8 @@ export default class Router {
         params = match('/image/:type/:postId/:filename', path)
         if (params.matches && method === 'DELETE' && params!.params!.type === 'draft') {
             const id = params!.params!.postId
-            const type = params!.params!.type
+            // const type = params!.params!.type
             const filename = params!.params!.filename
-            
-            console.log(`in DELETE image/type=${type}/id=${id}/filename=${filename} and auth is ${parsedAuth.result}`)
-
             await this.storage.DraftStorage().RemoveMedia(id, filename)
             return emptyResponse
         }
@@ -266,7 +264,6 @@ function extractHeader(headers: Record<string, string | undefined>, headerName: 
     let value: string | undefined
     Object.keys(headers).forEach (key => {
         if (key.toLowerCase() === headerName.toLowerCase()) {
-            console.log(`extracted ${headerName} from ${key}: ${headers[key]}`)
             value = headers[key]
         }
     })

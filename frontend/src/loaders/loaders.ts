@@ -53,24 +53,30 @@ class SimpleLoader implements LoaderApi {
     this.fetcher = fetcherStack(user)
   }
 
+  requireAuth() {
+    if (this.user === undefined || this.user === null) throw new Error('Authentication required')
+  }
+
   ListDrafts: () => Promise<Array<PostMetadata>> = () => {
-    // if (this.user === undefined || this.user === null) throw new Error('Authentication required')
+    this.requireAuth()
     return this.fetcher.fetch(
       `${apiBase}/draft/`, {
+        method: 'GET',
         headers: {'Accept': ContentTypes.json}
       }
     ).then(res => res.json())
   }
   GetDraft: (id: string) => Promise<Post> = (id) => {
-    // if (this.user === undefined || this.user === null) throw new Error('Authentication required')
+    this.requireAuth()
     return this.fetcher.fetch(`${apiBase}/draft/${id}`, {
+      method: 'GET',
       headers: {'Accept': ContentTypes.json}
     })
     .then(res => res.json())
   }
 
   CreateDraft: (title: string) => Promise<Post> = (title) => {
-    // if (this.user === undefined || this.user === null) throw new Error('Authentication required')
+    this.requireAuth()
     return this.fetcher.fetch(`${apiBase}/create-draft/`, {
       method: 'POST',
       headers: {'Accept': ContentTypes.json, 'Content-Type': ContentTypes.json},
@@ -80,7 +86,7 @@ class SimpleLoader implements LoaderApi {
   }
 
   SaveDraft: (id: string, post: PostUpdatableFields) => Promise<void> = (id, post) => {
-    // if (this.user === undefined || this.user === null) throw new Error('Authentication required')
+    this.requireAuth()
     return this.fetcher.fetch(`${apiBase}/draft/${id}`, {
         method: 'POST',
         headers: {'Accept': ContentTypes.json, 'Content-Type': ContentTypes.json},
@@ -90,17 +96,19 @@ class SimpleLoader implements LoaderApi {
   }
 
   DeleteDraft: (id: string) => Promise<void> = (id) => {
-    // if (this.user === undefined || this.user === null) throw new Error('Authentication required')
+    this.requireAuth()
     return this.fetcher.fetch(`${apiBase}/draft/${id}`, {
       method: 'DELETE',
+      headers: {},
     })
     .then(res => {})
   }
 
   PublishDraft: (id: string) => Promise<Identified> = (id) => {
-    // if (this.user === undefined || this.user === null) throw new Error('Authentication required')
+    this.requireAuth()
     return this.fetcher.fetch(`${apiBase}/publish-draft/${id}`, {
       method: 'POST',
+      headers: {},
     })
     .then(res => res.json())
   }
@@ -139,7 +147,7 @@ class SimpleLoader implements LoaderApi {
   }
 
   AddAttachment: (id: String, file: File) => Promise<void> = async (id, file) => {
-    // if (this.user === undefined || this.user === null) throw new Error('Authentication required')
+    this.requireAuth()
     this.fetcher.fetch(`${apiBase}/image/draft/${id}`, {
           method: 'POST',
           body: file,
@@ -153,9 +161,10 @@ class SimpleLoader implements LoaderApi {
   }
 
   RemoveAttachment: (id: String, filename: string) => Promise<void> = (id, filename) => {
-    // if (this.user === undefined || this.user === null) throw new Error('Authentication required')
+    this.requireAuth()
     return this.fetcher.fetch(`${apiBase}/image/draft/${id}/${filename}`, {
       method: 'DELETE',
+      headers: {},
     })
     .then(res => {})
   }

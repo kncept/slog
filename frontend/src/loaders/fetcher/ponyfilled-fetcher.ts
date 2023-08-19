@@ -6,14 +6,12 @@ const fetch_ponyfill = fetchPonyfill({})
 export default class PoynfilledFetcher implements Fetcher {
     fetch(
         url: string,
-        params?: FetcherInitParams,
+        params: FetcherInitParams,
     ): Promise<Response> {
-        const headers = params?.headers || {}
-
-        console.log(`${params?.method || 'GET'} ${url}, ${headers['Authorization']}`)
+        // console.log(`${params.method} ${url}, ${Object.keys(params.headers)}`)
         return fetch_ponyfill.fetch(url, {
-            headers: new Headers(params?.headers || {}),
-            method: params?.method || 'GET',
+            headers: new Headers(params.headers),
+            method: params.method,
             body: params?.body,
             credentials: 'include'
         })

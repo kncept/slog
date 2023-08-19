@@ -14,14 +14,11 @@ export class AuthenticatedFetcher implements Fetcher {
 
     fetch(
         url: string,
-        params?: FetcherInitParams,
+        params: FetcherInitParams,
     ): Promise<Response> {
         console.log(`fetcher user=${this.user !== null} for ${url}`)
         if (this.user !== null) {
-            if (!params) params = {}
-            if (!params.headers) params.headers = {}
             params.headers['Authorization'] = 'Bearer ' + this.user.token()
-            return this.wrapped.fetch(url, params).then(this.handleAuthError)    
         }
         return this.wrapped.fetch(url, params).then(this.handleAuthError)
     }

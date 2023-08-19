@@ -1,14 +1,14 @@
 
 export interface FetcherInitParams {
-    method?: string
+    method: string
+    headers: Record<string, string>
     body?: string | File
-    headers?: Record<string, string>
 }
 
 export interface Fetcher {
     fetch(
         url: string,
-        params?: FetcherInitParams,
+        params: FetcherInitParams,
     ): Promise<Response>
 }
 

@@ -49,16 +49,17 @@ export const handler = async (event: APIGatewayProxyEvent, context: Context): Pr
     }
   }
 
-  const headers: Record<string, string> = {}
-  // headers['Access-Control-Allow-Headers'] = 'Content-Type'
-  headers['Access-Control-Allow-Headers'] = '*'
-  headers['Access-Control-Allow-Origin'] = corsAllowedOriginResponse
-  headers['Access-Control-Allow-Methods'] = 'OPTIONS,GET,POST,DELETE'
+  const multiValueHeaders: Record<string, string[]> = {}
+  multiValueHeaders['Access-Control-Allow-Headers'] = ['Content-Type','Content-Disposition','Authorization','Accept']
+  // headers['Access-Control-Allow-Headers'] = '*'
+  multiValueHeaders['Access-Control-Allow-Origin'] = [corsAllowedOriginResponse]
+  multiValueHeaders['Access-Control-Allow-Methods'] = ['OPTIONS','GET','POST','DELETE']
 
   if (event.httpMethod == 'OPTIONS') {
     return {
       statusCode: 204,
-      headers,
+      // headers,
+      multiValueHeaders,
       body: ''
     }
   }
@@ -68,24 +69,30 @@ export const handler = async (event: APIGatewayProxyEvent, context: Context): Pr
     body = Buffer.from(event.body, 'base64')
   }
   
-  event.headers
 
   try {
       var res = await router.route(event.httpMethod, event.path, event.headers, body)
       if(res.headers) {
-        Object.keys(res.headers).forEach(key => headers[key] = res.headers![key])
+        Object.keys(res.headers).forEach(key => {
+
+          if (!multiValueHeaders[key]) {
+            multiValueHeaders[key] = []
+          }
+          multiValueHeaders[key].push(res.headers![key])
+
+        }) 
       }
 
       if (res.body == undefined) {
         return {
-          headers,
+          multiValueHeaders,
           statusCode: res.statusCode,
           body: ''
         }
       }
       if (Buffer.isBuffer(res.body)) {
         return {
-          headers,
+          multiValueHeaders,
           statusCode: res.statusCode,
           isBase64Encoded: true,
           body: (res.body as Buffer).toString('base64'),
@@ -93,7 +100,7 @@ export const handler = async (event: APIGatewayProxyEvent, context: Context): Pr
       }
       if (typeof res.body === 'string') {
         return {
-          headers,
+          multiValueHeaders,
           statusCode: res.statusCode,
           isBase64Encoded: false,
           body: res.body as string

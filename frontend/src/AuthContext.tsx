@@ -130,7 +130,8 @@ export const AuthProvider: React.FC<{children?: React.ReactNode}> = ({children})
                     setAuth(existing => {return {
                     ...existing,
                     currentUser: null,
-                }})}
+                    }})
+                }
                 const login = (provider: LoginProvider) => {
                     //  not replace - don't want to lose our url history
                     window.location.href = provider.authorizeUrl

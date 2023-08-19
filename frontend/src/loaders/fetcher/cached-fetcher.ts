@@ -10,12 +10,12 @@ export default class CachedFetcher implements Fetcher {
     }
     fetch(
         url: string,
-        params?: FetcherInitParams,
+        params: FetcherInitParams,
     ): Promise<Response> {
         // N.B. header count to catch presence/absence of auth header
         // So make sure we cache _after_ handling auth headers
-        const headersSize = Object.keys(params?.headers || []).length
-        const method = params?.method || 'GET'
+        const headersSize = Object.keys(params.headers).length
+        const method = params.method
         const key = `${headersSize}${method}${url}`
 
         let value = cachedActiveFetcherRequest[key]
