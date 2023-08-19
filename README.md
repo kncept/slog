@@ -28,7 +28,7 @@ Slog... the Simple Web Log.
 3) Copy the 'prodProperties.ts.template' to 'prodProperties.ts' `cp prodProperties.ts.template prodProperties.ts`, and fill in any blank properties
 
     The minimum set required should be:
-    * `ADMIN_USER` in a 'provider/email' format. eg: google/email.address@gmail.com
+    * `adminUser` in a 'provider/email' format. eg: google/email.address@gmail.com
     * `publicUrl` The front end URL that you want to use
     * `reactAppApiEndpoint` The back end URL that you want to use
     * `awsAccessKeyId`

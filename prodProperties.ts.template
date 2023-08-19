@@ -4,7 +4,7 @@ import { AwsAccessKeyProperties, FrontendProperties } from "./orchestration/env-
 const properties : AwsAccessKeyProperties & FrontendProperties = {
     publicUrl: 'https://',
     reactAppApiEndpoint: 'https://api.',
-    adminUser: 'GitHub:nkrul',
+    adminUser: , // 'ProviderId:UserId'
 
     awsAccessKeyId: ,
     awsSecretAccessKey: ,
