@@ -14,7 +14,7 @@ Including hosts file (!)
 * Add comments for logged in users
 * UserID and a lookup function
   * Deterministic UserID from provider/providerID combo
-  * also need a private random seed to ID's are not reverseable*
+  * also need a private random seed to ID's are not reverseable
 
 
 * Tags... author can tag a post with some strings
@@ -62,9 +62,6 @@ Including hosts file (!)
 
 * Auto encrypt/decrypt (from env property 'ANSIBLE_VAULT_PASSWORD')
   using a $DIRECTIVE; directive, tied to $ANSIBLE_VAULT
-
-* Allow Frontend and Backend to be in different domain names (top level domain name stuff)
-
 
 
 

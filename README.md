@@ -37,6 +37,8 @@ Slog... the Simple Web Log.
 
 4) `./run.ts deploy`
     If you are not running in the devcontainer, you may need to run the above via `ts-node`.
+    This will create a Cloudformation stack via the AWS CDK.
+    Everything is in one stack (`SLog` by default), but uses multiple nested stacks to deploy.
 
 5) Update your name servers to match the AWS domain - UNLESS the domain is AWS Managed (ie you set purchase on in config - still todo)
 
