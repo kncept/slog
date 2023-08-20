@@ -206,7 +206,7 @@ function setCookie(jwt: string | null) {
         Cookies.set(jwtCookieName, jwt, {
             sameSite: 'None',
             secure: true,
-            // domain: extractDomainNameFromUrl
+            // domain: extractDomainNameFromFQDN
         })
     }
 }

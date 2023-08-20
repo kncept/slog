@@ -1,7 +1,7 @@
 #!/usr/bin/env ts-node
 import { generateKeyPair } from './backend/src/crypto/crypto-utils'
 import { matchHostedZoneToDomainUrl } from './backend/tools/domain-tools'
-import { stackNameForBackend, stackNameForFrontend, stackNameForFrontendCertificate, stackNameForHostedZone } from './backend/tools/name-tools'
+import { superSimpleBaseBlogName } from './backend/tools/name-tools'
 import exec from './orchestration/exec'
 import EnvProperties, { EnvironmentName } from './orchestration/property-loaders'
 import * as fs from 'fs'
@@ -154,31 +154,10 @@ async function deploy(args: Array<string>) {
         return
     }
 
-    await cdkDeploy(stackNameForHostedZone())
-    .then(async () => {
-        const jobs: Array<Promise<any>> = []
-        jobs.push(
-            Promise.resolve()
-            .then(async () => {
-                await cdkDeploy(stackNameForFrontendCertificate())
-            })
-            .then(async () => {
-                await cdkDeploy(stackNameForFrontend())
-            })
-        )
-        
-        jobs.push(
-            Promise.resolve()
-            .then(async () => {
-                await cdkDeploy(stackNameForBackend())
-            })
-        )
-
-        // wait for all jobs to finish
-        await Promise.all(jobs)
-    })
+    await cdkDeploy(superSimpleBaseBlogName())
 }
 
+// heh - now that we have a nested stack approach, this should work 
 async function deployLs() {
     const envName = EnvironmentName.prod
     await exec(envName, 'backend', 'npm', ['i'])

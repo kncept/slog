@@ -8,7 +8,7 @@ import * as mime from 'mime-types'
 import { match } from 'node-match-path'
 
 import { AsymetricJwtAuth, AuthResult, JwtAuthenticator } from './auth/jwt-auth'
-import { extractDomainNameFromUrl } from '../tools/domain-tools'
+import { extractDomainNameFromFQDN, fullyQualifiedApiDomainName } from '../tools/domain-tools'
 
 export function frontendUrl(): string {
     let url = process.env.PUBLIC_URL || ''
@@ -230,7 +230,7 @@ export default class Router {
             const providerName = params!.params!.providerName
             return this.auth.LoginCallback(providerName, parse(requestBody!.toString()) as Record<string, string>)
             .then(jwt => {
-                const apiDomainName = extractDomainNameFromUrl()
+                const apiDomainName = extractDomainNameFromFQDN(fullyQualifiedApiDomainName())
                 return {
                     statusCode: 200,
                     headers: {

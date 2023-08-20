@@ -7,9 +7,7 @@ import * as lambda from 'aws-cdk-lib/aws-lambda'
 import * as lambdaNodeJs from 'aws-cdk-lib/aws-lambda-nodejs'
 import * as logs from 'aws-cdk-lib/aws-logs'
 import * as apigateway from 'aws-cdk-lib/aws-apigateway'
-import { HostedZoneInfo } from '../tools/domain-tools'
 import * as route53 from 'aws-cdk-lib/aws-route53'
-import * as ec2 from 'aws-cdk-lib/aws-ec2'
 import * as iam from 'aws-cdk-lib/aws-iam'
 import * as s3 from 'aws-cdk-lib/aws-s3'
 
@@ -20,18 +18,13 @@ export interface BackendStackProps {
   domainName: string
 }
 
-export class BackendStack extends cdk.Stack {
+export class BackendStack extends cdk.NestedStack {
     constructor(
     scope: Construct,
     id: string,
     props: BackendStackProps
   ) {
-    super(scope, id, {
-      crossRegionReferences: true,
-      env: {
-        region: process.env.AWS_REGION
-      }
-    })
+    super(scope, id, {})
     const prefix = 'SSB-BE'
 
     const apiCertificate = new cdk.aws_certificatemanager.Certificate(this, `${prefix}-api-cert`, {
@@ -40,7 +33,8 @@ export class BackendStack extends cdk.Stack {
     })
 
     const bucket = new s3.Bucket(this, `${prefix}-bucket`, {
-      removalPolicy: cdk.RemovalPolicy.DESTROY
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      autoDeleteObjects: true,
     })
 
     new cdk.CfnOutput(this, 'BucketName', {

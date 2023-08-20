@@ -3,18 +3,11 @@ import * as path from 'path'
 import * as cdk from 'aws-cdk-lib'
 import { Construct } from 'constructs'
 
-import * as lambda from 'aws-cdk-lib/aws-lambda'
-import * as lambdaNodeJs from 'aws-cdk-lib/aws-lambda-nodejs'
-import * as logs from 'aws-cdk-lib/aws-logs'
-import * as apigateway from 'aws-cdk-lib/aws-apigateway'
-import { HostedZoneInfo } from '../tools/domain-tools'
 import * as route53 from 'aws-cdk-lib/aws-route53'
-import * as ec2 from 'aws-cdk-lib/aws-ec2'
-import * as iam from 'aws-cdk-lib/aws-iam'
 import * as s3 from 'aws-cdk-lib/aws-s3'
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront'
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment'
-
+import * as cm from "aws-cdk-lib/aws-certificatemanager"
 
 
 export interface FrontendStackProps {
@@ -22,27 +15,22 @@ export interface FrontendStackProps {
   blogBaseName: string
   hostedZone: route53.IHostedZone
   domainName: string
-  cert: cdk.aws_certificatemanager.Certificate
 }
 
-export class FrontendStack extends cdk.Stack {
+export class FrontendStack extends cdk.NestedStack {
   constructor(
     scope: Construct,
     id: string,
     props: FrontendStackProps
   ) {
-    super(scope, id, {
-      crossRegionReferences: true,
-      env: {
-        region: process.env.AWS_REGION
-      }
-    })
+    super(scope, id, {})
     const prefix = 'SSB-FE'
 
     const bucket = new s3.Bucket(this, `${prefix}-s3`, {
       websiteIndexDocument: 'index.html',
       websiteErrorDocument: 'index.html',
-      removalPolicy: cdk.RemovalPolicy.DESTROY
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      autoDeleteObjects: true,
     })
 
     const originAccessIdentity = new cloudfront.OriginAccessIdentity(this, `${prefix}-OAI`, {
@@ -50,11 +38,17 @@ export class FrontendStack extends cdk.Stack {
     })
     bucket.grantRead(originAccessIdentity)
 
+    const certificate = new cm.DnsValidatedCertificate(this, `${prefix}-cert`, {
+      domainName: props.domainName,
+      hostedZone: props.hostedZone,
+      region: 'us-east-1', //stupid cloudfront, only using us-east-1 certificates :/
+    })
+
     const distribution = new cloudfront.CloudFrontWebDistribution(this, `${prefix}-cloudfront`, {
       viewerCertificate: {
         aliases: [props.domainName],
         props: {
-          acmCertificateArn: props.cert.certificateArn,
+          acmCertificateArn: certificate.certificateArn,
           sslSupportMethod: 'sni-only',
         },
       },

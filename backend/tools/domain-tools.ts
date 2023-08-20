@@ -53,9 +53,7 @@ function toFqdn(fqdnUrl: string): string {
     return fqdn
 }
 
-export function extractDomainNameFromUrl() : string {
-    let fqdn = fullyQualifiedApiDomainName()
-
+export function extractDomainNameFromFQDN(fqdn: string) : string {
     for(let i = 0; i < domainNameEndingsToScan.length; i++) {
         const knownTldEnding = domainNameEndingsToScan[i]
         if (fqdn.endsWith(knownTldEnding)) {
@@ -71,9 +69,9 @@ export function extractDomainNameFromUrl() : string {
 }
 
 // TODO: support heirarchical zones
-export async function matchHostedZoneToDomainUrl() : Promise<HostedZoneInfo | undefined> {
+export async function matchHostedZoneToDomainUrl(fqdn: string) : Promise<HostedZoneInfo | undefined> {
     const existingDomainNames = await listDomainNames()
-    const tld = extractDomainNameFromUrl()
+    const tld = extractDomainNameFromFQDN(fqdn)
     for(let i = 0; i < existingDomainNames.length; i++) {
         let existingDomainName = existingDomainNames[i].name
         if (existingDomainName.endsWith('.')) existingDomainName = existingDomainName.substring(0, existingDomainName.length - 1)

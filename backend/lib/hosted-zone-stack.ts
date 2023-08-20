@@ -2,41 +2,38 @@ import { lookupOutputs } from '../tools/cloudformation-tools'
 import * as cdk from 'aws-cdk-lib'
 import { Construct } from 'constructs'
 import * as route53 from 'aws-cdk-lib/aws-route53'
-import { stackNameForHostedZone } from '../tools/name-tools'
-import { listDomainNames, matchHostedZoneToDomainUrl } from '../tools/domain-tools'
+import { matchHostedZoneToDomainUrl } from '../tools/domain-tools'
+import { superSimpleBaseBlogName } from '../tools/name-tools'
 
 export interface HostedZoneStackProps {
+  prefix: string,
   hostedZoneName: string,
-  hostedZoneIdLookup: string | null // pass in NULL to create, or a valid ID to look up. N.B. this must 'latch'
+  hostedZoneIdLookup: string | null, // pass in NULL to create, or a valid ID to look up. N.B. this must 'latch'
 }
 
-export async function determineHostedZoneIdLookup(): Promise<string | null> {
-  const stackOutputs = await lookupOutputs(stackNameForHostedZone())
+export async function determineHostedZoneIdLookup(prefix: string, fqdn: string): Promise<string | null> {
+  const stackOutputs = await lookupOutputs(superSimpleBaseBlogName())
   if (stackOutputs) {
-    const isLookup = stackOutputs['is-lookup']
-    return isLookup ? stackOutputs['zone-id'] : null
+    const isLookup = stackOutputs[`${prefix}-is-lookup`]
+    return isLookup ? stackOutputs[`${prefix}-zone-id`] : null
   }
-  const matchedDomains = await matchHostedZoneToDomainUrl()
+  const matchedDomains = await matchHostedZoneToDomainUrl(fqdn)
   if (matchedDomains) return matchedDomains.id
   return null
 
 }
 
-export class HostedZoneStack extends cdk.Stack {
+export class HostedZoneStack extends cdk.NestedStack {
   zone: route53.IHostedZone
+  props: HostedZoneStackProps
   constructor(
     scope: Construct,
     id: string,
     props: HostedZoneStackProps,
   ) {
-    super(scope, id, {
-      crossRegionReferences: true,
-      env: {
-        region: process.env.AWS_REGION
-      }
-    })
-    const prefix = 'hz'
-
+    super(scope, id, {})
+    this.props = props
+    const prefix = props.prefix
     
     if (props.hostedZoneIdLookup != null) {
       this.zone = route53.PublicHostedZone.fromHostedZoneAttributes(this, `${prefix}-public`, {
@@ -50,19 +47,25 @@ export class HostedZoneStack extends cdk.Stack {
       })
       this.zone.applyRemovalPolicy(cdk.RemovalPolicy.DESTROY)
     }
-    new cdk.CfnOutput(this, `${prefix}-public-arn-out`, {
+    // this.generateOutputs(this, prefix)
+  }
+
+  generateOutputs(parent: Construct, prefix: string) {
+    new cdk.CfnOutput(parent, `${prefix}-arn-out`, {
       value: this.zone.hostedZoneArn,
-      exportName: 'zone-arn'
+      exportName: `${prefix}-zone-arn`,
     })
-
-    new cdk.CfnOutput(this, `${prefix}-hosted-zone-id`, {
+    new cdk.CfnOutput(parent, `${prefix}-name-out`, {
+      value: this.zone.zoneName,
+      exportName: `${prefix}-zone-name`,
+    })
+    new cdk.CfnOutput(parent, `${prefix}-zone-id-out`, {
       value: this.zone.hostedZoneId,
-      exportName: 'zone-id'
+      exportName: `${prefix}-zone-id`,
     })
-    new cdk.CfnOutput(this, `${prefix}-is-lookup`, {
-      value: `${props.hostedZoneIdLookup !== null}`,
-      exportName: 'is-lookup'
+    new cdk.CfnOutput(parent, `${prefix}-is-lookup-out`, {
+      value: `${this.props.hostedZoneIdLookup !== null}`,
+      exportName: `${prefix}-is-lookup`,
     })
-
   }
 }

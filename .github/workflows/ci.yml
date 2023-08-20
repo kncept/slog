@@ -28,3 +28,6 @@ jobs:
 
       - name: Run build
         run: npm run run.ts build
+
+      - name: Run cdk ls
+        run: npm run run.ts deploy-ls
