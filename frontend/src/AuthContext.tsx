@@ -210,6 +210,6 @@ function setCookie(jwt: string | null) {
         })
     }
 }
-function getCookie(): string | undefined {
-    return Cookies.get('jwt')
-}
+// function getCookie(): string | undefined {
+//     return Cookies.get('jwt')
+// }
