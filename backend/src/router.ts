@@ -8,6 +8,7 @@ import * as mime from 'mime-types'
 import { match } from 'node-match-path'
 
 import { AsymetricJwtAuth, AuthResult, JwtAuthenticator } from './auth/jwt-auth'
+import { extractDomainNameFromUrl } from '../tools/domain-tools'
 
 export function frontendUrl(): string {
     let url = process.env.PUBLIC_URL || ''
@@ -26,8 +27,12 @@ export function corsHeaders(originHeader: string | undefined, allowedOrigins: st
         'Content-Type',
         'Content-Length',
         'Content-Disposition',
+        
+        'Accept',
+        'Accept-Encoding',
+
         'Authorization',
-        'Accept'
+        'Cookie',
     ]
     multiValueHeaders['Access-Control-Allow-Origin'] = matchingOrigins.length == 1 ? matchingOrigins : [frontendUrlNoSlash()] // browser will deny access
     multiValueHeaders['Vary'] = ['Origin']
@@ -78,8 +83,12 @@ export default class Router {
         params = match('/post/:postId', path)
         if (params.matches && method === 'GET') {
             const id = params!.params!.postId
-            const res = await this.storage.PostStorage().GetPost(id)
-            return quickResponse(stringify(res))
+            try {
+                const res = await this.storage.PostStorage().GetPost(id)
+                return quickResponse(stringify(res))
+            } catch (err) {
+                return notFoundResponse
+            }
         }
 
         params = match('/draft/', path)
@@ -113,8 +122,12 @@ export default class Router {
             if (parsedAuth.result === AuthResult.unauthorized) return unauthorizedResponse
             if (!parsedAuth.claims?.admin) return forbiddenResponse
             const id = params!.params!.postId
-            const res = await this.storage.DraftStorage().GetPost(id)
-            return quickResponse(stringify(res))
+            try {
+                const res = await this.storage.DraftStorage().GetPost(id)
+                return quickResponse(stringify(res))
+            } catch (err) {
+                return notFoundResponse
+            }
         }
         if (params.matches && method === 'DELETE') {
             if (parsedAuth.result === AuthResult.unauthorized) return unauthorizedResponse
@@ -165,16 +178,17 @@ export default class Router {
 
         params = match('/image/:type/:postId', path)
         if (params.matches && method === 'POST' && params!.params!.type === 'draft') {
-            console.log('about to upload image:: parsedAuth', parsedAuth)
             if (parsedAuth.result === AuthResult.unauthorized) return unauthorizedResponse
             if (!parsedAuth.claims?.admin) return forbiddenResponse
             const id = params!.params!.postId
-            const cdHeader = extractHeader(headers, 'content-disposition') || ''
+            const cdHeader = extractHeader(headers, 'Content-Disposition') || ''
             console.log('content disposition header', cdHeader)
-            if (cdHeader.startsWith('file; filename=')) {
+            if (cdHeader.startsWith('file; filename=')) { // optional: inline and/or attachment
                 const filename = cdHeader.substring(15)
                 await this.storage.DraftStorage().AddMedia(id, filename, requestBody!)
                 return emptyResponse
+            } else if (cdHeader !== '') {
+                console.log('Unknown Content-Disposition Header: ', cdHeader)
             }
         }
 
@@ -192,13 +206,7 @@ export default class Router {
                 try {
                     return bufferResponse(await this.storage.DraftStorage().GetMedia(id, filename), filename)
                 } catch (err) {
-                    return {
-                        statusCode: 404,
-                        headers: {
-                            'Content-Type': 'text/plain'
-                        },
-                        body: `NOT FOUND: ${method} ${path}`
-                    }
+                    return notFoundResponse
                 }
             }
         }
@@ -222,10 +230,16 @@ export default class Router {
             const providerName = params!.params!.providerName
             return this.auth.LoginCallback(providerName, parse(requestBody!.toString()) as Record<string, string>)
             .then(jwt => {
+                const apiDomainName = extractDomainNameFromUrl()
                 return {
                     statusCode: 200,
                     headers: {
                         'Content-Type': 'application/jwt',
+
+                        // TODO: Expires to _match_ jwt
+                        // Expires: Wed, 21 Oct 2015 07:28:00 GMT
+                        'Set-Cookie': `jwt=${jwt}; Domain=${apiDomainName}; SameSite=None; Secure`,
+                        
                     },
                     body: jwt,
                 }
@@ -279,6 +293,10 @@ const forbiddenResponse: RouterResponse = {
 
 const emptyResponse: RouterResponse = {
     statusCode: 204, // accepted, 'No Content'
+}
+
+const notFoundResponse: RouterResponse = {
+    statusCode: 404, // not found
 }
 
 function quickResponse(jsonResponse: string): RouterResponse {

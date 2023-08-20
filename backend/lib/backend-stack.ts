@@ -21,7 +21,7 @@ export interface BackendStackProps {
 }
 
 export class BackendStack extends cdk.Stack {
-  constructor(
+    constructor(
     scope: Construct,
     id: string,
     props: BackendStackProps
@@ -40,6 +40,7 @@ export class BackendStack extends cdk.Stack {
     })
 
     const bucket = new s3.Bucket(this, `${prefix}-bucket`, {
+      removalPolicy: cdk.RemovalPolicy.DESTROY
     })
 
     new cdk.CfnOutput(this, 'BucketName', {

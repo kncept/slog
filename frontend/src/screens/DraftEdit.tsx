@@ -86,10 +86,10 @@ const DraftEdit: React.FC = () => {
     
     Content:
     <Markdown postId={draft.id} mode={MarkdownMode.EDIT} value={markdown} setValue={setMarkdown} />
-    <Contributors contributors={draft.contributors} />
+    <Contributors contributors={draft?.contributors || []} />
 
     <div className='Attachments'>
-      {draft.attachments.map((value: string, index: number) => <div className='AttachmentRow' key={index}>{value}
+      {(draft?.attachments || []).map((value: string, index: number) => <div className='AttachmentRow' key={index}>{value}
       <SimpleButton text='Insert' style={{color: 'green'}} onClick={() => insertAttachment(value)} />
       <SimpleButton text='Delete' style={{color: 'red'}} onClick={() => deleteAttachment(value)} />
       </div>)}

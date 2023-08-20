@@ -9,11 +9,11 @@ import PoynfilledFetcher from "./ponyfilled-fetcher"
 export enum FetcherStackType {
     native = 'native',
     ponyfill = 'ponyfill',
-    iosmorphic = 'isomorphic',
+    isomorphic = 'isomorphic',
 }
 
 export function fetcherStack(user: AuthenticatedUser | null, type?: FetcherStackType) : Fetcher {
-    let wrapped = fetcherOfType(type || FetcherStackType.ponyfill)
+    let wrapped = fetcherOfType(type || FetcherStackType.native)
     wrapped = new CachedFetcher(wrapped)
     wrapped = new AuthenticatedFetcher(
         wrapped,
@@ -25,7 +25,7 @@ function fetcherOfType(type: FetcherStackType) {
     switch(type) {
         case FetcherStackType.native: return new NativeFetcher()
         case FetcherStackType.ponyfill: return new PoynfilledFetcher()
-        case FetcherStackType.iosmorphic: return new IsomorphicFetcher()
+        case FetcherStackType.isomorphic: return new IsomorphicFetcher()
     }
     throw Error(`Unknown fetcher type: ${type}`)
 }

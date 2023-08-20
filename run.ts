@@ -120,7 +120,7 @@ async function keygen() {
 
 async function build() {
     const envName = EnvironmentName.prod
-    await exec(envName, 'frontend', 'npm', ['i'])
+    await exec(envName, 'frontend', 'npm', ['ci'])
     .then(async () => {
         await exec(envName, 'frontend', 'npm',['run', 'build'])
     })
@@ -140,7 +140,7 @@ async function deploy(args: Array<string>) {
     // build frontend and prepare backend
     await Promise.all([
         build(),
-        exec(envName, 'backend', 'npm', ['i'])
+        exec(envName, 'backend', 'npm', ['ci'])
     ])
 
     const cdkDeploy = (stackname: string): Promise<any> => {

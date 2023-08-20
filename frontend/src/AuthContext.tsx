@@ -131,7 +131,7 @@ export const AuthProvider: React.FC<{children?: React.ReactNode}> = ({children})
                     // load 'last url' and 'state hash' from Localstorage?
                     return Loader(auth.currentUser()).LoginCallback(provider.name, params).then(jwt => {
                         localStorage.setItem(localStorageKeys.user, jwt)
-                        Cookies.set(jwtCookieName, jwt)
+                        setCookie(jwt)
                         ValidJwtUser(jwt, loginOptions.verificationKeys!, logout).then(user => {
                             setAuth(existing => {return {
                                 ...existing,
@@ -147,10 +147,10 @@ export const AuthProvider: React.FC<{children?: React.ReactNode}> = ({children})
                 const jwtString = localStorage.getItem(localStorageKeys.user) || ''
                 if (jwtString !== '') initialUser = await ValidJwtUser(jwtString, loginOptions.verificationKeys, logout).then(currentUser =>{
                     if (currentUser !== null) {
-                        Cookies.set(jwtCookieName, currentUser.token())
+                        setCookie(currentUser.token())
                     } else {
                         localStorage.removeItem(localStorageKeys.user)
-                        Cookies.remove(jwtCookieName)
+                        setCookie(null)
                     }
                     return currentUser
                 })
@@ -197,4 +197,19 @@ async function ValidJwtUser(jwtString: string, verificationKeys: Array<string>, 
         }
     }
     return null
+}
+
+function setCookie(jwt: string | null) {
+    if (jwt === null) {
+        Cookies.remove(jwtCookieName)
+    } else {
+        Cookies.set(jwtCookieName, jwt, {
+            sameSite: 'None',
+            secure: true,
+            // domain: extractDomainNameFromUrl
+        })
+    }
+}
+function getCookie(): string | undefined {
+    return Cookies.get('jwt')
 }
