@@ -8,6 +8,7 @@ const domainNameEndingsToScan = [
     '.org.au',
     '.co.nz',
     '.co.uk',
+    '.local',
 ]
 
 export type HostedZoneInfo = {
@@ -50,6 +51,7 @@ function toFqdn(fqdnUrl: string): string {
     if (fqdn.indexOf('/') != -1) {
         fqdn = fqdn.substring(0, fqdn.indexOf('/'))
     }
+    if (fqdn.includes(":")) fqdn = fqdn.substring(0, fqdn.indexOf(":"))
     return fqdn
 }
 
@@ -65,7 +67,7 @@ export function extractDomainNameFromFQDN(fqdn: string) : string {
             }
         }
     }
-    throw new Error('Unable to determine hosted zone name')
+    throw new Error(`Unable to determine hosted zone name from ${fqdn}`)
 }
 
 // TODO: support heirarchical zones

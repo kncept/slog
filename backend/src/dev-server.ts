@@ -1,10 +1,12 @@
 import * as http from 'http'
 import * as https from 'https'
-import Router, { corsHeaders } from './router'
+import Router, { corsHeaders, frontendUrl, frontendUrlNoSlash } from './router'
 import * as path from 'path'
 import { FilesystemStorage } from './storage/storage'
 import { LocalFsOperations, S3FsOperations } from './storage/filesystem-storage'
 import * as fs from 'fs'
+import { certForCN } from '../../orchestration/commands/keygen'
+import { fullyQualifiedApiDomainName } from '../tools/domain-tools'
 
 // define `bucketName` (and aws keys) in devProperties.ts to use an s3 bucket
 const bucketName = process.env.BUCKET_NAME || ''
@@ -14,7 +16,7 @@ const router: Router = bucketName !== '' ?
 
 const requestListener: http.RequestListener = (req, res) => {
     const addCorsHeaders = () => {
-        const headersToAdd = corsHeaders(req.headers.origin, ["https://localhost:3000"])
+        const headersToAdd = corsHeaders(req.headers.origin, ["https://localhost:3000", frontendUrlNoSlash()])
         Object.keys(headersToAdd).forEach(key => res.appendHeader(key, headersToAdd[key]))
     }
 
@@ -79,18 +81,21 @@ function respond(method: string, path: string, headers: Record<string, string>, 
 const useHttps = true
 // since we can't top level 'await' the ready flag
 router.readyFlag.then(async () => {
-    if (useHttps && fs.existsSync('../.data/server.key') && fs.existsSync('../.data/server.cert')) {
+    if (useHttps) {
+        const hostname = fullyQualifiedApiDomainName()
+        const selfSigned = await certForCN(hostname)
+
         const server = https.createServer({
-            key: fs.readFileSync('../.data/server.key'),
-            cert: fs.readFileSync('../.data/server.cert'),
+            key: fs.readFileSync(`../.data/${selfSigned.key}`),
+            cert: fs.readFileSync(`../.data/${selfSigned.cert}`),
         }, requestListener)
-        server.listen(8080, "localhost", () => {
-            console.log("https dev backend is running")
+        server.listen(8080, 'localhost', () => {
+            console.log(`https dev backend is running https://${hostname}:8080/`)
         })
     } else {
         const server = http.createServer(requestListener)
         server.listen(8080, "localhost", () => {
-            console.log("http dev backend is running")
+            console.log("http dev backend is running http://localhost:8080/")
         })
     }
 })
