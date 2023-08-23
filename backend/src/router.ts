@@ -21,6 +21,8 @@ export function backendUrl(): string {
     return url
 }
 
+const jwtParamHack = (process.env.JWT_PARAM_HACK || '') == 'true'
+
 export function frontendUrlNoSlash() {
     return frontendUrl().substring(0, frontendUrl().length - 1)
 }
@@ -88,7 +90,7 @@ export default class Router {
             if(jwtString) return this.auth.ParseAuth(jwtString)
         }
     
-        if (urlParams && urlParams.jwt) {
+        if (jwtParamHack && urlParams && urlParams.jwt) {
             return this.auth.ParseAuth(urlParams.jwt)
         }
 
