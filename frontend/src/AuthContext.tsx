@@ -201,12 +201,13 @@ async function ValidJwtUser(jwtString: string, verificationKeys: Array<string>, 
 
 function setCookie(jwt: string | null) {
     if (jwt === null) {
+        console.log('clearing login cookie')
         Cookies.remove(jwtCookieName)
     } else {
+        console.log('setting login cookie')
         Cookies.set(jwtCookieName, jwt, {
             sameSite: 'None',
             secure: true,
-            // domain: extractDomainNameFromFQDN
         })
     }
 }

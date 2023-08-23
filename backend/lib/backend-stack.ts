@@ -62,8 +62,6 @@ export class BackendStack extends cdk.NestedStack {
         ADMIN_USERS: process.env.ADMIN_USERS || '[]',
         S3_BUCKET_NAME: bucket.bucketName,
         LOGIN_PROVIDERS: process.env.LOGIN_PROVIDERS || '[]',
-
-        JWT_PARAM_HACK: 'true',
       },
       logRetention: logs.RetentionDays.ONE_MONTH,
       bundling: {

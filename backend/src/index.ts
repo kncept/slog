@@ -10,9 +10,9 @@ function bucketName(): string {
 }
 
 const router: Router = new Router(
-  new FilesystemStorage('.', new S3FsOperations(bucketName())))
+  new FilesystemStorage('.', new S3FsOperations(bucketName()))
+)
 
-  
 
 export const handler = async (event: APIGatewayProxyEvent, context: Context): Promise<APIGatewayProxyResult> => {
   // console.log('event', event)
@@ -50,7 +50,7 @@ export const handler = async (event: APIGatewayProxyEvent, context: Context): Pr
   
 
   try {
-    let res = await router.route(event.headers, event.httpMethod, event.path, event.pathParameters || {}, body)
+    let res = await router.route(event.multiValueHeaders, event.httpMethod, event.path, event.pathParameters || {}, body)
     if(res.headers) {
       Object.keys(res.headers).forEach(key => {
 

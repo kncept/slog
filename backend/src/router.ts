@@ -21,8 +21,6 @@ export function backendUrl(): string {
     return url
 }
 
-const jwtParamHack = (process.env.JWT_PARAM_HACK || '') == 'true'
-
 export function frontendUrlNoSlash() {
     return frontendUrl().substring(0, frontendUrl().length - 1)
 }
@@ -68,7 +66,7 @@ export default class Router {
     }
 
     async extractAuth(
-        headers: Record<string, string | undefined>,
+        headers: Record<string, string[] | undefined>,
         urlParams: Record<string, string | undefined>,
     ): Promise<ParsedAuth> {
         if (this.auth === undefined) this.auth = new AsymetricJwtAuth(this.storage.KeyManager())
@@ -84,21 +82,16 @@ export default class Router {
         }
 
         // sequential: Cookie header next
-        const cookieHeader = extractHeader(headers, 'Cookie')
-        if (cookieHeader) {
-            const jwtString = getCookie('jwt', cookieHeader)
-            if(jwtString) return this.auth.ParseAuth(jwtString)
-        }
-    
-        if (jwtParamHack && urlParams && urlParams.jwt) {
-            return this.auth.ParseAuth(urlParams.jwt)
+        const cookieJwt = extractCookie('jwt', headers)
+        if (cookieJwt) {
+            return this.auth.ParseAuth(cookieJwt)
         }
 
         return this.auth.ParseAuth(undefined)
     }
     
     async route(
-        headers: Record<string, string | undefined>,
+        headers: Record<string, string[] | undefined>,
         method: string,
         path: string,
         urlParams: Record<string, string | undefined>,
@@ -274,34 +267,13 @@ export default class Router {
 
                         // TODO: Expires to _match_ jwt
                         // Expires: Wed, 21 Oct 2015 07:28:00 GMT
-                        // 'Set-Cookie': `jwt=${jwt}; Domain=${apiDomainName}; SameSite=None; Secure`,
+                        'Set-Cookie': `jwt=${jwt}; Path=/; Domain=${apiDomainName}; SameSite=None; Secure`,
                         
                     },
                     body: jwt,
                 }
             })
         }
-
-        // params = match('/relogin', path)
-        // if (params.matches && method === 'POST') {
-        //     const providerName = params!.params!.providerName
-        //     return this.auth.LoginCallback(providerName, parse(requestBody!.toString()) as Record<string, string>)
-        //     .then(jwt => {
-        //         const apiDomainName = extractDomainNameFromFQDN(fullyQualifiedApiDomainName())
-        //         return {
-        //             statusCode: 200,
-        //             headers: {
-        //                 'Content-Type': 'application/jwt',
-
-        //                 // TODO: Expires to _match_ jwt
-        //                 // Expires: Wed, 21 Oct 2015 07:28:00 GMT
-        //                 'Set-Cookie': `jwt=${jwt}; Domain=${apiDomainName}; SameSite=None; Secure`,
-                        
-        //             },
-        //             body: jwt,
-        //         }
-        //     })
-        // }
 
         return {
             statusCode: 404,
@@ -376,22 +348,38 @@ function bufferResponse(body: Buffer, filename: string): RouterResponse {
     }
 }
 
-function extractHeader(headers: Record<string, string | undefined>, headerName: string) : string | undefined{
+// just rip the first header
+function extractHeader(headers: Record<string, string[] | undefined>, headerName: string) : string | undefined {
     let value: string | undefined
     Object.keys(headers).forEach (key => {
-        if (key.toLowerCase() === headerName.toLowerCase()) {
-            value = headers[key]
+        if (key.toLowerCase() === headerName.toLowerCase() && headers[key] !== undefined) {
+            if(headers[key]!.length > 0) value = headers[key]![0]
         }
     })
     return value
 }
 
-function getCookie(name: string, cookieHeader: string) : string | undefined{
-    let matches = cookieHeader.match(new RegExp(
-        "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
-    ))
-    return matches ? decodeURIComponent(matches[1]) : undefined
+function extractCookie(name: string, headers: Record<string, string[] | undefined>): string | undefined {
+    let value: string | undefined
+    Object.keys(headers).forEach (key => {
+        if (key.toLowerCase() === 'cookie' && headers[key] !== undefined) {
+            headers[key]!.forEach(cookieHeader => {
+                let matches = cookieHeader.match(new RegExp(
+                    "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
+                ))
+                if (matches) value = decodeURIComponent(matches[1])
+            })
+        }
+    })
+    return value
 }
+
+// function getCookie(name: string, cookieHeader: string) : string | undefined{
+//     let matches = cookieHeader.match(new RegExp(
+//         "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
+//     ))
+//     return matches ? decodeURIComponent(matches[1]) : undefined
+// }
 
 function sortPosts(data: Array<PostMetadata>): Array<PostMetadata> {
     return data.sort((a: PostMetadata, b: PostMetadata) => b.updatedTs - a.updatedTs)

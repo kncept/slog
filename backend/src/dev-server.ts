@@ -31,18 +31,18 @@ const requestListener: http.RequestListener = (req, res) => {
     } else if (method === 'POST') {
         // have to stream out the post data ...
         let body = Buffer.from([])
-        // let body: string = ''
+        // let body: string =SERS ''
         req.on('data', data => {
             body = Buffer.concat([body, data])
             // body = body + data.toString()
         })
         req.on('end', async() => {
             const url = urlWithParams(req.url || '')
-            respond(flattenHeaders(req.headers), method, url.path, url.params, body, res, addCorsHeaders)
+            respond(multiValueHeaders(req.headers), method, url.path, url.params, body, res, addCorsHeaders)
         })
     } else if (method === 'GET' || method === 'DELETE') {
         const url = urlWithParams(req.url || '')
-        respond(flattenHeaders(req.headers), method, url.path, url.params, undefined, res, addCorsHeaders)
+        respond(multiValueHeaders(req.headers), method, url.path, url.params, undefined, res, addCorsHeaders)
     }
 }
 
@@ -57,21 +57,22 @@ function urlWithParams(requestUrl: string): UrlWithParams {
     return {path, params}
 }
 
-function flattenHeaders(headers: NodeJS.Dict<string | string[]>): Record<string, string> {
-    const flat: Record<string, string> = {}
+function multiValueHeaders(headers: NodeJS.Dict<string | string[]>): Record<string, string[] | undefined> {
+    const obj: Record<string, string[] | undefined> = {}
     Object.keys(headers).forEach(key => {
         const value = headers[key]
-        if (Array.isArray(value)) {
-            flat[key] = value[0]
+        if (value === undefined) {
+            if (!obj[key]) obj[key] = undefined
         } else {
-            flat[key] = value || ''
+            const val= Array.isArray(value) ? value : [value]
+            obj[key] = val
         }
     })
-    return flat
+    return obj
 }
 
 function respond(
-    headers: Record<string, string>,
+    headers: Record<string, string[] | undefined>,
     method: string,
     path: string,
     urlParams: Record<string, string>,
