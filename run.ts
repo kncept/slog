@@ -2,7 +2,7 @@
 import BuildCommand from './orchestration/commands/build'
 import StartDevCommand from './orchestration/commands/start-dev'
 import KeygenCommand from './orchestration/commands/keygen'
-import TestCommand from './orchestration/commands/test'
+import TestCommand from './orchestration/commands/test-command'
 import DeployCommand from './orchestration/commands/deploy'
 import CliCommand from './orchestration/cli-command'
 
