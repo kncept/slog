@@ -14,10 +14,18 @@ export function frontendUrl(): string {
     let url = process.env.PUBLIC_URL || ''
     if (!url.endsWith('/')) url = url + '/'
     return url
-  }
+}
+export function backendUrl(): string {
+    let url = process.env.REACT_APP_API_ENDPOINT || ''
+    if (!url.endsWith('/')) url = url + '/'
+    return url
+}
 
 export function frontendUrlNoSlash() {
     return frontendUrl().substring(0, frontendUrl().length - 1)
+}
+export function backendUrlNoSlash() {
+    return backendUrl().substring(0, backendUrl().length - 1)
 }
 export function corsHeaders(originHeader: string | undefined, allowedOrigins: string[]): Record<string, string[]> {
     const matchingOrigins = allowedOrigins.filter(origin => origin === originHeader)
@@ -57,7 +65,10 @@ export default class Router {
         this.readyFlag = storage.readyFlag
     }
 
-    async extractAuth(headers: Record<string, string | undefined>): Promise<ParsedAuth> {
+    async extractAuth(
+        headers: Record<string, string | undefined>,
+        urlParams: Record<string, string | undefined>,
+    ): Promise<ParsedAuth> {
         if (this.auth === undefined) this.auth = new AsymetricJwtAuth(this.storage.KeyManager())
 
         // sequential: auth header first
@@ -76,16 +87,26 @@ export default class Router {
             const jwtString = getCookie('jwt', cookieHeader)
             if(jwtString) return this.auth.ParseAuth(jwtString)
         }
+    
+        if (urlParams && urlParams.jwt) {
+            return this.auth.ParseAuth(urlParams.jwt)
+        }
 
         return this.auth.ParseAuth(undefined)
     }
-
-    async route(method: string, path: string, headers: Record<string, string | undefined>, requestBody: Buffer | undefined): Promise<RouterResponse> {
+    
+    async route(
+        headers: Record<string, string | undefined>,
+        method: string,
+        path: string,
+        urlParams: Record<string, string | undefined>,
+        requestBody: Buffer | undefined
+    ): Promise<RouterResponse> {
         try {
         if (path === null || path === undefined || path === "") {
             throw new Error("No path defined: " + path)
         }
-        const parsedAuth = await this.extractAuth(headers)
+        const parsedAuth = await this.extractAuth(headers, urlParams)
 
         let params = match('/post/', path)
         if (params.matches && method === 'GET') {

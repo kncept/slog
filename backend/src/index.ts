@@ -50,47 +50,47 @@ export const handler = async (event: APIGatewayProxyEvent, context: Context): Pr
   
 
   try {
-      var res = await router.route(event.httpMethod, event.path, event.headers, body)
-      if(res.headers) {
-        Object.keys(res.headers).forEach(key => {
+    let res = await router.route(event.headers, event.httpMethod, event.path, event.pathParameters || {}, body)
+    if(res.headers) {
+      Object.keys(res.headers).forEach(key => {
 
-          if (!multiValueHeaders[key]) {
-            multiValueHeaders[key] = []
-          }
-          multiValueHeaders[key].push(res.headers![key])
+        if (!multiValueHeaders[key]) {
+          multiValueHeaders[key] = []
+        }
+        multiValueHeaders[key].push(res.headers![key])
 
-        }) 
-      }
+      }) 
+    }
 
-      if (res.body == undefined) {
-        return {
-          multiValueHeaders,
-          statusCode: res.statusCode,
-          body: ''
-        }
-      }
-      if (Buffer.isBuffer(res.body)) {
-        return {
-          multiValueHeaders,
-          statusCode: res.statusCode,
-          isBase64Encoded: true,
-          body: (res.body as Buffer).toString('base64'),
-        }
-      }
-      if (typeof res.body === 'string') {
-        return {
-          multiValueHeaders,
-          statusCode: res.statusCode,
-          isBase64Encoded: false,
-          body: res.body as string
-        }
-      }
-      console.log('Internal Server Error: Unable to determine type of ' + res.body)
+    if (res.body == undefined) {
       return {
-        statusCode: 500,
-        isBase64Encoded: false,
-        body: 'Internal Server Error'
+        multiValueHeaders,
+        statusCode: res.statusCode,
+        body: ''
       }
+    }
+    if (Buffer.isBuffer(res.body)) {
+      return {
+        multiValueHeaders,
+        statusCode: res.statusCode,
+        isBase64Encoded: true,
+        body: (res.body as Buffer).toString('base64'),
+      }
+    }
+    if (typeof res.body === 'string') {
+      return {
+        multiValueHeaders,
+        statusCode: res.statusCode,
+        isBase64Encoded: false,
+        body: res.body as string
+      }
+    }
+    console.log('Internal Server Error: Unable to determine type of ' + res.body)
+    return {
+      statusCode: 500,
+      isBase64Encoded: false,
+      body: 'Internal Server Error'
+    }
   } catch (err) {
       console.log('err', err)
       return {

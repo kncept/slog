@@ -1,8 +1,9 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import 'easymde/dist/easymde.min.css'
 import CatchErr from './CatchErr'
 import MDEditor from '@uiw/react-md-editor'
 import rehypeSanitize from 'rehype-sanitize'
+import AuthContext from '../AuthContext'
 
 let apiBase = process.env.REACT_APP_API_ENDPOINT || ""
 while (apiBase.endsWith("/")) {
@@ -22,6 +23,7 @@ type Props = {
 }
 
 const Markdown: React.FC<Props> = ({postId, value, setValue, mode}) => {
+    const auth = useContext(AuthContext)
     if (mode === MarkdownMode.EDIT && setValue === undefined) throw new Error('Must defined setValue when editing')
 
     const onChange = (v: string | undefined) => {
@@ -39,8 +41,15 @@ const Markdown: React.FC<Props> = ({postId, value, setValue, mode}) => {
 
         if (src.startsWith('_/')) {
         src = postId + src.substring(1)
-        const imageBase = mode === MarkdownMode.EDIT ? `${apiBase}/image/draft/` : `${apiBase}/image/post/`
-        return `${imageBase}${src}`
+        if (mode === MarkdownMode.EDIT) {
+            if (auth.currentUser() !== null) {
+                // this is a HORRIBLE WORKAROUND
+                return `${apiBase}/image/draft/${src}?jwt=${encodeURIComponent(auth.currentUser()!.token())}`
+            }
+            return `${apiBase}/image/draft/${src}`
+        } else {
+            return `${apiBase}/image/post/${src}`
+        }
         } else {
         return `${apiBase}/image/post/${src}`
         }

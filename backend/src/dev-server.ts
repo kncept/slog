@@ -1,6 +1,6 @@
 import * as http from 'http'
 import * as https from 'https'
-import Router, { corsHeaders, frontendUrl, frontendUrlNoSlash } from './router'
+import Router, { backendUrlNoSlash, corsHeaders, frontendUrl, frontendUrlNoSlash } from './router'
 import * as path from 'path'
 import { FilesystemStorage } from './storage/storage'
 import { LocalFsOperations, S3FsOperations } from './storage/filesystem-storage'
@@ -37,11 +37,24 @@ const requestListener: http.RequestListener = (req, res) => {
             // body = body + data.toString()
         })
         req.on('end', async() => {
-            respond(method, req.url || '', flattenHeaders(req.headers), body, res, addCorsHeaders)
+            const url = urlWithParams(req.url || '')
+            respond(flattenHeaders(req.headers), method, url.path, url.params, body, res, addCorsHeaders)
         })
     } else if (method === 'GET' || method === 'DELETE') {
-        respond(method, req.url || '', flattenHeaders(req.headers), undefined, res, addCorsHeaders)
+        const url = urlWithParams(req.url || '')
+        respond(flattenHeaders(req.headers), method, url.path, url.params, undefined, res, addCorsHeaders)
     }
+}
+
+interface UrlWithParams {
+    path: string
+    params: Record<string, string>
+}
+function urlWithParams(requestUrl: string): UrlWithParams {
+    const url = new URL(requestUrl, `https://${backendUrlNoSlash()}`)
+    const params = Object.fromEntries(url.searchParams.entries())
+    const path = requestUrl.includes("?") ? requestUrl.substring(0, requestUrl.indexOf("?")) : requestUrl
+    return {path, params}
 }
 
 function flattenHeaders(headers: NodeJS.Dict<string | string[]>): Record<string, string> {
@@ -57,8 +70,16 @@ function flattenHeaders(headers: NodeJS.Dict<string | string[]>): Record<string,
     return flat
 }
 
-function respond(method: string, path: string, headers: Record<string, string>, requestBody: Buffer | undefined, res: http.ServerResponse<http.IncomingMessage>, addCorsHeaders: () => void) {
-    router.route(method, path, headers, requestBody)
+function respond(
+    headers: Record<string, string>,
+    method: string,
+    path: string,
+    urlParams: Record<string, string>,
+    requestBody: Buffer | undefined,
+    res: http.ServerResponse<http.IncomingMessage>,
+    addCorsHeaders: () => void
+) {
+    router.route(headers, method, path, urlParams, requestBody)
     .then((value) => {
         addCorsHeaders()
         if(value.headers) {
