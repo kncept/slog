@@ -1,25 +1,22 @@
 export type URL = string
 
 export interface BlogProperties {
-    adminUser: string
+    adminUsers: Array<string>
 
-    // If you are hosting more than one instance of SuperSimpleBlog, you will need to name them all uniquely
-    // default = SuperSimpleBlog
+    // If you are hosting more than one instance of Slog, you will need to name them all uniquely
+    // default = Slog
     blogName?: string
 
-    // TODO: possibly roll our own oauth
-    // because switching providers _should_ be easy
-    // but apparently isn't
-    // eg: https://tasoskakour.com/blog/react-use-oauth2
-    //
     loginProviders: Array<LoginProvider>
   
 }
 
-export interface FrontendProperties {
+export interface HostnameProperties {
     // Front end URI that the app will be hosted at.
     // eg: https://example.com/
     publicUrl: URL
+    // Front end URI that the app will be hosted at.
+    // eg: https://example.com/
     reactAppApiEndpoint: URL
 }
 

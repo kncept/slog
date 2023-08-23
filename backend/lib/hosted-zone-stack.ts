@@ -3,7 +3,7 @@ import * as cdk from 'aws-cdk-lib'
 import { Construct } from 'constructs'
 import * as route53 from 'aws-cdk-lib/aws-route53'
 import { matchHostedZoneToDomainUrl } from '../tools/domain-tools'
-import { superSimpleBaseBlogName } from '../tools/name-tools'
+import { baseSlogName } from '../tools/name-tools'
 
 export interface HostedZoneStackProps {
   prefix: string,
@@ -12,7 +12,7 @@ export interface HostedZoneStackProps {
 }
 
 export async function determineHostedZoneIdLookup(prefix: string, fqdn: string): Promise<string | null> {
-  const stackOutputs = await lookupOutputs(superSimpleBaseBlogName())
+  const stackOutputs = await lookupOutputs(baseSlogName())
   if (stackOutputs) {
     const isLookup = stackOutputs[`${prefix}-is-lookup`]
     return isLookup ? stackOutputs[`${prefix}-zone-id`] : null

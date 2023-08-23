@@ -11,7 +11,8 @@ export default class NativeFetcher implements Fetcher {
             headers: new Headers(params.headers),
             method: params.method,
             body: params?.body,
-            credentials: 'include'
+            credentials: 'include',
+            mode: 'cors',
         })
     }
 }

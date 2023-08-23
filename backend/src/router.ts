@@ -7,7 +7,7 @@ import KSUID from 'ksuid'
 import * as mime from 'mime-types'
 import { match } from 'node-match-path'
 
-import { AsymetricJwtAuth, AuthResult, JwtAuthenticator } from './auth/jwt-auth'
+import { AsymetricJwtAuth, AuthResult, JwtAuthenticator, ParsedAuth } from './auth/jwt-auth'
 import { extractDomainNameFromFQDN, fullyQualifiedApiDomainName } from '../tools/domain-tools'
 
 export function frontendUrl(): string {
@@ -57,22 +57,35 @@ export default class Router {
         this.readyFlag = storage.readyFlag
     }
 
+    async extractAuth(headers: Record<string, string | undefined>): Promise<ParsedAuth> {
+        if (this.auth === undefined) this.auth = new AsymetricJwtAuth(this.storage.KeyManager())
+
+        // sequential: auth header first
+        const authorizationHeader = extractHeader(headers, 'Authorization')
+        if (authorizationHeader) {
+            if (authorizationHeader.startsWith('Bearer ')) {
+                const jwtString = authorizationHeader.substring(7)
+                return this.auth.ParseAuth(jwtString)
+            }
+            return this.auth.ParseAuth('')
+        }
+
+        // sequential: Cookie header next
+        const cookieHeader = extractHeader(headers, 'Cookie')
+        if (cookieHeader) {
+            const jwtString = getCookie('jwt', cookieHeader)
+            if(jwtString) return this.auth.ParseAuth(jwtString)
+        }
+
+        return this.auth.ParseAuth(undefined)
+    }
+
     async route(method: string, path: string, headers: Record<string, string | undefined>, requestBody: Buffer | undefined): Promise<RouterResponse> {
         try {
         if (path === null || path === undefined || path === "") {
             throw new Error("No path defined: " + path)
         }
-
-        if (this.auth === undefined) this.auth = new AsymetricJwtAuth(this.storage.KeyManager())
-
-        // TODO: fix multi headers for 'Cookie'
-        const parsedAuth = await this.auth.ParseAuth(extractHeader(headers, 'Authorization'), extractHeader(headers, 'Cookie'))
-        // console.log(`parsedAuth for ${method} ${path}`, parsedAuth)
-        // TODO:
-        // if (parsedAuth.result === AuthResult.invalid) {
-            // delete auth tokens
-        // }
-        // if (parsedAuth.result === AuthResult.invalid) return forbiddenResponse
+        const parsedAuth = await this.extractAuth(headers)
 
         let params = match('/post/', path)
         if (params.matches && method === 'GET') {
@@ -238,13 +251,34 @@ export default class Router {
 
                         // TODO: Expires to _match_ jwt
                         // Expires: Wed, 21 Oct 2015 07:28:00 GMT
-                        'Set-Cookie': `jwt=${jwt}; Domain=${apiDomainName}; SameSite=None; Secure`,
+                        // 'Set-Cookie': `jwt=${jwt}; Domain=${apiDomainName}; SameSite=None; Secure`,
                         
                     },
                     body: jwt,
                 }
             })
         }
+
+        // params = match('/relogin', path)
+        // if (params.matches && method === 'POST') {
+        //     const providerName = params!.params!.providerName
+        //     return this.auth.LoginCallback(providerName, parse(requestBody!.toString()) as Record<string, string>)
+        //     .then(jwt => {
+        //         const apiDomainName = extractDomainNameFromFQDN(fullyQualifiedApiDomainName())
+        //         return {
+        //             statusCode: 200,
+        //             headers: {
+        //                 'Content-Type': 'application/jwt',
+
+        //                 // TODO: Expires to _match_ jwt
+        //                 // Expires: Wed, 21 Oct 2015 07:28:00 GMT
+        //                 'Set-Cookie': `jwt=${jwt}; Domain=${apiDomainName}; SameSite=None; Secure`,
+                        
+        //             },
+        //             body: jwt,
+        //         }
+        //     })
+        // }
 
         return {
             statusCode: 404,
@@ -327,6 +361,13 @@ function extractHeader(headers: Record<string, string | undefined>, headerName: 
         }
     })
     return value
+}
+
+function getCookie(name: string, cookieHeader: string) : string | undefined{
+    let matches = cookieHeader.match(new RegExp(
+        "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
+    ))
+    return matches ? decodeURIComponent(matches[1]) : undefined
 }
 
 function sortPosts(data: Array<PostMetadata>): Array<PostMetadata> {

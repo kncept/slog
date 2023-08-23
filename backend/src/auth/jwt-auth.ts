@@ -8,7 +8,7 @@ import { KeyName, KeyManager, KeyPairName } from '../crypto/keypair-manager'
 
 const logonProviders = parse(process.env.LOGIN_PROVIDERS!) as Array<BackendLoginProvider>
 const frontendUrl = process.env.PUBLIC_URL!
-const adminUser = process.env.ADMIN_USER || ''
+const adminUsers = parse(process.env.ADMIN_USERS || '[]')
 
 type JwtAuthClaimsToSend = Omit<JwtAuthClaims, 'iat' | 'iss' | 'sub'>
 
@@ -33,7 +33,7 @@ const invalid: ParsedAuth = {
 }
 
 export interface JwtAuthenticator {
-    ParseAuth: (authorizationHeader: string | undefined, cookieHeader: string | undefined) => Promise<ParsedAuth>
+    ParseAuth: (jwt: string | undefined) => Promise<ParsedAuth>
     LoginOptions: () => Promise<LoginOptions>
     LoginCallback: (providerName: string, requestBody: Record<string, string>) => Promise<string> //JWT ... or null for failure?
     ValidKeys: () => Promise<Array<string>>
@@ -68,14 +68,9 @@ export class AsymetricJwtAuth implements JwtAuthenticator {
         return this.cache[KeyName.user] 
     }
 
-    ParseAuth: (authorizationHeader: string | undefined, cookieHeader: string | undefined) => Promise<ParsedAuth> = async (authorizationHeader, cookieHeader) => {
-        if (authorizationHeader !== undefined && authorizationHeader.startsWith('Bearer ')) {
-            const jwtString = authorizationHeader.substring(7)
-            return parseJwtString(jwtString, await this.loginKeypair())
-        }
-        if (cookieHeader) {
-            const jwtString = getCookie('jwt', cookieHeader)
-            if(jwtString) return parseJwtString(jwtString, await this.loginKeypair())
+    ParseAuth: (jwt: string | undefined) => Promise<ParsedAuth> = async (jwt) => {
+        if (jwt !== undefined) {
+            return parseJwtString(jwt, await this.loginKeypair())
         }
         return unauthenticated
     }
@@ -149,11 +144,13 @@ export class AsymetricJwtAuth implements JwtAuthenticator {
 
                         // assumed common in 'user details endpoint' responses:
                         // email name login id
-
-                        if (adminUser.includes('@')) {
-                            admin = adminUser === `${providerName}:${userDetails.email}`
-                        } else {
-                            admin = adminUser === `${providerName}:${userDetails.login}`
+                        for(let i = 0; i < adminUsers.length; i++) {
+                            let adminUser = adminUsers[i]
+                            if (adminUser.includes('@')) {
+                                admin = admin || adminUser === `${providerName}:${userDetails.email}`
+                            } else {
+                                admin = admin || adminUser === `${providerName}:${userDetails.login}`
+                            }
                         }
 
                         // jwt.verify(authToken, 'private-key')
@@ -222,10 +219,3 @@ function parseJwtString(jwtString: string, keyPair: KeyPair): ParsedAuth {
         return invalid
     }
 }
-
-function getCookie(name: string, cookieHeader: string) : string | undefined{
-    let matches = cookieHeader.match(new RegExp(
-      "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
-    ));
-    return matches ? decodeURIComponent(matches[1]) : undefined;
-  }

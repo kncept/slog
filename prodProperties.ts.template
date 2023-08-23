@@ -1,10 +1,10 @@
-import { AwsAccessKeyProperties, FrontendProperties } from "./orchestration/env-properties"
+import { AwsAccessKeyProperties, HostnameProperties } from "./orchestration/env-properties"
 
 // add as many property types from orchestration/properties as required
-const properties : AwsAccessKeyProperties & FrontendProperties = {
+const properties : AwsAccessKeyProperties & HostnameProperties & BlogProperties = {
     publicUrl: 'https://',
-    reactAppApiEndpoint: 'https://api.',
-    adminUser: , // 'ProviderId:UserId'
+    reactAppApiEndpoint: 'https://',
+    adminUsers: [], // 'ProviderId:UserId'
 
     awsAccessKeyId: ,
     awsSecretAccessKey: ,

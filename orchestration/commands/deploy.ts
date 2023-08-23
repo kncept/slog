@@ -1,4 +1,4 @@
-import { superSimpleBaseBlogName } from '../../backend/tools/name-tools'
+import { baseSlogName } from '../../backend/tools/name-tools'
 import CliCommand from '../cli-command'
 import exec, {} from '../exec'
 import EnvProperties, { EnvironmentName } from '../property-loaders'
@@ -38,5 +38,5 @@ async function deploy(args: Array<string>) {
         return
     }
 
-    await cdkDeploy(superSimpleBaseBlogName())
+    await cdkDeploy(baseSlogName())
 }

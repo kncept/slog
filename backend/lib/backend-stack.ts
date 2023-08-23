@@ -59,7 +59,7 @@ export class BackendStack extends cdk.NestedStack {
       environment: {
         PUBLIC_URL: process.env.PUBLIC_URL || '',
         REACT_APP_API_ENDPOINT: process.env.REACT_APP_API_ENDPOINT || '',
-        ADMIN_USER: process.env.ADMIN_USER || '',
+        ADMIN_USERS: process.env.ADMIN_USERS || '[]',
         S3_BUCKET_NAME: bucket.bucketName,
         LOGIN_PROVIDERS: process.env.LOGIN_PROVIDERS || '[]',
       },

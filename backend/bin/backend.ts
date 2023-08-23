@@ -3,7 +3,7 @@ import 'source-map-support/register'
 import * as cdk from 'aws-cdk-lib'
 import { BackendStack } from '../lib/backend-stack'
 import * as path from 'path'
-import { superSimpleBaseBlogName } from '../tools/name-tools'
+import { baseSlogName } from '../tools/name-tools'
 import { extractDomainNameFromFQDN, fullyQualifiedApiDomainName, fullyQualifiedFrontendDomainName } from '../tools/domain-tools'
 import { HostedZoneStack, determineHostedZoneIdLookup } from '../lib/hosted-zone-stack'
 import { FrontendStack } from '../lib/frontend-stack'
@@ -43,7 +43,7 @@ export class ApplicationStack extends cdk.Stack {
     // Backend API/Lambda and S3 bucket
     const backendStack = new BackendStack(this, `Backend`, {
       projectRootDir,
-      blogBaseName: superSimpleBaseBlogName(),
+      blogBaseName: baseSlogName(),
       hostedZone: backendHostedZone.zone,
       domainName: fullyQualifiedApiDomainName(),
     })
@@ -51,7 +51,7 @@ export class ApplicationStack extends cdk.Stack {
     // Cloudfront distribution of static frontend
     const frontendStack = new FrontendStack(this, `Frontend`, {
       projectRootDir,
-      blogBaseName: superSimpleBaseBlogName(),
+      blogBaseName: baseSlogName(),
       hostedZone: frontendHostedZone.zone,
       domainName: fullyQualifiedFrontendDomainName(),
     })
@@ -74,7 +74,7 @@ export class ApplicationStack extends cdk.Stack {
 
 async function defineStack() {
   const app = new cdk.App()
-  const stack = new ApplicationStack(app, superSimpleBaseBlogName())
+  const stack = new ApplicationStack(app, baseSlogName())
   await stack.init()
 }
 

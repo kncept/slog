@@ -1,7 +1,7 @@
-import { FrontendProperties } from "./orchestration/env-properties"
+import { HostnameProperties } from "./orchestration/env-properties"
 
 // add as many property types from orchestration/properties as required
-const properties : FrontendProperties = {
+const properties : HostnameProperties & BlogProperties = {
     publicUrl: 'https://127.0.0.1:3000/',
     reactAppApiEndpoint: 'https://127.0.0.1:8080/',
 

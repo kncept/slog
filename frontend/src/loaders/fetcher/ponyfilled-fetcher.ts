@@ -13,7 +13,8 @@ export default class PoynfilledFetcher implements Fetcher {
             headers: new Headers(params.headers),
             method: params.method,
             body: params?.body,
-            credentials: 'include'
+            credentials: 'include',
+            mode: 'cors',
         })
     }
 }

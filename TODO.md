@@ -27,6 +27,8 @@ Including hosts file (!)
 
 # General TODOs
 
+ADMIN ==> AUTHOR
+
 * Backend needs to be more pluggable.
   * segments: attachment files, posts, keymanager,  userdata
 * fix 'storage' and split into clearer domain modules
