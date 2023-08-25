@@ -31,21 +31,21 @@ jest.mock('rehype-sanitize', () => {
       }
 })
 
-jest.mock('fetch-ponyfill', () => {
-    class Headers {
-        constructor(args: any) {
-        }
-    }
-    return {
-        __esModule: true,
-        default: () => { return {
-            fetch: () => Promise.resolve({
-                ok: false,
-                json: () => {}
-            }),
-            Headers,
-        }}
-      }
-})
+// jest.mock('fetch-ponyfill', () => {
+//     class Headers {
+//         constructor(args: any) {
+//         }
+//     }
+//     return {
+//         __esModule: true,
+//         default: () => { return {
+//             fetch: () => Promise.resolve({
+//                 ok: false,
+//                 json: () => {}
+//             }),
+//             Headers,
+//         }}
+//       }
+// })
 
 

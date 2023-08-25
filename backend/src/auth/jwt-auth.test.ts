@@ -33,7 +33,7 @@ test("can verify tokens", async () => {
         subject,
         issuer,
     })
-    const authResult = await auth.ParseAuth(`Bearer ${jwtString}`, undefined)
+    const authResult = await auth.ParseAuth(`${jwtString}`)
     expect(authResult.result).toBe(AuthResult.authorized)
     expect(authResult.claims?.sub).toBe(subject)
 })
@@ -45,7 +45,7 @@ test("requires a known issuer", async () => {
         subject,
         issuer: 'anything else',
     })
-    const authResult = await auth.ParseAuth(`Bearer ${jwtString}`, undefined)
+    const authResult = await auth.ParseAuth(`${jwtString}`)
     expect(authResult.result).toBe(AuthResult.invalid)
 })
 
@@ -55,7 +55,7 @@ test("requires the same keypair", async () => {
         subject,
         issuer,
     })
-    const authResult = await auth.ParseAuth(`Bearer ${jwtString}`, undefined)
+    const authResult = await auth.ParseAuth(`${jwtString}`)
     expect(authResult.result).toBe(AuthResult.invalid)
 })
 
