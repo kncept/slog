@@ -2,7 +2,7 @@ import { Identified, LoginOptions, Post, PostMetadata, PostUpdatableFields } fro
 import { AuthenticatedUser } from '../AuthContext'
 import { stringify} from '@supercharge/json'
 import { Fetcher } from './fetcher/fetcher'
-import { FetcherStackType, fetcherStack } from './fetcher/fetcher-stack'
+import { fetcherStack } from './fetcher/fetcher-stack'
 
 
 export interface LoaderApi {
@@ -23,6 +23,7 @@ export interface LoaderApi {
   // auth related (therefore auth not required)
   LoginProviders: () => Promise<LoginOptions>
   LoginCallback: (providerId: string, params: Record<string, string>) => Promise<string>
+  LogoutCallback: () => Promise<void>
   
 }
 
@@ -146,11 +147,17 @@ class SimpleLoader implements LoaderApi {
       .then(res => res.text())
   }
 
+  LogoutCallback: () => Promise<void> = async () => {
+    return this.fetcher.fetch(`${apiBase}/logout`, {
+      method: 'GET',
+      headers: { },
+    })
+    .then(() => {})
+  }
+
   AddAttachment: (id: String, file: File) => Promise<void> = async (id, file) => {
     this.requireAuth()
-    // broken with ponyfill ??
-    const fetcher = fetcherStack(this.user, FetcherStackType.native)
-    fetcher.fetch(`${apiBase}/image/draft/${id}`, {
+    this.fetcher.fetch(`${apiBase}/image/draft/${id}`, {
           method: 'POST',
           body: file,
           headers: {

@@ -40,4 +40,5 @@ export class StubLoader implements LoaderApi {
   LoginCallback: (providerId: string, params: Record<string, string>) => Promise<string> = () => {
       return Promise.resolve('')
   }
+  LogoutCallback: () => Promise<void> = () => Promise.resolve()
 }

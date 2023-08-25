@@ -121,10 +121,12 @@ export const AuthProvider: React.FC<{children?: React.ReactNode}> = ({children})
                     console.log('logout called')
                     localStorage.removeItem(localStorageKeys.user)
                     Cookies.remove(jwtCookieName)
-                    setAuth(existing => {return {
-                        ...existing,
-                        currentUser: () => null,
-                    }})
+                    Loader(null).LogoutCallback().then(() => {
+                        setAuth(existing => {return {
+                            ...existing,
+                            currentUser: () => null,
+                        }})
+                    })
                 }
                 
                 const callback = (provider: LoginProvider, params: Record<string, string>) => {

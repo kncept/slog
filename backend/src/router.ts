@@ -101,9 +101,47 @@ export default class Router {
         if (path === null || path === undefined || path === "") {
             throw new Error("No path defined: " + path)
         }
-        const parsedAuth = await this.extractAuth(headers, urlParams)
 
-        let params = match('/post/', path)
+        // handle auth modifiers before bothering to parse auth, they overwrite anyway
+        let params = match('/logout', path)
+        if (params.matches && method === 'GET')  {
+            const apiDomainName = extractDomainNameFromFQDN(fullyQualifiedApiDomainName())
+            return {
+                statusCode: 204,
+                headers: {
+                    'Set-Cookie': `jwt=_; Path=/; Domain=${apiDomainName}; SameSite=None; Secure; Max-Age=0`, // expire login cookie
+                    
+                },
+            }
+        }
+        params = match('/login/providers', path)
+        if (params.matches && method === 'GET') {
+            return quickResponse(stringify(await this.auth.LoginOptions()))
+        }
+
+        
+        if (this.auth === undefined) this.auth = new AsymetricJwtAuth(this.storage.KeyManager())
+
+        params = match('/login/callback/:providerName', path)
+        if (params.matches && method === 'POST') {
+            const providerName = params!.params!.providerName
+            return this.auth.LoginCallback(providerName, parse(requestBody!.toString()) as Record<string, string>)
+            .then(jwt => {
+                const apiDomainName = extractDomainNameFromFQDN(fullyQualifiedApiDomainName())
+                return {
+                    statusCode: 200,
+                    headers: {
+                        'Content-Type': 'application/jwt',
+                        // TODO: Expires to _match_ jwt. eg:  Expires: Wed, 21 Oct 2015 07:28:00 GMT
+                        'Set-Cookie': `jwt=${jwt}; Path=/; Domain=${apiDomainName}; SameSite=None; Secure`,
+                        
+                    },
+                    body: jwt,
+                }
+            })
+        }
+
+        params = match('/post/', path)
         if (params.matches && method === 'GET') {
             const res = await this.storage.PostStorage().ListPosts().then(sortPosts)
             return quickResponse(stringify(res))
@@ -119,6 +157,9 @@ export default class Router {
                 return notFoundResponse
             }
         }
+
+        // delay parsing auth till we absolutely have to
+        const parsedAuth = await this.extractAuth(headers, urlParams)
 
         params = match('/draft/', path)
         if (params.matches && method === 'GET') {
@@ -247,32 +288,6 @@ export default class Router {
             const filename = params!.params!.filename
             await this.storage.DraftStorage().RemoveMedia(id, filename)
             return emptyResponse
-        }
-
-
-        params = match('/login/providers', path)
-        if (params.matches && method === 'GET') {
-            return quickResponse(stringify(await this.auth.LoginOptions()))
-        }
-        params = match('/login/callback/:providerName', path)
-        if (params.matches && method === 'POST') {
-            const providerName = params!.params!.providerName
-            return this.auth.LoginCallback(providerName, parse(requestBody!.toString()) as Record<string, string>)
-            .then(jwt => {
-                const apiDomainName = extractDomainNameFromFQDN(fullyQualifiedApiDomainName())
-                return {
-                    statusCode: 200,
-                    headers: {
-                        'Content-Type': 'application/jwt',
-
-                        // TODO: Expires to _match_ jwt
-                        // Expires: Wed, 21 Oct 2015 07:28:00 GMT
-                        'Set-Cookie': `jwt=${jwt}; Path=/; Domain=${apiDomainName}; SameSite=None; Secure`,
-                        
-                    },
-                    body: jwt,
-                }
-            })
         }
 
         return {
