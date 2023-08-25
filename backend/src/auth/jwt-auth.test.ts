@@ -58,15 +58,3 @@ test("requires the same keypair", async () => {
     const authResult = await auth.ParseAuth(`${jwtString}`)
     expect(authResult.result).toBe(AuthResult.invalid)
 })
-
-describe("jwt userid encryption", () => {
-    const userIdToEncode = "TestUsers:" + randomInt(32767)
-    let encrypted = ''
-    it('consistently encrypts', async () => {
-        encrypted = await auth.EncodeUserId(userIdToEncode, undefined)
-        expect(await auth.EncodeUserId(userIdToEncode, undefined)).toEqual(encrypted)
-    })
-    it('decrypts', async () => {
-        expect(await auth.DecodeUserId(encrypted, undefined)).toEqual(userIdToEncode)
-    })
-})

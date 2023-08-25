@@ -2,11 +2,9 @@
 # TODO
 
 # In Progress
-Linting & cleaning up... Feels like its time to post, then go on to some features
 
-Set up dev properties to use slog-dev.localdev and slog-api.localdev as hostnames
-Including hosts file (!)
-
+Create Usermanager to allow renaming via slog.
+Capture some data for (Admin) and for (Author) use
 
 # Feature Level TODOs
 
@@ -24,10 +22,12 @@ Including hosts file (!)
 
 * Ability to embed Links for downloading  into current document - referencing that post's metadata
 
-
 # General TODOs
 
-ADMIN ==> AUTHOR
+Three-tier users property.
+ADMIN -> can do some site admin stuff (add/remove author privileges)
+AUTHOR -> can create and publish drafts
+AUTHENTICATED -> can comment
 
 * Backend needs to be more pluggable.
   * segments: attachment files, posts, keymanager,  userdata

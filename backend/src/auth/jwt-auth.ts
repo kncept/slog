@@ -1,10 +1,11 @@
 import { JwtAuthClaims, LoginOptions, LoginProvider } from '../../../interface/Model'
-import { KeyPair, KeySpec, simpleDecode, simpleEncode } from '../crypto/crypto-utils'
+import { KeyPair } from '../crypto/crypto-utils'
 import jwt from 'jsonwebtoken'
 import { parse } from '@supercharge/json'
 import { LoginProvider as BackendLoginProvider } from '../../../orchestration/env-properties'
 import fetch from 'isomorphic-fetch'
 import { KeyName, KeyManager, KeyPairName } from '../crypto/keypair-manager'
+import { UserManager } from '../user/user-manager'
 
 const logonProviders = parse(process.env.LOGIN_PROVIDERS!) as Array<BackendLoginProvider>
 const frontendUrl = process.env.PUBLIC_URL!
@@ -37,10 +38,6 @@ export interface JwtAuthenticator {
     LoginOptions: () => Promise<LoginOptions>
     LoginCallback: (providerName: string, requestBody: Record<string, string>) => Promise<string> //JWT ... or null for failure?
     ValidKeys: () => Promise<Array<string>>
-
-    // // using the 'user' key::
-    EncodeUserId: (userId: string, version?: string | undefined) => Promise<string>
-    DecodeUserId: (userId: string, version?: string | undefined) => Promise<string>
     
 }
 
@@ -60,13 +57,7 @@ export class AsymetricJwtAuth implements JwtAuthenticator {
         }
         return this.cache[KeyPairName.login]
     }
-    userKey: (version: string | undefined ) => Promise<KeySpec> = async () => {
-        // TODO - versionmanager this, and keep efficient caching
-        if (!this.cache[KeyName.user]) {
-            this.cache[KeyName.user] = await this.keyManager.ReadKey(KeyName.user)
-        }
-        return this.cache[KeyName.user] 
-    }
+
 
     ParseAuth: (jwt: string | undefined) => Promise<ParsedAuth> = async (jwt) => {
         if (jwt !== undefined) {
@@ -165,7 +156,7 @@ export class AsymetricJwtAuth implements JwtAuthenticator {
                             tok: oauthToken.access_token
                         }
                         
-                        const subject = await this.EncodeUserId(`${providerName}:${userDetails.id}`, undefined)
+                        const subject = await new UserManager(this.keyManager).ObscureId(`${providerName}:${userDetails.id}`)
                         const privateKey = (await this.loginKeypair()).privateKey
                         const authToken = jwt.sign(
                             authenticatedUser,
@@ -187,10 +178,6 @@ export class AsymetricJwtAuth implements JwtAuthenticator {
     }
 
     ValidKeys: () => Promise<Array<string>> = async () => [(await this.loginKeypair()).publicKey]
-
-    EncodeUserId: (userId: string, version: string | undefined) => Promise<string> = async (userId, version) => this.userKey(version).then(key => simpleEncode(key, userId, version))
-
-    DecodeUserId: (encodedId: string, version: string | undefined) => Promise<string> = (encodedId, version) => this.userKey(version).then(key => simpleDecode(key, encodedId, version))
 
 }
 

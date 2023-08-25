@@ -27,26 +27,18 @@ describe('keys', () => {
     })
 })
 
-
-
-describe('version encoding', () => {
-    const versions = ['1.0.0', '1.0.1']
+describe('symmetric encoding', () => {
     const keyspec = generateKey()
-    versions.forEach(version => {
-        describe(`version ${version}`, () => {
+    it('should consistently encode and decode', async () => {
 
-            it('should consistently encode and decode', async () => {
-
-                // base62 uses 6 byte nibbles, so lets pad that out when needed
-                const seed = 'Test string at ' + new Date().getTime()
-                const pad = 'xxxxxx'
-                for(let i = 0; i < pad.length; i++) {
-                    const original = seed + pad.substring(0, i)
-                    const encoded = simpleEncode(await keyspec, original, version)
-                    const decoded = simpleDecode(await keyspec, encoded, version)
-                    expect(decoded).toEqual(original)
-                }
-            })
-        })
+        // base62 uses 6 byte nibbles, so lets pad that out when needed
+        const seed = 'Test string at ' + new Date().getTime()
+        const pad = 'xxxxxx'
+        for(let i = 0; i < pad.length; i++) {
+            const original = seed + pad.substring(0, i)
+            const encoded = simpleEncode(await keyspec, original)
+            const decoded = simpleDecode(await keyspec, encoded)
+            expect(decoded).toEqual(original)
+        }
     })
 })
