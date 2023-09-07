@@ -8,7 +8,26 @@ import Loading from './components/Loading'
 
 const useBrowserCrypto = false
 
-const AuthContext = createContext<AuthContextType>(undefined as any as AuthContextType)
+export interface AuthContextType {
+    isLoading(): boolean // INITIAL load
+    verificationKeys(): Array<string>
+    providers(): Array<LoginProvider>
+    login(provider: LoginProvider): void // will probably trigger path reloads
+    logout(): void
+    callback(provider: LoginProvider, params: Record<string, string>): Promise<void> // needed for Oauth2 callbacks
+    currentUser(): AuthenticatedUser | null
+}
+const emptyDefaultAuthType: AuthContextType = {
+    isLoading: () => true,
+    verificationKeys: () => [],
+    providers: () => [],
+    login: (provider: LoginProvider) => window.location.href = provider.authorizeUrl, // not replace - don't want to lose our url history
+    logout: () => {},
+    callback: () => {throw new Error('Loading')},
+    currentUser: () => null
+}
+
+const AuthContext = createContext<AuthContextType>(emptyDefaultAuthType)
 export default AuthContext
 
 const jwtCookieName = 'jwt'
@@ -21,6 +40,8 @@ export interface AuthenticatedUser {
     logout(): Promise<void>
 
     name(): string
+    id(): string
+
     admin(): boolean 
 }
 
@@ -43,20 +64,15 @@ class JwtUser implements AuthenticatedUser {
     name(): string {
         return this.claims.name
     }
+    id(): string {
+        return this.claims.sub
+    }
     admin(): boolean {
         return this.claims.admin
     }
 }
 
-export interface AuthContextType {
-    isLoading(): boolean // INITIAL load
-    verificationKeys(): Array<string>
-    providers(): Array<LoginProvider>
-    login(provider: LoginProvider): void // will probably trigger path reloads
-    logout(): void
-    callback(provider: LoginProvider, params: Record<string, string>): Promise<void> // needed for Oauth2 callbacks
-    currentUser(): AuthenticatedUser | null
-}
+
 
 
 export const AuthProviderCallback: React.FC = () => {
@@ -102,23 +118,15 @@ export const AuthProviderCallback: React.FC = () => {
     return <></>
 }
 
+
 export const AuthProvider: React.FC<{children?: React.ReactNode}> = ({children}) => {
-    const [auth, setAuth] = useState<AuthContextType>({
-        isLoading: () => true,
-        verificationKeys: () => [],
-        providers: () => [],
-        login: (provider: LoginProvider) => window.location.href = provider.authorizeUrl, // not replace - don't want to lose our url history
-        logout: () => {},
-        callback: () => {throw new Error('Loading')},
-        currentUser: () => null
-    })
+    const [auth, setAuth] = useState<AuthContextType>(emptyDefaultAuthType)
     
     useEffect(() => {
         if (auth.isLoading()) {
             Loader(auth.currentUser()).LoginProviders().then(async loginOptions => {
 
                 const logout = () => {
-                    console.log('logout called')
                     localStorage.removeItem(localStorageKeys.user)
                     Cookies.remove(jwtCookieName)
                     Loader(null).LogoutCallback().then(() => {

@@ -1,15 +1,21 @@
 import React from 'react'
-import './HBox.css'
+import SimpleButton from './SimpleButton'
+import './DraftMediaDisplay.css'
 
 type Props = {
     attachments: Array<string>
+    insertAttachment: (value: string) => void
+    deleteAttachment: (value: string) => void
 }
 
-const DraftMediaDisplay: React.FC<Props> = ({attachments}) => {
-    return <div className='attachments'>
-        You can reference images in your post directy by name.
-        {attachments.map(attachment => <span key={attachment}>{attachment}</span>)}
+const DraftMediaDisplay: React.FC<Props> = ({attachments, insertAttachment, deleteAttachment}) => {
+    return <div className='Attachments'>
+      {attachments.map((value: string, index: number) => <div className='AttachmentRow' key={index}>{value}
+      <SimpleButton text='Insert' style={{color: 'green'}} onClick={() => insertAttachment(value)} />
+      <SimpleButton text='Delete' style={{color: 'red'}} onClick={() => deleteAttachment(value)} />
+      </div>)}
     </div>
 }
 
 export default DraftMediaDisplay
+

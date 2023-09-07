@@ -1,0 +1,11 @@
+
+.contributors {
+    border: 1px solid;
+    margin-top: 5px;
+}
+
+.contributor-row {
+    display: flex;
+    flex-flow: row wrap;
+    padding: 4px;
+  }

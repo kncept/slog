@@ -4,7 +4,9 @@
 # In Progress
 
 Create Usermanager to allow renaming via slog.
-Capture some data for (Admin) and for (Author) use
+Capture some data for (Admin) and for (Author).
+i.e. 'number of posts' , 'last post date', etc?
+
 
 # Feature Level TODOs
 
@@ -28,6 +30,11 @@ Three-tier users property.
 ADMIN -> can do some site admin stuff (add/remove author privileges)
 AUTHOR -> can create and publish drafts
 AUTHENTICATED -> can comment
+
+(foldable?) boxes for:
+Contributors - with a (remove) option
+Media
+And make sure that the association is clear.
 
 * Backend needs to be more pluggable.
   * segments: attachment files, posts, keymanager,  userdata
@@ -70,9 +77,6 @@ AUTHENTICATED -> can comment
 # Kinda Done, but still here as they need refining:
 * draft media to have a tick/cross for 'usage' (and able to be deleted)
 * save draft to have a clear -> loading -> tick -> clear cycled (edit based)
-
-
-
 
 
 

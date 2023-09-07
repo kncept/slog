@@ -182,7 +182,24 @@ export default class Router {
                 if (post.title) existing.title= post.title
                 existing.contributors = addContributor(existing.contributors, parsedAuth.claims!)
                 existing.updatedTs = now
-                await this.storage.DraftStorage().Save(existing)    
+                await this.storage.DraftStorage().Save(existing)
+            })
+            return emptyResponse
+        }
+
+        params = match('/draft/:postId/contributors/:contributorId', path)
+        if (params.matches && method === 'DELETE') {
+            const postId = params!.params!.postId
+            const contributorId = params!.params!.contributorId
+            const userId = parsedAuth.claims?.sub || ''
+            console.log(`${contributorId} === ${userId}  (${contributorId === userId})`)
+            if(contributorId === userId) return emptyResponse // can't remove yourself
+            const now = luxon.DateTime.now().toMillis()
+            await this.storage.DraftStorage().GetPost(postId)
+            .then(async existing => {
+                existing.contributors = existing.contributors.filter(value => value.id !== contributorId)
+                existing.updatedTs = now
+                await this.storage.DraftStorage().Save(existing)
             })
             return emptyResponse
         }

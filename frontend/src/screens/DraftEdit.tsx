@@ -9,6 +9,7 @@ import FileUpload from '../components/FileUpload'
 import AuthContext from '../AuthContext'
 import Loading from '../components/Loading'
 import Contributors from '../components/Contributors'
+import DraftMediaDisplay from '../components/DraftMediaDisplay'
 
 const DraftEdit: React.FC = () => {
   const { id } = useParams()
@@ -68,6 +69,7 @@ const DraftEdit: React.FC = () => {
     .then((post) => navigate(`/posts/${post.id}`))
   }
 
+
   const insertAttachment = (attachment: string) => {
     // Hmm... cant use unknown url schemes... sigh
     setMarkdown(markdown + `\n![${attachment}](_/${attachment})`)
@@ -75,6 +77,13 @@ const DraftEdit: React.FC = () => {
   const deleteAttachment = (filename: string) => {
     Loader(auth.currentUser()).RemoveAttachment(id!, filename)
     draft.attachments = draft.attachments.filter(attachment => attachment !== filename)
+    setDraft({...draft})
+  }
+
+  const removeContributor = (contributorId: string) => {
+    console.log(`${auth.currentUser()?.id()} --> ${contributorId}  `)
+    Loader(auth.currentUser()).RemoveContributor(id!, contributorId)
+    draft.contributors = draft.contributors.filter(contributor => contributor.id !== contributorId)
     setDraft({...draft})
   }
 
@@ -86,14 +95,9 @@ const DraftEdit: React.FC = () => {
     
     Content:
     <Markdown postId={draft.id} mode={MarkdownMode.EDIT} value={markdown} setValue={setMarkdown} />
-    <Contributors contributors={draft?.contributors || []} />
+    <Contributors contributors={draft?.contributors || []} removeContributor={removeContributor}/>
 
-    <div className='Attachments'>
-      {(draft?.attachments || []).map((value: string, index: number) => <div className='AttachmentRow' key={index}>{value}
-      <SimpleButton text='Insert' style={{color: 'green'}} onClick={() => insertAttachment(value)} />
-      <SimpleButton text='Delete' style={{color: 'red'}} onClick={() => deleteAttachment(value)} />
-      </div>)}
-    </div>
+    <DraftMediaDisplay attachments={draft?.attachments || []} insertAttachment={insertAttachment} deleteAttachment={deleteAttachment}/>
     <FileUpload draftId={draft.id} onUpload={onUpload} />
 
     <div className='DraftControlButtons'>
