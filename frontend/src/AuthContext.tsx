@@ -167,8 +167,8 @@ export const AuthProvider: React.FC<{children?: React.ReactNode}> = ({children})
                 setAuth(existing => {return {
                     ...existing,
                     isLoading: () => false,
-                    verificationKeys: () => loginOptions.verificationKeys,
-                    providers: () =>loginOptions.providers,
+                    verificationKeys: () => loginOptions.verificationKeys || [],
+                    providers: () => loginOptions.providers || [],
                     logout,
                     callback,
                     currentUser: () => initialUser
@@ -176,7 +176,6 @@ export const AuthProvider: React.FC<{children?: React.ReactNode}> = ({children})
             })
         }
     }, [auth])
-
 
 
     return <>
