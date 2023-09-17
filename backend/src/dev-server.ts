@@ -111,8 +111,8 @@ router.readyFlag.then(async () => {
             key: fs.readFileSync(`../.data/${selfSigned.key}`),
             cert: fs.readFileSync(`../.data/${selfSigned.cert}`),
         }, requestListener)
-        server.listen(8080, 'localhost', () => {
-            console.log(`https dev backend is running https://${hostname}:8080/`)
+        server.listen(8443, 'localhost', () => {
+            console.log(`https dev backend is running https://${hostname}:8443/`)
         })
     } else {
         const server = http.createServer(requestListener)
