@@ -56,6 +56,7 @@ function toFqdn(fqdnUrl: string): string {
 }
 
 export function extractDomainNameFromFQDN(fqdn: string) : string {
+    if (fqdn === "localhost" || fqdn === '127.0.0.1') return fqdn
     for(let i = 0; i < domainNameEndingsToScan.length; i++) {
         const knownTldEnding = domainNameEndingsToScan[i]
         if (fqdn.endsWith(knownTldEnding)) {
