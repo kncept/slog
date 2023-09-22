@@ -10,9 +10,10 @@ export default class BuildCommand implements CliCommand {
 }
 
 async function build() {
-    const envName = EnvironmentName.prod
-    await exec(envName, 'frontend', 'npm', ['ci'])
+    const feBuild = exec(EnvironmentName.prod, 'frontend', 'npm', ['ci'])
     .then(async () => {
-        await exec(envName, 'frontend', 'npm',['run', 'build'])
+        await exec(EnvironmentName.prod, 'frontend', 'npm',['run', 'build'])
     })
+    const beBuild = await exec(EnvironmentName.prod, 'backend', 'npm', ['ci'])
+    await Promise.all([feBuild, beBuild])
 }

@@ -35,20 +35,24 @@ Slog... the Simple Web Log.
     * `awsSecretAccessKey`
     * `awsSecretAccessKey` AWS CLI Credentials (See AWS Documentation if this is not already set up)
 
-4) `./run.ts deploy`
+5) Initialize the Dev environment
+    Run `npm ci` in order to download dependencies for the run.ts file.
+
+6) `./run.ts deploy`
     If you are not running in the devcontainer, you may need to run the above via `ts-node`.
     This will create a Cloudformation stack via the AWS CDK.
     Everything is in one stack (`SLog` by default), but uses multiple nested stacks to deploy.
 
-5) Update your name servers to match the AWS domain - UNLESS the domain is AWS Managed (ie you set purchase on in config - still todo)
+7) Update your name servers to match the AWS domain - UNLESS the domain is AWS Managed (ie you set purchase on in config - still todo)
 
-6) Start Posting
+8) Start Posting
 
 
 ## Developing
 All orchestration is done by the run.ts command. This uses ts-node
 
 In the dev container, 
+`./run.ts build` will initialze npm for the subprojects, and do a production build for the frontend
 `./run.ts start` will start up the the stack in dev mode
 `./run.ts deploy` will build and deploy the stack
 `./run.ts test` will run all unit tests
@@ -63,13 +67,12 @@ In the dev container,
 
 `cp devProperties.ts.template devProperties.ts` ==> Support for checked in dev properties
 
-If you want to commit secrets, I would suggest using the `https://github.com/commenthol/ansible-vault` library.
+If you want to commit secrets, I would suggest using the `https://github.com/commenthol/ansible-vault` library to encrypt them.
 
 
 ## Auth Provider Configuration
 
-Help for some basic auth providers.<br/>
-Currently only OIDC is supported.
+(todo) Help for some basic auth providers.<br/>
 
 ### OIDC providers:
 
