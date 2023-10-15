@@ -37,7 +37,8 @@ const LoginBox: React.FC<Props> = ({style}) => {
         </div>
     }
 
-    if (auth.providers().length === 0) {
+    // on a 500 this can end up as undefined (??)
+    if (auth.providers() === undefined || auth.providers().length === 0) {
         return <div style={style} key='disabled'>
             <DropDownPicker
                 disabled={true}

@@ -1,8 +1,6 @@
 
 # TODO
 
-# In Progress
-
 Create Usermanager to allow renaming via slog.
 Capture some data for (Admin) and for (Author).
 i.e. 'number of posts' , 'last post date', etc?

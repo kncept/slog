@@ -1,6 +1,7 @@
 // I must say, the Lambda V3 API and typescript offering from amazon is horrible
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda'
 import Router, { corsHeaders, frontendUrl, frontendUrlNoSlash } from './router'
+import { stringify} from '@supercharge/json'
 import { S3FsOperations } from './storage/filesystem-storage'
 import { FilesystemStorage } from './storage/storage'
 
@@ -14,9 +15,9 @@ const router: Router = new Router(
 )
 
 
-export const handler = async (event: APIGatewayProxyEvent, context: Context): Promise<APIGatewayProxyResult> => {
-  // console.log('event', event)
-  // console.log('context', context)
+export const handler = async (event: APIGatewayProxyEvent, _context: Context): Promise<APIGatewayProxyResult> => {
+  console.log('event', event)
+  // console.log('context', _context)
   await router.readyFlag // make sure that we've created the s3 directories.
   
   // play nice: redirect all root requests to the frontend
@@ -51,6 +52,7 @@ export const handler = async (event: APIGatewayProxyEvent, context: Context): Pr
 
   try {
     let res = await router.route(event.multiValueHeaders, event.httpMethod, event.path, event.pathParameters || {}, body)
+    console.log(`Result from route ${event.path} ${stringify(res)}`)
     if(res.headers) {
       Object.keys(res.headers).forEach(key => {
 

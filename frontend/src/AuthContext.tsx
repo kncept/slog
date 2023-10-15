@@ -125,6 +125,7 @@ export const AuthProvider: React.FC<{children?: React.ReactNode}> = ({children})
     useEffect(() => {
         if (auth.isLoading()) {
             Loader(auth.currentUser()).LoginProviders().then(async loginOptions => {
+                loginOptions = loginOptions || {}
 
                 const logout = () => {
                     localStorage.removeItem(localStorageKeys.user)
